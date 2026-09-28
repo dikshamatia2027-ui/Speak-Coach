@@ -368,7 +368,9 @@ export function analyzeResponse(transcript: string, durationSec: number): Analys
     },
   ];
   const seed = (fillerCount + wpm + wordCount) % pool.length;
-  const exercises = [pool[seed], pool[(seed + 2) % pool.length], pool[(seed + 4) % pool.length]];
+  const exercises = [seed, (seed + 2) % pool.length, (seed + 4) % pool.length].map(
+    (i) => pool[i]!,
+  );
 
   const summary =
     overall >= 80
