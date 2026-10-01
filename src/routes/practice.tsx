@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Mic, Square, ArrowLeft, RotateCcw } from "lucide-react";
+import { Mic, Square, ArrowLeft, RotateCcw, Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,96 @@ export const Route = createFileRoute("/practice")({
   component: Practice,
 });
 
-type Phase = "pick" | "ready" | "recording" | "analysing";
+type Phase = "pick" | "ready" | "countdown" | "recording" | "paused" | "analysing";
+
+function formatTime(totalSeconds: number) {
+  const m = Math.floor(totalSeconds / 60);
+  const s = Math.floor(totalSeconds % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+/**
+ * Animated waveform bars on a canvas. Amplitudes are simulated for the MVP —
+ * TODO(api): drive these from a real AnalyserNode once microphone capture is
+ * wired up.
+ */
+function Waveform({ active }: { active: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const activeRef = useRef(active);
+  activeRef.current = active;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const resize = () => {
+      const { clientWidth, clientHeight } = canvas;
+      canvas.width = clientWidth * dpr;
+      canvas.height = clientHeight * dpr;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const BAR_COUNT = 48;
+    const levels = new Array<number>(BAR_COUNT).fill(0.08);
+    let raf = 0;
+    let t = 0;
+
+    const draw = () => {
+      raf = requestAnimationFrame(draw);
+      t += 0.045;
+      const { width, height } = canvas;
+      ctx.clearRect(0, 0, width, height);
+
+      const gap = width / BAR_COUNT;
+      const barWidth = Math.max(2 * dpr, gap * 0.45);
+      const gradient = ctx.createLinearGradient(0, 0, width, 0);
+      gradient.addColorStop(0, "rgba(99, 102, 241, 0.95)");
+      gradient.addColorStop(0.55, "rgba(139, 92, 246, 0.95)");
+      gradient.addColorStop(1, "rgba(217, 70, 239, 0.9)");
+      ctx.fillStyle = gradient;
+
+      for (let i = 0; i < BAR_COUNT; i++) {
+        const target = activeRef.current
+          ? 0.18 +
+            0.55 *
+              Math.abs(
+                Math.sin(t * 1.6 + i * 0.55) * 0.6 +
+                  Math.sin(t * 3.1 + i * 1.3) * 0.3 +
+                  Math.sin(t * 0.9 + i * 0.21) * 0.35,
+              ) *
+              (0.55 + 0.45 * Math.sin(i * 0.7 + t * 0.4) ** 2)
+          : 0.07;
+        // Ease toward the target so bars feel fluid, not jumpy.
+        levels[i] += (target - levels[i]) * (activeRef.current ? 0.25 : 0.08);
+        const h = Math.max(3 * dpr, levels[i] * height);
+        const x = i * gap + (gap - barWidth) / 2;
+        const y = (height - h) / 2;
+        const r = barWidth / 2;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, h, r);
+        ctx.fill();
+      }
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="h-20 w-full sm:h-24"
+      aria-hidden="true"
+    />
+  );
+}
 
 function Practice() {
   const { profile } = store.get();
@@ -45,30 +134,77 @@ function Practice() {
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [phase, setPhase] = useState<Phase>("pick");
   const [elapsed, setElapsed] = useState(0);
+  const [countdown, setCountdown] = useState(3);
   const [liveText, setLiveText] = useState("");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const elapsedRef = useRef(0);
   const navigate = useNavigate();
 
-  useEffect(() => () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    },
+    [],
+  );
 
-  function startRecording() {
-    setPhase("recording");
+  function startCountdown() {
+    setPhase("countdown");
+    setCountdown(3);
     setElapsed(0);
+    elapsedRef.current = 0;
     setLiveText("");
+    let n = 3;
+    timerRef.current = setInterval(() => {
+      n -= 1;
+      if (n <= 0) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        beginRecording();
+      } else {
+        setCountdown(n);
+      }
+    }, 900);
+  }
+
+  function beginRecording() {
+    setPhase("recording");
     // TODO(api): swap for real speech-to-text streaming. For the MVP we
     // reveal the sample transcript progressively to simulate live captions.
     const words = scenario!.sampleTranscript.split(" ");
     timerRef.current = setInterval(() => {
-      setElapsed((e) => {
-        const next = e + 1;
-        const shown = Math.min(words.length, Math.floor((next / scenario!.seconds) * words.length));
+      elapsedRef.current += 1;
+      const next = elapsedRef.current;
+      setElapsed(next);
+      const shown = Math.min(
+        words.length,
+        Math.floor((next / scenario!.seconds) * words.length),
+      );
+      setLiveText(words.slice(0, shown).join(" "));
+      if (next >= scenario!.seconds) finish(next);
+    }, 1000);
+  }
+
+  function togglePause() {
+    if (phase === "recording") {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setPhase("paused");
+    } else if (phase === "paused") {
+      setPhase("recording");
+      const words = scenario!.sampleTranscript.split(" ");
+      timerRef.current = setInterval(() => {
+        elapsedRef.current += 1;
+        const next = elapsedRef.current;
+        setElapsed(next);
+        const shown = Math.min(
+          words.length,
+          Math.floor((next / scenario!.seconds) * words.length),
+        );
         setLiveText(words.slice(0, shown).join(" "));
         if (next >= scenario!.seconds) finish(next);
-        return next;
-      });
-    }, 1000);
+      }, 1000);
+    }
   }
 
   function finish(finalElapsed?: number) {
@@ -77,7 +213,7 @@ function Practice() {
       timerRef.current = null;
     }
     setPhase("analysing");
-    const duration = Math.max(finalElapsed ?? elapsed, 8);
+    const duration = Math.max(finalElapsed ?? elapsedRef.current, 8);
     const sc = scenario!;
     // Mock analysis derived from the transcript. TODO(api): real AI call.
     const transcript = sc.sampleTranscript;
@@ -100,11 +236,9 @@ function Practice() {
     }, 1400);
   }
 
-  function stopEarly() {
-    finish();
-  }
-
-  const remaining = scenario ? Math.max(0, scenario.seconds - elapsed) : 0;
+  const isLive = phase === "recording";
+  const isPaused = phase === "paused";
+  const inSession = isLive || isPaused;
 
   return (
     <AppShell>
@@ -133,6 +267,9 @@ function Practice() {
               </button>
             ))}
           </div>
+          {goalScenarios.length === 0 && (
+            <p className="mt-8 text-sm text-muted-foreground">No scenarios for this goal yet.</p>
+          )}
         </div>
       )}
 
@@ -154,38 +291,116 @@ function Practice() {
               Speak for about <strong>{scenario.seconds} seconds</strong>. Talk naturally — the
               coach handles the rest.
             </p>
-            <Button variant="hero" size="xl" className="mt-8" onClick={startRecording}>
+            <Button variant="hero" size="xl" className="mt-8" onClick={startCountdown}>
               <Mic className="size-5" /> Start recording
             </Button>
           </div>
         </div>
       )}
 
-      {phase === "recording" && scenario && (
+      {phase === "countdown" && scenario && (
+        <div className="animate-rise mx-auto flex max-w-xl flex-col items-center py-16 text-center">
+          <p className="text-sm font-medium text-muted-foreground">{scenario.prompt}</p>
+          <div className="relative mt-12 flex size-36 items-center justify-center">
+            <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/25" />
+            <span className="bg-soft absolute inset-0 rounded-full border border-border" />
+            <span className="font-display text-brand text-7xl font-bold tabular-nums">
+              {countdown}
+            </span>
+          </div>
+          <p className="mt-10 text-sm font-medium text-muted-foreground">
+            Get ready — take a breath
+          </p>
+        </div>
+      )}
+
+      {inSession && scenario && (
         <div className="animate-rise mx-auto max-w-xl text-center">
           <p className="text-sm font-medium text-muted-foreground">{scenario.prompt}</p>
+
+          {/* Status chip */}
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-semibold tracking-wide uppercase shadow-soft">
+            <span
+              className={cn(
+                "size-2 rounded-full",
+                isLive ? "animate-pulse bg-destructive" : "bg-warning",
+              )}
+            />
+            {isLive ? "Recording" : "Paused"}
+          </div>
+
+          {/* Big mic */}
           <div className="mt-8 flex flex-col items-center">
-            <button
-              onClick={stopEarly}
-              aria-label="Stop recording"
-              className="bg-brand shadow-glow relative flex size-28 items-center justify-center rounded-full transition-transform hover:scale-105"
-            >
-              <span className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
-              <Square className="size-8 fill-primary-foreground text-primary-foreground" />
-            </button>
-            <p className="font-display mt-6 text-5xl font-bold tabular-nums">
-              {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}
+            <div className="relative flex size-32 items-center justify-center sm:size-36">
+              {isLive && (
+                <>
+                  <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/30" />
+                  <span
+                    className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/20"
+                    style={{ animationDelay: "0.8s" }}
+                  />
+                </>
+              )}
+              <div
+                className={cn(
+                  "bg-brand shadow-glow relative flex size-28 items-center justify-center rounded-full transition-all duration-300 sm:size-32",
+                  isPaused && "scale-95 opacity-80 shadow-soft",
+                )}
+              >
+                <Mic className="size-11 text-primary-foreground sm:size-12" />
+              </div>
+            </div>
+
+            {/* Timer */}
+            <p className="font-display mt-7 text-6xl font-bold tabular-nums tracking-tight">
+              {formatTime(elapsed)}
             </p>
-            <p className="mt-1 text-xs tracking-wide text-muted-foreground uppercase">
-              Listening… tap to finish early
+            <p className="mt-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {isLive
+                ? `Listening… target ${formatTime(scenario.seconds)}`
+                : "Paused — resume when ready"}
             </p>
           </div>
+
+          {/* Waveform */}
+          <div className="surface mt-8 px-4 py-3">
+            <Waveform active={isLive} />
+          </div>
+
+          {/* Controls */}
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <button
+              onClick={togglePause}
+              aria-label={isLive ? "Pause recording" : "Resume recording"}
+              className="surface flex size-14 items-center justify-center rounded-full transition-all hover:-translate-y-0.5 hover:shadow-lift"
+            >
+              {isLive ? (
+                <Pause className="size-6 fill-foreground text-foreground" />
+              ) : (
+                <Play className="size-6 fill-foreground text-foreground" />
+              )}
+            </button>
+            <button
+              onClick={() => finish()}
+              aria-label="Stop and analyse"
+              className="bg-brand shadow-glow flex h-14 items-center gap-2.5 rounded-full px-7 text-sm font-semibold text-primary-foreground transition-all hover:-translate-y-0.5 hover:shadow-lift"
+            >
+              <Square className="size-4 fill-primary-foreground" />
+              Stop &amp; analyse
+            </button>
+          </div>
+
+          {/* Live transcript */}
           <div className="surface mt-8 min-h-28 p-5 text-left">
             <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Live transcript
             </p>
             <p className="mt-2 text-sm leading-relaxed">
-              {liveText || <span className="text-muted-foreground">Start speaking…</span>}
+              {liveText || (
+                <span className="text-muted-foreground">
+                  {isLive ? "Start speaking…" : "Transcript paused"}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -201,10 +416,6 @@ function Practice() {
             Scoring pace, filler words, clarity and confidence.
           </p>
         </div>
-      )}
-
-      {phase === "pick" && goalScenarios.length === 0 && (
-        <p className={cn("mt-8 text-sm text-muted-foreground")}>No scenarios for this goal yet.</p>
       )}
     </AppShell>
   );
