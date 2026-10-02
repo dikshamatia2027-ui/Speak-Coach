@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { MetricBar, ScoreRing } from "@/components/score";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/hooks/use-store";
-import { goalById, scoreTone, timeAgo } from "@/lib/speakcoach";
+import { goalById, metricCoaching, scoreTone, timeAgo } from "@/lib/speakcoach";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/results/$sessionId")({
@@ -54,6 +54,10 @@ function Results() {
     .filter((s) => s.scenarioId === session.scenarioId && s.createdAt < session.createdAt)
     .sort((a, b) => b.createdAt - a.createdAt)[0];
   const delta = previous ? session.analysis.overall - previous.analysis.overall : 0;
+  const focusAreas = session.analysis.metrics.flatMap((metric) => {
+    const coaching = metricCoaching(metric, session.transcript, session.analysis);
+    return coaching ? [{ metric, coaching }] : [];
+  });
 
   return (
     <AppShell>
@@ -89,6 +93,31 @@ function Results() {
             )}
           </div>
         </div>
+
+        {focusAreas.length > 0 && (
+          <section className="mt-8" aria-labelledby="focus-areas-heading">
+            <h2 id="focus-areas-heading" className="text-xl font-bold">Your focus areas</h2>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {focusAreas.map(({ metric, coaching }) => (
+                <article key={metric.id} className="surface p-6">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="font-semibold">{metric.label}</h3>
+                    <span className="text-sm font-bold tabular-nums text-warning">{metric.score}/100</span>
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    <span className="font-semibold text-foreground">Why it matters: </span>{coaching.why}
+                  </p>
+                  <blockquote className="mt-4 border-l-2 border-primary pl-4 text-sm italic leading-relaxed">
+                    “{coaching.quote}”
+                  </blockquote>
+                  <p className="mt-4 text-sm leading-relaxed">
+                    <span className="font-semibold">Try this: </span>{coaching.exercise}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <div className="surface p-6">

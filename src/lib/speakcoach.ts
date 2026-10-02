@@ -167,6 +167,69 @@ export type Analysis = {
   summary: string;
 };
 
+/** Coaching is derived at display time so previously saved attempts receive it too. */
+export function metricCoaching(metric: Metric, transcript: string, analysis: Analysis) {
+  if (metric.score >= 80 || !transcript.trim()) return null;
+
+  const sentences = transcript.trim().match(/[^.!?]+[.!?]?/g)?.map((s) => s.trim()).filter(Boolean) ?? [];
+  const first = sentences[0] ?? transcript.trim();
+  const longest = [...sentences].sort((a, b) => b.length - a.length)[0] ?? first;
+  // Keep quotations verbatim: no generated words or mid-word truncation.
+  const quote = (text: string) => {
+    const snippet = text.trim();
+    if (snippet.length <= 140) return snippet;
+    const cut = snippet.lastIndexOf(" ", 140);
+    return snippet.slice(0, cut > 0 ? cut : 140);
+  };
+  const filler = analysis.fillerWords[0]?.word;
+  const fillerSentence = filler
+    ? sentences.find((sentence) => new RegExp(`\\b${filler}\\b`, "i").test(sentence)) ?? first
+    : first;
+
+  switch (metric.id) {
+    case "pace":
+      return {
+        why: analysis.wordsPerMinute > 160
+          ? `At ${analysis.wordsPerMinute} words per minute, listeners may miss your key point.`
+          : `At ${analysis.wordsPerMinute} words per minute, long gaps can make your point harder to follow.`,
+        quote: quote(first),
+        exercise: analysis.wordsPerMinute > 160
+          ? "Read this excerpt aloud again. Pause for one full breath after the main idea, then record it once more."
+          : "Read this excerpt aloud as one complete thought. Pause only at the end, then record it once more.",
+      };
+    case "fillers":
+      return {
+        why: "Frequent filler words can distract listeners from the point you want them to remember.",
+        quote: quote(fillerSentence),
+        exercise: `Record this sentence three times. Each time you reach ${filler ? `“${filler}”` : "a filler"}, close your mouth and pause for one beat instead.`,
+      };
+    case "clarity":
+      return {
+        why: "Long or crowded sentences make it harder for listeners to hold on to your main idea.",
+        quote: quote(longest),
+        exercise: "Rewrite this excerpt as two short sentences, one idea in each. Say both aloud without rushing.",
+      };
+    case "pronunciation":
+      return {
+        why: "Clear articulation helps listeners catch important words. A transcript alone cannot verify how you pronounced them.",
+        quote: quote(first),
+        exercise: "Say this excerpt slowly three times, clearly finishing each word. Record a fourth pass at your natural pace and listen back.",
+      };
+    case "vocabulary":
+      return {
+        why: "More precise wording makes your message easier to picture and remember.",
+        quote: quote(first),
+        exercise: "Rewrite this excerpt with one more specific noun and one concrete verb. Speak both versions aloud and compare.",
+      };
+    case "delivery":
+      return {
+        why: "A complete, decisive thought gives listeners a stronger sense of your point. Confidence in your voice needs an audio listen-back to assess.",
+        quote: quote(first),
+        exercise: "Record this thought three times. End each pass with a full sentence and a one-beat pause; listen for a steady finish.",
+      };
+  }
+}
+
 const FILLERS = [
   "um",
   "uh",
