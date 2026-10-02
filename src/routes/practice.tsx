@@ -5,7 +5,6 @@ import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import {
   analyzeResponse,
-  getScenario,
   goalById,
   scenariosForGoal,
   store,
