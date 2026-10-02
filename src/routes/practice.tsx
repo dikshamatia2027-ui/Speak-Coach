@@ -98,8 +98,10 @@ function Waveform({ active }: { active: boolean }) {
               (0.55 + 0.45 * Math.sin(i * 0.7 + t * 0.4) ** 2)
           : 0.07;
         // Ease toward the target so bars feel fluid, not jumpy.
-        levels[i] += (target - levels[i]) * (activeRef.current ? 0.25 : 0.08);
-        const h = Math.max(3 * dpr, levels[i] * height);
+        const current = levels[i] ?? 0.08;
+        const nextLevel = current + (target - current) * (activeRef.current ? 0.25 : 0.08);
+        levels[i] = nextLevel;
+        const h = Math.max(3 * dpr, nextLevel * height);
         const x = i * gap + (gap - barWidth) / 2;
         const y = (height - h) / 2;
         const r = barWidth / 2;
