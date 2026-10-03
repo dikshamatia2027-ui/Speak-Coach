@@ -633,3 +633,58 @@ export function timeAgo(ts: number) {
 export function goalById(id: GoalId | null | undefined) {
   return GOALS.find((g) => g.id === id) ?? null;
 }
+
+// ---------- Progress ----------
+export function longestStreak(sessions: Session[]) {
+  const days = [...new Set(sessions.map((s) => {
+    const d = new Date(s.createdAt); d.setHours(0, 0, 0, 0); return d.getTime();
+  }))].sort((a, b) => a - b);
+  let best = 0, run = 0, prev = 0;
+  for (const d of days) {
+    run = prev && Math.round((d - prev) / 86_400_000) === 1 ? run + 1 : 1;
+    best = Math.max(best, run); prev = d;
+  }
+  return best;
+}
+
+export function weekDays(sessions: Session[]) {
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // Monday
+  return Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(start); day.setDate(start.getDate() + i);
+    const next = day.getTime() + 86_400_000;
+    const count = sessions.filter((s) => s.createdAt >= day.getTime() && s.createdAt < next).length;
+    return { label: day.toLocaleDateString(undefined, { weekday: "narrow" }), count, isToday: day.toDateString() === new Date().toDateString(), isFuture: day.getTime() > Date.now() };
+  });
+}
+
+export function personalBests(sessions: Session[]) {
+  const best = (pick: (s: Session) => number) =>
+    sessions.reduce<Session | null>((b, s) => (!b || pick(s) > pick(b) ? s : b), null);
+  const overall = best((s) => s.analysis.overall);
+  const metricIds: MetricId[] = ["pace", "fillers", "clarity", "pronunciation", "vocabulary", "delivery"];
+  const metrics = metricIds.map((id) => {
+    const score = (s: Session) => s.analysis.metrics.find((m) => m.id === id)?.score ?? 0;
+    const s = best(score);
+    return { id, label: s?.analysis.metrics.find((m) => m.id === id)?.label ?? id, score: s ? score(s) : 0, sessionId: s?.id };
+  });
+  return { overall, metrics };
+}
+
+export type Milestone = { id: string; title: string; detail: string; current: number; target: number; done: boolean };
+
+export function milestones(sessions: Session[]): Milestone[] {
+  const top = Math.max(0, ...sessions.map((s) => s.analysis.overall));
+  const goals = new Set(sessions.map((s) => s.goal)).size;
+  const cleanest = Math.min(Infinity, ...sessions.map((s) => s.analysis.fillerCount));
+  const defs: Omit<Milestone, "done">[] = [
+    { id: "first", title: "First session", detail: "Record your first response", current: sessions.length, target: 1 },
+    { id: "ten", title: "10 sessions", detail: "Build a consistent practice habit", current: sessions.length, target: 10 },
+    { id: "streak7", title: "7-day streak", detail: "Practise on seven consecutive days", current: longestStreak(sessions), target: 7 },
+    { id: "score80", title: "Score 80+", detail: "Reach a strong overall score", current: top, target: 80 },
+    { id: "score90", title: "Score 90+", detail: "Deliver an excellent response", current: top, target: 90 },
+    { id: "range", title: "Versatile speaker", detail: "Practise every goal type", current: goals, target: GOALS.length },
+    { id: "clean", title: "Filler-free", detail: "Finish a response with zero fillers", current: sessions.length && cleanest === 0 ? 1 : 0, target: 1 },
+  ];
+  return defs.map((m) => ({ ...m, current: Math.min(m.current, m.target), done: m.current >= m.target }));
+}
