@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Flame, Mic, Target, TrendingUp } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { ProgressPanel } from "@/components/progress";
 import { ScoreRing, Sparkline } from "@/components/score";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/hooks/use-store";
@@ -116,6 +117,8 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      <ProgressPanel sessions={sessions} profile={profile} />
 
       <div className="mt-8 flex items-center justify-between">
         <h2 className="text-xl font-bold">Recent sessions</h2>
