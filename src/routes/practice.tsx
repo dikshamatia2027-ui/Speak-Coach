@@ -4,12 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import {
-  analyzeResponse,
   goalById,
   scenariosForGoal,
   store,
+  type Analysis,
   type Scenario,
 } from "@/lib/speakcoach";
+import { startRecording, type Recorder } from "@/lib/record-wav";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/practice")({
@@ -41,12 +42,14 @@ function formatTime(totalSeconds: number) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/**
- * Animated waveform bars on a canvas. Amplitudes are simulated for the MVP —
- * TODO(api): drive these from a real AnalyserNode once microphone capture is
- * wired up.
- */
-function Waveform({ active }: { active: boolean }) {
+/** Animated waveform bars driven by the live microphone AnalyserNode. */
+function Waveform({
+  active,
+  analyser,
+}: {
+  active: boolean;
+  analyser: React.RefObject<AnalyserNode | null>;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const activeRef = useRef(active);
   activeRef.current = active;
@@ -69,11 +72,10 @@ function Waveform({ active }: { active: boolean }) {
     const BAR_COUNT = 48;
     const levels = new Array<number>(BAR_COUNT).fill(0.08);
     let raf = 0;
-    let t = 0;
+    let buf: Uint8Array<ArrayBuffer> | null = null;
 
     const draw = () => {
       raf = requestAnimationFrame(draw);
-      t += 0.045;
       const { width, height } = canvas;
       ctx.clearRect(0, 0, width, height);
 
@@ -85,20 +87,19 @@ function Waveform({ active }: { active: boolean }) {
       gradient.addColorStop(1, "rgba(217, 70, 239, 0.9)");
       ctx.fillStyle = gradient;
 
+      const node = analyser.current;
+      if (node && activeRef.current) {
+        if (!buf || buf.length !== node.frequencyBinCount) buf = new Uint8Array(node.frequencyBinCount);
+        node.getByteFrequencyData(buf);
+      }
+
       for (let i = 0; i < BAR_COUNT; i++) {
-        const target = activeRef.current
-          ? 0.18 +
-            0.55 *
-              Math.abs(
-                Math.sin(t * 1.6 + i * 0.55) * 0.6 +
-                  Math.sin(t * 3.1 + i * 1.3) * 0.3 +
-                  Math.sin(t * 0.9 + i * 0.21) * 0.35,
-              ) *
-              (0.55 + 0.45 * Math.sin(i * 0.7 + t * 0.4) ** 2)
-          : 0.07;
-        // Ease toward the target so bars feel fluid, not jumpy.
+        // Mirror around the centre so voice energy (low bins) sits in the middle.
+        const dist = Math.abs(i - (BAR_COUNT - 1) / 2) / (BAR_COUNT / 2);
+        const bin = buf ? (buf[Math.floor(dist * buf.length * 0.6)] ?? 0) / 255 : 0;
+        const target = activeRef.current && node ? 0.07 + bin * 0.9 : 0.07;
         const current = levels[i] ?? 0.08;
-        const nextLevel = current + (target - current) * (activeRef.current ? 0.25 : 0.08);
+        const nextLevel = current + (target - current) * (activeRef.current ? 0.35 : 0.08);
         levels[i] = nextLevel;
         const h = Math.max(3 * dpr, nextLevel * height);
         const x = i * gap + (gap - barWidth) / 2;
@@ -136,24 +137,44 @@ function Practice() {
   const [phase, setPhase] = useState<Phase>("pick");
   const [elapsed, setElapsed] = useState(0);
   const [countdown, setCountdown] = useState(3);
-  const [liveText, setLiveText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [analysingStep, setAnalysingStep] = useState("Transcribing your answer…");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef(0);
+  const recorderRef = useRef<Recorder | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
 
   useEffect(
     () => () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      recorderRef.current?.cancel();
+      abortRef.current?.abort();
     },
     [],
   );
 
-  function startCountdown() {
+  async function startCountdown() {
+    setError(null);
+    // Ask for the mic first so the permission prompt doesn't interrupt the countdown.
+    try {
+      const rec = await startRecording();
+      rec.setPaused(true);
+      recorderRef.current = rec;
+      analyserRef.current = rec.analyser;
+    } catch (e) {
+      setError(
+        e instanceof DOMException && e.name === "NotAllowedError"
+          ? "Microphone access was blocked. Allow it in your browser settings and try again."
+          : "We couldn't start your microphone. Check it's connected and try again.",
+      );
+      return;
+    }
     setPhase("countdown");
     setCountdown(3);
     setElapsed(0);
     elapsedRef.current = 0;
-    setLiveText("");
     let n = 3;
     timerRef.current = setInterval(() => {
       n -= 1;
@@ -166,22 +187,19 @@ function Practice() {
     }, 900);
   }
 
-  function beginRecording() {
-    setPhase("recording");
-    // TODO(api): swap for real speech-to-text streaming. For the MVP we
-    // reveal the sample transcript progressively to simulate live captions.
-    const words = scenario!.sampleTranscript.split(" ");
+  function tick() {
     timerRef.current = setInterval(() => {
       elapsedRef.current += 1;
-      const next = elapsedRef.current;
-      setElapsed(next);
-      const shown = Math.min(
-        words.length,
-        Math.floor((next / scenario!.seconds) * words.length),
-      );
-      setLiveText(words.slice(0, shown).join(" "));
-      if (next >= scenario!.seconds) finish(next);
+      setElapsed(elapsedRef.current);
+      // Hard cap well under the transcription size limit.
+      if (elapsedRef.current >= Math.max(scenario!.seconds * 3, 180)) void finish();
     }, 1000);
+  }
+
+  function beginRecording() {
+    setPhase("recording");
+    recorderRef.current?.setPaused(false);
+    tick();
   }
 
   function togglePause() {
@@ -190,51 +208,71 @@ function Practice() {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
+      recorderRef.current?.setPaused(true);
       setPhase("paused");
     } else if (phase === "paused") {
+      recorderRef.current?.setPaused(false);
       setPhase("recording");
-      const words = scenario!.sampleTranscript.split(" ");
-      timerRef.current = setInterval(() => {
-        elapsedRef.current += 1;
-        const next = elapsedRef.current;
-        setElapsed(next);
-        const shown = Math.min(
-          words.length,
-          Math.floor((next / scenario!.seconds) * words.length),
-        );
-        setLiveText(words.slice(0, shown).join(" "));
-        if (next >= scenario!.seconds) finish(next);
-      }, 1000);
+      tick();
     }
   }
 
-  function finish(finalElapsed?: number) {
+  async function finish() {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    setPhase("analysing");
-    const duration = Math.max(finalElapsed ?? elapsedRef.current, 8);
+    const rec = recorderRef.current;
+    recorderRef.current = null;
+    analyserRef.current = null;
+    if (!rec) return;
     const sc = scenario!;
-    // Mock analysis derived from the transcript. TODO(api): real AI call.
-    const transcript = sc.sampleTranscript;
-    const analysis = analyzeResponse(transcript, duration);
-    const prior = store.get().sessions.filter((s) => s.scenarioId === sc.id).length;
-    const session = {
-      id: `s-${Date.now()}`,
-      scenarioId: sc.id,
-      goal: sc.goal,
-      prompt: sc.prompt,
-      transcript,
-      durationSec: duration,
-      createdAt: Date.now(),
-      analysis,
-      attempt: prior + 1,
-    };
-    store.addSession(session);
-    setTimeout(() => {
+    const duration = Math.max(elapsedRef.current, 1);
+    setPhase("analysing");
+    setAnalysingStep("Transcribing your answer…");
+    const stepTimer = setTimeout(() => setAnalysingStep("Scoring your delivery…"), 4000);
+    try {
+      const audio = await rec.stop();
+      const form = new FormData();
+      form.append("audio", audio);
+      form.append("durationSec", String(duration));
+      form.append("prompt", sc.prompt);
+      form.append("goal", sc.goal);
+      abortRef.current = new AbortController();
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        body: form,
+        signal: abortRef.current.signal,
+      });
+      const body = (await res.json().catch(() => ({}))) as {
+        transcript?: string;
+        analysis?: Analysis;
+        error?: string;
+      };
+      if (!res.ok || !body.analysis || !body.transcript) {
+        throw new Error(body.error ?? "Analysis failed. Please try again.");
+      }
+      const prior = store.get().sessions.filter((s) => s.scenarioId === sc.id).length;
+      const session = {
+        id: `s-${Date.now()}`,
+        scenarioId: sc.id,
+        goal: sc.goal,
+        prompt: sc.prompt,
+        transcript: body.transcript,
+        durationSec: duration,
+        createdAt: Date.now(),
+        analysis: body.analysis,
+        attempt: prior + 1,
+      };
+      store.addSession(session);
       void navigate({ to: "/results/$sessionId", params: { sessionId: session.id } });
-    }, 1400);
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      setError((e as Error).message);
+      setPhase("ready");
+    } finally {
+      clearTimeout(stepTimer);
+    }
   }
 
   const isLive = phase === "recording";
@@ -292,7 +330,12 @@ function Practice() {
               Speak for about <strong>{scenario.seconds} seconds</strong>. Talk naturally — the
               coach handles the rest.
             </p>
-            <Button variant="hero" size="xl" className="mt-8" onClick={startCountdown}>
+            {error && (
+              <p role="alert" className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+            <Button variant="hero" size="xl" className="mt-8" onClick={() => void startCountdown()}>
               <Mic className="size-5" /> Start recording
             </Button>
           </div>
@@ -365,7 +408,7 @@ function Practice() {
 
           {/* Waveform */}
           <div className="surface mt-8 px-4 py-3">
-            <Waveform active={isLive} />
+            <Waveform active={isLive} analyser={analyserRef} />
           </div>
 
           {/* Controls */}
@@ -382,7 +425,7 @@ function Practice() {
               )}
             </button>
             <button
-              onClick={() => finish()}
+              onClick={() => void finish()}
               aria-label="Stop and analyse"
               className="bg-brand shadow-glow flex h-14 items-center gap-2.5 rounded-full px-7 text-sm font-semibold text-primary-foreground transition-all hover:-translate-y-0.5 hover:shadow-lift"
             >
@@ -391,19 +434,9 @@ function Practice() {
             </button>
           </div>
 
-          {/* Live transcript */}
-          <div className="surface mt-8 min-h-28 p-5 text-left">
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Live transcript
-            </p>
-            <p className="mt-2 text-sm leading-relaxed">
-              {liveText || (
-                <span className="text-muted-foreground">
-                  {isLive ? "Start speaking…" : "Transcript paused"}
-                </span>
-              )}
-            </p>
-          </div>
+          <p className="mt-8 text-xs text-muted-foreground">
+            Your transcript and report appear as soon as you stop.
+          </p>
         </div>
       )}
 
@@ -414,7 +447,7 @@ function Practice() {
           </span>
           <h1 className="mt-6 text-2xl font-bold">Analysing your delivery…</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Scoring pace, filler words, clarity and confidence.
+            {analysingStep}
           </p>
         </div>
       )}
