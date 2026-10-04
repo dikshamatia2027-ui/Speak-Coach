@@ -4,12 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import {
-  analyzeResponse,
   goalById,
   scenariosForGoal,
   store,
+  type Analysis,
   type Scenario,
 } from "@/lib/speakcoach";
+import { startRecording, type Recorder } from "@/lib/record-wav";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/practice")({
@@ -329,7 +330,12 @@ function Practice() {
               Speak for about <strong>{scenario.seconds} seconds</strong>. Talk naturally — the
               coach handles the rest.
             </p>
-            <Button variant="hero" size="xl" className="mt-8" onClick={startCountdown}>
+            {error && (
+              <p role="alert" className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+            <Button variant="hero" size="xl" className="mt-8" onClick={() => void startCountdown()}>
               <Mic className="size-5" /> Start recording
             </Button>
           </div>
@@ -402,7 +408,7 @@ function Practice() {
 
           {/* Waveform */}
           <div className="surface mt-8 px-4 py-3">
-            <Waveform active={isLive} />
+            <Waveform active={isLive} analyser={analyserRef} />
           </div>
 
           {/* Controls */}
@@ -419,7 +425,7 @@ function Practice() {
               )}
             </button>
             <button
-              onClick={() => finish()}
+              onClick={() => void finish()}
               aria-label="Stop and analyse"
               className="bg-brand shadow-glow flex h-14 items-center gap-2.5 rounded-full px-7 text-sm font-semibold text-primary-foreground transition-all hover:-translate-y-0.5 hover:shadow-lift"
             >
@@ -428,19 +434,9 @@ function Practice() {
             </button>
           </div>
 
-          {/* Live transcript */}
-          <div className="surface mt-8 min-h-28 p-5 text-left">
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Live transcript
-            </p>
-            <p className="mt-2 text-sm leading-relaxed">
-              {liveText || (
-                <span className="text-muted-foreground">
-                  {isLive ? "Start speaking…" : "Transcript paused"}
-                </span>
-              )}
-            </p>
-          </div>
+          <p className="mt-8 text-xs text-muted-foreground">
+            Your transcript and report appear as soon as you stop.
+          </p>
         </div>
       )}
 
@@ -451,7 +447,7 @@ function Practice() {
           </span>
           <h1 className="mt-6 text-2xl font-bold">Analysing your delivery…</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Scoring pace, filler words, clarity and confidence.
+            {analysingStep}
           </p>
         </div>
       )}
