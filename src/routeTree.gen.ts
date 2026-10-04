@@ -15,6 +15,7 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ApiAnalyzeRouteImport } from './routes/api/analyze'
 import { Route as ResultsSessionIdRouteImport } from './routes/results.$sessionId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -47,6 +48,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAnalyzeRoute = ApiAnalyzeRouteImport.update({
+  id: '/api/analyze',
+  path: '/api/analyze',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultsSessionIdRoute = ResultsSessionIdRouteImport.update({
   id: '/results/$sessionId',
   path: '/results/$sessionId',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/settings': typeof SettingsRoute
+  '/api/analyze': typeof ApiAnalyzeRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/settings': typeof SettingsRoute
+  '/api/analyze': typeof ApiAnalyzeRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/settings': typeof SettingsRoute
+  '/api/analyze': typeof ApiAnalyzeRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/settings'
+    | '/api/analyze'
     | '/results/$sessionId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/settings'
+    | '/api/analyze'
     | '/results/$sessionId'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/settings'
+    | '/api/analyze'
     | '/results/$sessionId'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PracticeRoute: typeof PracticeRoute
   SettingsRoute: typeof SettingsRoute
+  ApiAnalyzeRoute: typeof ApiAnalyzeRoute
   ResultsSessionIdRoute: typeof ResultsSessionIdRoute
 }
 
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/analyze': {
+      id: '/api/analyze'
+      path: '/api/analyze'
+      fullPath: '/api/analyze'
+      preLoaderRoute: typeof ApiAnalyzeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/results/$sessionId': {
       id: '/results/$sessionId'
       path: '/results/$sessionId'
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PracticeRoute: PracticeRoute,
   SettingsRoute: SettingsRoute,
+  ApiAnalyzeRoute: ApiAnalyzeRoute,
   ResultsSessionIdRoute: ResultsSessionIdRoute,
 }
 export const routeTree = rootRouteImport
