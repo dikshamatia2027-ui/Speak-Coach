@@ -46,7 +46,7 @@ export async function analyzeTranscript(input: {
   const result = streamText({
     model: provider.responses(MODEL),
     output: Output.object({ schema }),
-    abortSignal: input.signal,
+    ...(input.signal ? { abortSignal: input.signal } : {}),
     system:
       "You are an expert public speaking coach. Analyse a transcribed spoken answer. " +
       "Score clarity, pronunciation, vocabulary and delivery/confidence from 0-100 (be honest; 80+ means genuinely strong). " +
