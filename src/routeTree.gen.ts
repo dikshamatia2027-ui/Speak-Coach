@@ -15,6 +15,7 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as ApiAnalyzeRouteImport } from './routes/api/analyze'
 import { Route as ResultsSessionIdRouteImport } from './routes/results.$sessionId'
 
@@ -48,6 +49,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VocabularyRoute = VocabularyRouteImport.update({
+  id: '/vocabulary',
+  path: '/vocabulary',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAnalyzeRoute = ApiAnalyzeRouteImport.update({
   id: '/api/analyze',
   path: '/api/analyze',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/settings': typeof SettingsRoute
+  '/vocabulary': typeof VocabularyRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/settings': typeof SettingsRoute
+  '/vocabulary': typeof VocabularyRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/settings': typeof SettingsRoute
+  '/vocabulary': typeof VocabularyRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/settings'
+    | '/vocabulary'
     | '/api/analyze'
     | '/results/$sessionId'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/settings'
+    | '/vocabulary'
     | '/api/analyze'
     | '/results/$sessionId'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/settings'
+    | '/vocabulary'
     | '/api/analyze'
     | '/results/$sessionId'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PracticeRoute: typeof PracticeRoute
   SettingsRoute: typeof SettingsRoute
+  VocabularyRoute: typeof VocabularyRoute
   ApiAnalyzeRoute: typeof ApiAnalyzeRoute
   ResultsSessionIdRoute: typeof ResultsSessionIdRoute
 }
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vocabulary': {
+      id: '/vocabulary'
+      path: '/vocabulary'
+      fullPath: '/vocabulary'
+      preLoaderRoute: typeof VocabularyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/analyze': {
       id: '/api/analyze'
       path: '/api/analyze'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PracticeRoute: PracticeRoute,
   SettingsRoute: SettingsRoute,
+  VocabularyRoute: VocabularyRoute,
   ApiAnalyzeRoute: ApiAnalyzeRoute,
   ResultsSessionIdRoute: ResultsSessionIdRoute,
 }
