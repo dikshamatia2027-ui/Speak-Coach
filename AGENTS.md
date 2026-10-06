@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Derive metric-specific coaching from saved transcripts at display time, so historical attempts receive actionable feedback without rewriting persisted sessions.
+- Vocabulary game state lives in its own localStorage store (src/lib/vocab.ts) separate from speaking sessions; AI sentence checks run in a server function so the key stays server-side.
