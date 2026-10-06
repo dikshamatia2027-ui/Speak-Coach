@@ -472,6 +472,8 @@ export type Session = {
   /** Set when this attempt is a retry of an earlier session. */
   retryOf?: string;
   attempt: number;
+  /** "ai" = transcribed + scored by the real AI pipeline. Anything else is legacy mock data. */
+  source?: "ai";
 };
 
 export type Profile = {
@@ -498,7 +500,7 @@ const defaultProfile: Profile = {
   strictFillers: false,
 };
 
-function seedSessions(): Session[] {
+export function seedSessions(): Session[] {
   const day = 86_400_000;
   const now = Date.now();
   const picks: { s: string; ago: number; d: number }[] = [
@@ -526,7 +528,7 @@ function seedSessions(): Session[] {
 }
 
 function initial(): StoreState {
-  return { profile: { ...defaultProfile }, sessions: seedSessions() };
+  return { profile: { ...defaultProfile }, sessions: [] };
 }
 
 let state: StoreState | null = null;
@@ -537,7 +539,11 @@ function read(): StoreState {
   if (typeof window === "undefined") return initial();
   try {
     const raw = window.localStorage.getItem(KEY);
-    state = raw ? (JSON.parse(raw) as StoreState) : initial();
+    const parsed = raw ? (JSON.parse(raw) as StoreState) : initial();
+    // Only AI-analysed sessions count toward scores; drop legacy mock/sample sessions.
+    const real = parsed.sessions.filter((x) => x.source === "ai");
+    state = { ...parsed, sessions: real };
+    if (real.length !== parsed.sessions.length) window.localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
     state = initial();
   }
