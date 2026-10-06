@@ -288,6 +288,8 @@ function Round({ mode, onExit }: { mode: "learn" | "review"; onExit: () => void 
     return out;
   }, [mode]);
 
+  // Snapshot which words were already known when the round started.
+  const [knownAtStart] = useState(() => new Set(Object.keys(vocabStore.get().cards)));
   const [i, setI] = useState(0);
   const [step, setStep] = useState<"card" | "write" | "result">("card");
   const [sentence, setSentence] = useState("");
@@ -301,7 +303,7 @@ function Round({ mode, onExit }: { mode: "learn" | "review"; onExit: () => void 
   const s = useVocab();
 
   const word = queue[i];
-  const isReview = mode === "review" || !!s.cards[word?.id ?? ""]?.seen;
+  const isReview = mode === "review" || knownAtStart.has(word?.id ?? "");
 
   if (!word || i >= queue.length) {
     return (
