@@ -263,6 +263,7 @@ function Practice() {
         createdAt: Date.now(),
         analysis: body.analysis,
         attempt: prior + 1,
+        source: "ai" as const,
       };
       store.addSession(session);
       void navigate({ to: "/results/$sessionId", params: { sessionId: session.id } });
