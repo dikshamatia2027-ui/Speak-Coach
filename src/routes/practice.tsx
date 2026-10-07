@@ -1,9 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Mic, Square, ArrowLeft, RotateCcw, Pause, Play } from "lucide-react";
+import { Mic, Square, ArrowLeft, RotateCcw, Pause, Play, Crown, Lock, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { ProUpgradeModal } from "@/components/pro-upgrade-modal";
 import {
+  checkPracticeAccess,
+  currentWeekSessions,
+  FREE_WEEKLY_LIMIT,
   goalById,
   scenariosForGoal,
   store,
@@ -128,7 +132,17 @@ function Waveform({
 }
 
 function Practice() {
-  const { profile } = store.get();
+  const { profile, sessions } = store.get();
+  const isPro = profile.plan === "pro";
+  const thisWeekSessions = useMemo(() => currentWeekSessions(sessions), [sessions]);
+  const sessionsThisWeek = thisWeekSessions.length;
+  const isWeeklyLimitReached = !isPro && sessionsThisWeek >= FREE_WEEKLY_LIMIT;
+
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [modalTriggerReason, setModalTriggerReason] = useState<
+    "quota_reached" | "scenario_locked" | "advanced_analytics" | null
+  >(null);
+
   const goalScenarios = useMemo(
     () => scenariosForGoal(profile.goal ?? "confidence"),
     [profile.goal],
@@ -155,7 +169,33 @@ function Practice() {
     [],
   );
 
+  function handleSelectScenario(sc: Scenario) {
+    if (!isPro && sc.tier === "pro") {
+      setModalTriggerReason("scenario_locked");
+      setShowUpgradeModal(true);
+      return;
+    }
+    if (!isPro && isWeeklyLimitReached) {
+      setModalTriggerReason("quota_reached");
+      setShowUpgradeModal(true);
+      return;
+    }
+    setScenario(sc);
+    setPhase("ready");
+  }
+
   async function startCountdown() {
+    if (!isPro && isWeeklyLimitReached) {
+      setModalTriggerReason("quota_reached");
+      setShowUpgradeModal(true);
+      return;
+    }
+    if (!isPro && scenario?.tier === "pro") {
+      setModalTriggerReason("scenario_locked");
+      setShowUpgradeModal(true);
+      return;
+    }
+
     setError(null);
     // Ask for the mic first so the permission prompt doesn't interrupt the countdown.
     try {
@@ -282,30 +322,122 @@ function Practice() {
 
   return (
     <AppShell>
+      {/* Upgrade dialog */}
+      <ProUpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        triggerReason={modalTriggerReason}
+      />
+
       {phase === "pick" && (
         <div className="animate-rise">
-          <h1 className="text-3xl font-bold sm:text-4xl">Choose your scenario</h1>
-          <p className="mt-2 text-muted-foreground">
-            Based on your goal: {goalById(profile.goal ?? "confidence")?.label}. Each takes about a
-            minute.
-          </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            {goalScenarios.map((sc) => (
-              <button
-                key={sc.id}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold sm:text-4xl">Choose your scenario</h1>
+              <p className="mt-2 text-muted-foreground">
+                Based on your goal: {goalById(profile.goal ?? "confidence")?.label}. Each takes about a
+                minute.
+              </p>
+            </div>
+            
+            {/* Free tier weekly status badge */}
+            {!isPro ? (
+              <div className="rounded-2xl border border-border/80 bg-card p-3 sm:px-4 flex items-center gap-3">
+                <div className="text-right">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Free Plan Limit
+                  </div>
+                  <div className="text-sm font-bold text-foreground">
+                    <span className={cn(isWeeklyLimitReached ? "text-destructive" : "text-primary")}>
+                      {sessionsThisWeek} / {FREE_WEEKLY_LIMIT}
+                    </span>{" "}
+                    sessions this week
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 text-xs font-bold gap-1"
+                  onClick={() => {
+                    setModalTriggerReason(isWeeklyLimitReached ? "quota_reached" : null);
+                    setShowUpgradeModal(true);
+                  }}
+                >
+                  <Crown className="size-3 fill-amber-500" /> Unlock Unlimited
+                </Button>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 rounded-2xl bg-amber-500/10 border border-amber-500/30 px-4 py-2 text-xs font-bold text-amber-600 dark:text-amber-400">
+                <Crown className="size-4 fill-amber-500" /> Pro Member · Unlimited Practice
+              </div>
+            )}
+          </div>
+
+          {/* Warning banner if free limit reached */}
+          {isWeeklyLimitReached && (
+            <div className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <Zap className="size-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-sm text-foreground">
+                    You've reached your free weekly limit ({FREE_WEEKLY_LIMIT}/{FREE_WEEKLY_LIMIT} sessions)
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Your quota resets every Monday. Upgrade to SpeakCoach Pro for unlimited practice attempts, specialized executive scenarios, and advanced analytics.
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="hero"
+                size="sm"
+                className="shrink-0 gap-1.5"
                 onClick={() => {
-                  setScenario(sc);
-                  setPhase("ready");
+                  setModalTriggerReason("quota_reached");
+                  setShowUpgradeModal(true);
                 }}
-                className="surface group p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift"
               >
-                <p className="text-lg font-semibold group-hover:text-primary">{sc.prompt}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{sc.context}</p>
-                <p className="mt-4 text-xs font-semibold tracking-wide text-primary uppercase">
-                  {sc.seconds}s target
-                </p>
-              </button>
-            ))}
+                <Crown className="size-3.5 fill-primary-foreground" /> Upgrade to Pro
+              </Button>
+            </div>
+          )}
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {goalScenarios.map((sc) => {
+              const isLocked = !isPro && sc.tier === "pro";
+              return (
+                <button
+                  key={sc.id}
+                  onClick={() => handleSelectScenario(sc)}
+                  className={cn(
+                    "surface group relative p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift cursor-pointer",
+                    isLocked && "border-dashed border-primary/30 bg-card/60",
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-lg font-semibold group-hover:text-primary leading-snug">
+                      {sc.prompt}
+                    </p>
+                    {sc.tier === "pro" && (
+                      <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                        {isLocked ? <Lock className="size-3" /> : <Crown className="size-3 fill-amber-500" />}
+                        PRO {sc.badge ? `· ${sc.badge}` : ""}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">{sc.context}</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <p className="text-xs font-semibold tracking-wide text-primary uppercase">
+                      {sc.seconds}s target
+                    </p>
+                    {isLocked && (
+                      <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <Lock className="size-3" /> Unlock with Pro
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
           {goalScenarios.length === 0 && (
             <p className="mt-8 text-sm text-muted-foreground">No scenarios for this goal yet.</p>

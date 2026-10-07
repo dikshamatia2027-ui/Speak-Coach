@@ -1,8 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, Lightbulb, RefreshCw, Sparkles } from "lucide-react";
+import {
+  Activity,
+  ArrowLeft,
+  CheckCircle2,
+  Crown,
+  Lightbulb,
+  Lock,
+  PieChart,
+  RefreshCw,
+  Sparkles,
+  Zap,
+} from "lucide-react";
+import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { MetricBar, ScoreRing } from "@/components/score";
 import { Button } from "@/components/ui/button";
+import { ProUpgradeModal } from "@/components/pro-upgrade-modal";
 import { useStore } from "@/hooks/use-store";
 import { goalById, metricCoaching, scoreTone, timeAgo } from "@/lib/speakcoach";
 import { cn } from "@/lib/utils";
@@ -30,8 +43,10 @@ export const Route = createFileRoute("/results/$sessionId")({
 
 function Results() {
   const { sessionId } = Route.useParams();
-  const { sessions } = useStore();
+  const { sessions, profile } = useStore();
   const navigate = useNavigate();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const isPro = profile.plan === "pro";
   const session = sessions.find((s) => s.id === sessionId);
 
   if (!session) {
@@ -61,6 +76,12 @@ function Results() {
 
   return (
     <AppShell>
+      <ProUpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        triggerReason="advanced_analytics"
+      />
+
       <div className="animate-rise">
         <button
           onClick={() => void navigate({ to: "/dashboard" })}
@@ -178,6 +199,156 @@ function Results() {
               </ul>
             </div>
           </div>
+        </div>
+
+        {/* --- Advanced Pro Analytics Section --- */}
+        <div className="surface mt-6 p-6 sm:p-8 relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="size-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <Crown className="size-5 fill-amber-500" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold">Advanced Speech Analytics</h2>
+                  <span className="rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-xs font-extrabold uppercase">
+                    PRO
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Deep acoustic pacing distributions, filler density breakdown &amp; vocabulary uniqueness.
+                </p>
+              </div>
+            </div>
+
+            {!isPro && (
+              <Button
+                variant="hero"
+                size="sm"
+                className="shrink-0 gap-1.5"
+                onClick={() => setShowUpgradeModal(true)}
+              >
+                <Crown className="size-3.5 fill-primary-foreground" /> Unlock Pro Analytics
+              </Button>
+            )}
+          </div>
+
+          {isPro ? (
+            <div className="mt-6 grid gap-5 sm:grid-cols-3">
+              {/* Filler words list */}
+              <div className="rounded-2xl bg-secondary/70 p-5 border border-border/60">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Filler Frequency
+                  </p>
+                  <PieChart className="size-4 text-primary" />
+                </div>
+                {session.analysis.fillerWords.length > 0 ? (
+                  <div className="mt-4 space-y-2.5">
+                    {session.analysis.fillerWords.map((fw) => (
+                      <div key={fw.word} className="flex items-center justify-between text-sm">
+                        <span className="font-mono text-xs font-semibold bg-background/80 px-2 py-1 rounded-lg">
+                          “{fw.word}”
+                        </span>
+                        <span className="font-bold tabular-nums text-muted-foreground">
+                          {fw.count} {fw.count === 1 ? "time" : "times"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-4 text-xs text-success font-medium">Zero filler words detected! Outstanding control.</p>
+                )}
+              </div>
+
+              {/* Pacing cadence */}
+              <div className="rounded-2xl bg-secondary/70 p-5 border border-border/60">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Pacing Stability
+                  </p>
+                  <Activity className="size-4 text-primary" />
+                </div>
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-baseline justify-between text-sm">
+                    <span className="text-xs text-muted-foreground">Target speech rate</span>
+                    <span className="font-semibold text-xs">130 – 160 wpm</span>
+                  </div>
+                  <div className="flex items-baseline justify-between text-sm">
+                    <span className="text-xs text-muted-foreground">Your rate</span>
+                    <span className={cn(
+                      "font-bold tabular-nums",
+                      session.analysis.wordsPerMinute >= 130 && session.analysis.wordsPerMinute <= 160
+                        ? "text-success"
+                        : "text-warning"
+                    )}>
+                      {session.analysis.wordsPerMinute} wpm
+                    </span>
+                  </div>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="bg-brand h-full rounded-full"
+                      style={{
+                        width: `${Math.min(100, (session.analysis.wordsPerMinute / 180) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground pt-1">
+                    {session.analysis.wordsPerMinute > 160
+                      ? "Pacing is slightly fast. Try inserting 1-second strategic pauses."
+                      : session.analysis.wordsPerMinute < 120
+                        ? "Pacing is measured. Aim to energize transitions."
+                        : "Optimal conversational tempo for audience retention."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Vocabulary density */}
+              <div className="rounded-2xl bg-secondary/70 p-5 border border-border/60">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Vocabulary Range
+                  </p>
+                  <Sparkles className="size-4 text-amber-500" />
+                </div>
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-baseline justify-between text-sm">
+                    <span className="text-xs text-muted-foreground">Unique word ratio</span>
+                    <span className="font-bold tabular-nums text-foreground">
+                      {Math.round((new Set(session.transcript.toLowerCase().split(/\s+/)).size / Math.max(1, session.analysis.wordCount)) * 100)}%
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between text-sm">
+                    <span className="text-xs text-muted-foreground">Total word count</span>
+                    <span className="font-bold tabular-nums text-foreground">{session.analysis.wordCount} words</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground pt-2">
+                    Advanced linguistic scoring detects repetition and flags opportunities for higher-impact verbs.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-6 rounded-2xl border border-dashed border-border/80 bg-secondary/40 p-6 sm:p-8 text-center flex flex-col items-center justify-center">
+              <div className="size-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
+                <Lock className="size-6" />
+              </div>
+              <h3 className="text-base font-bold text-foreground">
+                Advanced Analytics are Locked
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground max-w-md">
+                Pro members receive in-depth syllable-level pacing stability, filler frequency charts, vocabulary diversity ratios, and vocal confidence heatmaps.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-bold gap-1.5"
+                onClick={() => setShowUpgradeModal(true)}
+              >
+                <Crown className="size-3.5 fill-amber-500" /> Upgrade to Pro to view
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="surface mt-6 p-6">

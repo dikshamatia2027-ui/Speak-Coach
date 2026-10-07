@@ -48,23 +48,31 @@ export const GOALS: Goal[] = [
   },
 ];
 
+export type ScenarioTier = "free" | "pro";
+
 export type Scenario = {
   id: string;
   goal: GoalId;
   prompt: string;
   context: string;
   seconds: number;
+  tier?: ScenarioTier;
+  badge?: string;
   /** Used when live transcription is unavailable. TODO(api): remove with real STT. */
   sampleTranscript: string;
 };
 
+export const FREE_WEEKLY_LIMIT = 3;
+
 export const SCENARIOS: Scenario[] = [
+  // --- Standard / Free Scenarios ---
   {
     id: "int-1",
     goal: "interview",
     prompt: "Tell me about yourself.",
     context: "Final-round interview. The hiring manager opens with the classic question.",
     seconds: 90,
+    tier: "free",
     sampleTranscript:
       "So, um, I guess I'd say I'm a product designer with about six years of experience, and, you know, I've mostly worked on data-heavy tools. I started at a small agency where I basically did a bit of everything, and then I moved into a fintech company where I led the redesign of our onboarding flow, which, um, cut drop-off by around thirty percent. I really like problems where the interface has to make something complicated feel obvious. Outside of work I actually run a small newsletter about design systems, which kind of keeps me sharp. And yeah, I'm looking for a role where I can own a product area end to end.",
   },
@@ -74,15 +82,42 @@ export const SCENARIOS: Scenario[] = [
     prompt: "Describe a time you failed and what you learned.",
     context: "The interviewer wants honesty plus a clear lesson, in under two minutes.",
     seconds: 100,
+    tier: "free",
     sampleTranscript:
       "Yeah, so, one that comes to mind, um, we shipped a pricing page redesign without testing it on mobile properly. Basically conversion dropped like eighteen percent in the first week and I, you know, I hadn't pushed for a staged rollout. I owned it in the retro, we rolled back within two days, and after that I made staged rollouts a default for anything touching revenue. The lesson for me was that being fast is only useful if you can also be reversible.",
   },
+  // --- Specialized / Pro Scenarios for Interview ---
+  {
+    id: "int-pro-1",
+    goal: "interview",
+    prompt: "Executive Leadership: Defend a controversial architectural rewrite.",
+    context: "CTO & VP Engineering grilling your decision to pause roadmap features for tech debt.",
+    seconds: 120,
+    tier: "pro",
+    badge: "Specialized",
+    sampleTranscript:
+      "I appreciate the concern about near-term feature delivery. However, our incident rate doubled over the last two quarters, costing us fifteen hours of customer-facing downtime. Pausing non-critical features for six weeks allows us to decouple the core checkout monolith into resilient services, cutting our p99 latency by half and preventing cascading failovers. In the long run, this enables faster iteration and protects enterprise ARR.",
+  },
+  {
+    id: "int-pro-2",
+    goal: "interview",
+    prompt: "Salary & Compensation Negotiation: Counter a below-band offer.",
+    context: "Recruiter phone screen. You bring high leverage and want a 15% bump plus equity match.",
+    seconds: 90,
+    tier: "pro",
+    badge: "Specialized",
+    sampleTranscript:
+      "Thank you for extending the offer—I'm genuinely excited about the team and the roadmap. Given the scope of leading the cross-functional infrastructure team and my background scaling similar distributed systems, I was targeting a base closer to one hundred and ninety thousand, alongside competitive equity. If we can bridge that gap, I'm prepared to sign today.",
+  },
+
+  // --- Presentation Scenarios ---
   {
     id: "pres-1",
     goal: "presentation",
     prompt: "Open a 10-minute talk about a project you are proud of.",
     context: "A 60-person internal all-hands. You get the first 60 seconds to hook them.",
     seconds: 75,
+    tier: "free",
     sampleTranscript:
       "Alright, so, um, today I want to talk about the search rebuild. Last year, basically, our users were, you know, abandoning search about half the time, which is kind of a huge number when search is how people find everything. So we spent a quarter rebuilding the ranking, and I want to walk you through what we learned, um, because I think a lot of it applies to other teams too.",
   },
@@ -92,33 +127,90 @@ export const SCENARIOS: Scenario[] = [
     prompt: "Explain your work to someone outside your field in one minute.",
     context: "A cross-department showcase. No jargon allowed.",
     seconds: 60,
+    tier: "free",
     sampleTranscript:
       "So basically I work on the part of the app that decides what you see first. Um, imagine a shop where the shelves rearrange themselves depending on who walks in, right? That's kind of what we do, and, you know, the tricky part is doing it fast enough that nobody notices it happening.",
   },
+  // --- Specialized / Pro Presentation Scenarios ---
+  {
+    id: "pres-pro-1",
+    goal: "presentation",
+    prompt: "Keynote / Town Hall: Deliver a crisis turnaround vision.",
+    context: "Company-wide town hall after missing quarterly growth targets.",
+    seconds: 120,
+    tier: "pro",
+    badge: "Specialized",
+    sampleTranscript:
+      "I want to address the numbers directly. We missed our target by twelve percent this quarter, and that falls on leadership. But rather than chasing vanity metrics, we are consolidating our focus onto three high-margin enterprise products. We have already streamlined operational burn and improved retention among top cohorts. Here is our exact three-step plan to return to profitability by Q4.",
+  },
+  {
+    id: "pres-pro-2",
+    goal: "presentation",
+    prompt: "TED-Style Opening: Deliver a memorable hook with personal vulnerability.",
+    context: "Industry conference stage with 500 attendees. Capture the audience in 60 seconds.",
+    seconds: 75,
+    tier: "pro",
+    badge: "Specialized",
+    sampleTranscript:
+      "Three years ago, I stood on a train platform convinced that my entire startup was a failure. We had eighty dollars left in the bank and six weeks of payroll due. But the decision we made on that very platform didn't just save the company—it reshaped how four thousand teams collaborate every single day.",
+  },
+
+  // --- Meeting Scenarios ---
   {
     id: "meet-1",
     goal: "meeting",
     prompt: "Disagree with a decision your team just made, respectfully.",
     context: "Weekly planning. You have 45 seconds before the topic closes.",
     seconds: 60,
+    tier: "free",
     sampleTranscript:
       "Can I, um, push back slightly on that? I think the timeline works but I'm a bit worried we're committing before we've seen the migration data. Maybe, you know, we could take two days to validate, and if it holds up we keep the same ship date. I just don't want us to find out in week three.",
   },
+  // --- Specialized / Pro Meeting Scenarios ---
+  {
+    id: "meet-pro-1",
+    goal: "meeting",
+    prompt: "Boardroom Alignment: Handle an aggressive hostile stakeholder interruption.",
+    context: "High-stakes stakeholder meeting where a partner challenges your project budget.",
+    seconds: 90,
+    tier: "pro",
+    badge: "Specialized",
+    sampleTranscript:
+      "That is a fair question regarding the capital allocation. Let me clarify why the upfront investment in automated testing infrastructure directly reduces our quarterly bug triage expenses by forty percent. Let us review slide four together to inspect the exact ROI breakdown.",
+  },
+
+  // --- Sales Scenarios ---
   {
     id: "sales-1",
     goal: "sales",
     prompt: "Pitch your product to a skeptical buyer in 60 seconds.",
     context: "A cold discovery call. The buyer already uses a competitor.",
     seconds: 70,
+    tier: "free",
     sampleTranscript:
       "Sure, so, um, most teams we talk to are already using something, right, and the thing they complain about is that reporting takes three days to arrive. What we do differently is, basically, everything is live, so your team sees the number the moment it changes. Customers like Northwind cut their reporting cycle from three days to, um, about twenty minutes. I'd love to just show you it on your own data for fifteen minutes.",
   },
+  // --- Specialized / Pro Sales Scenarios ---
+  {
+    id: "sales-pro-1",
+    goal: "sales",
+    prompt: "Enterprise Closing: Reframe a 40% price objection during procurement.",
+    context: "CFO procurement gatekeeper pushing for massive discount before quarter end.",
+    seconds: 90,
+    tier: "pro",
+    badge: "Specialized",
+    sampleTranscript:
+      "I understand budget constraints are top of mind. When comparing unit cost, remember our platform eliminates the need for two separate third-party analytics add-ons, saving your team over fifty thousand dollars annually. When factoring in implementation speed and security compliance, this package delivers net-positive return by month two.",
+  },
+
+  // --- Confidence Scenarios ---
   {
     id: "conf-1",
     goal: "confidence",
     prompt: "Introduce yourself to a room of strangers at an event.",
     context: "A networking evening. Warm, short, memorable.",
     seconds: 45,
+    tier: "free",
     sampleTranscript:
       "Hi, um, I'm Alex, I work on, you know, making complicated software feel simple, mostly for finance teams. I'm here because I'm kind of obsessed with how people learn new tools, and, yeah, I'd love to hear what you're working on.",
   },
@@ -128,8 +220,21 @@ export const SCENARIOS: Scenario[] = [
     prompt: "Give a one-minute toast at a friend's celebration.",
     context: "Twenty people, glasses raised, no notes.",
     seconds: 55,
+    tier: "free",
     sampleTranscript:
       "Okay, um, so I've known Sam for, like, eleven years now, and the thing about Sam is that she just shows up. You know, quietly, every time. And I think tonight is basically all of us showing up for her for once. So, yeah, to Sam.",
+  },
+  // --- Specialized / Pro Confidence Scenarios ---
+  {
+    id: "conf-pro-1",
+    goal: "confidence",
+    prompt: "Impromptu Media / Press: Answer an unexpected live question on camera.",
+    context: "Surprise live interview at a conference with zero preparation time.",
+    seconds: 75,
+    tier: "pro",
+    badge: "Specialized",
+    sampleTranscript:
+      "Great question. The most important trend we're witnessing today isn't just automation—it's how human judgment and empathetic communication elevate automated workflows. Organizations that invest in both their people's voice and their technical foundation are the ones outperforming the market.",
   },
 ];
 
@@ -476,6 +581,8 @@ export type Session = {
   source?: "ai";
 };
 
+export type SubscriptionTier = "free" | "pro";
+
 export type Profile = {
   name: string;
   goal: GoalId | null;
@@ -484,6 +591,7 @@ export type Profile = {
   onboarded: boolean;
   reminders: boolean;
   strictFillers: boolean;
+  plan: SubscriptionTier;
 };
 
 export type StoreState = { profile: Profile; sessions: Session[] };
@@ -498,6 +606,7 @@ const defaultProfile: Profile = {
   onboarded: false,
   reminders: true,
   strictFillers: false,
+  plan: "free",
 };
 
 export function seedSessions(): Session[] {
@@ -540,6 +649,10 @@ function read(): StoreState {
   try {
     const raw = window.localStorage.getItem(KEY);
     const parsed = raw ? (JSON.parse(raw) as StoreState) : initial();
+    // Ensure profile has default plan if migrating from older state
+    if (!parsed.profile.plan) {
+      parsed.profile.plan = "free";
+    }
     // Only AI-analysed sessions count toward scores; drop legacy mock/sample sessions.
     const real = parsed.sessions.filter((x) => x.source === "ai");
     state = { ...parsed, sessions: real };
@@ -693,4 +806,40 @@ export function milestones(sessions: Session[]): Milestone[] {
     { id: "clean", title: "Filler-free", detail: "Finish a response with zero fillers", current: sessions.length && cleanest === 0 ? 1 : 0, target: 1 },
   ];
   return defs.map((m) => ({ ...m, current: Math.min(m.current, m.target), done: m.current >= m.target }));
+}
+
+export function currentWeekSessions(sessions: Session[]) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // Monday start
+  const startMs = start.getTime();
+  return sessions.filter((s) => s.createdAt >= startMs);
+}
+
+export function checkPracticeAccess(profile: Profile, sessions: Session[], scenario?: Scenario | null) {
+  const isPro = profile.plan === "pro";
+  const thisWeekCount = currentWeekSessions(sessions).length;
+  const isScenarioProOnly = scenario?.tier === "pro";
+
+  if (!isPro && isScenarioProOnly) {
+    return {
+      allowed: false,
+      reason: "scenario_locked" as const,
+      message: "This specialized scenario requires SpeakCoach Pro.",
+    };
+  }
+
+  if (!isPro && thisWeekCount >= FREE_WEEKLY_LIMIT) {
+    return {
+      allowed: false,
+      reason: "quota_reached" as const,
+      message: `You have reached your free weekly limit of ${FREE_WEEKLY_LIMIT} practice sessions. Upgrade to Pro for unlimited practice.`,
+    };
+  }
+
+  return {
+    allowed: true,
+    reason: null,
+    message: "",
+  };
 }

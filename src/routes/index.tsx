@@ -207,6 +207,109 @@ function Landing() {
         </div>
       </section>
 
+      {/* Free vs Pro Pricing Section */}
+      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-20">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <h2 className="text-3xl font-bold sm:text-4xl">Simple, transparent plans</h2>
+          <p className="mt-3 text-muted-foreground">
+            Start for free to test the waters, or go Pro to unlock unlimited practice and executive-level analytics.
+          </p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-2 max-w-4xl mx-auto">
+          {/* Free Tier */}
+          <div className="surface p-8 flex flex-col justify-between border-2 border-border/80 relative">
+            <div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold">Free Plan</h3>
+                <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-muted-foreground">
+                  Get Started
+                </span>
+              </div>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="font-display text-4xl font-extrabold">$0</span>
+                <span className="text-sm text-muted-foreground">/ month forever</span>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Perfect for casual speakers and trying out AI speech scoring.
+              </p>
+
+              <ul className="mt-6 space-y-3.5 border-t border-border pt-6 text-sm">
+                <li className="flex items-center gap-3">
+                  <Check className="size-4 text-success shrink-0" />
+                  <span><strong>3 practice sessions</strong> per week</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="size-4 text-success shrink-0" />
+                  <span>Foundational speaking scenarios</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="size-4 text-success shrink-0" />
+                  <span>Instant AI transcription &amp; basic score report</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="size-4 text-success shrink-0" />
+                  <span>Pace &amp; filler count tracking</span>
+                </li>
+              </ul>
+            </div>
+
+            <Button asChild variant="outline" size="xl" className="mt-8 w-full">
+              <Link to="/onboarding">Get started for free</Link>
+            </Button>
+          </div>
+
+          {/* Pro Tier */}
+          <div className="surface p-8 flex flex-col justify-between border-2 border-primary relative shadow-lift bg-card">
+            <div className="absolute -top-3.5 right-6 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white px-3.5 py-1 text-xs font-bold uppercase tracking-wider shadow-sm">
+              Most Popular
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold">SpeakCoach Pro</h3>
+                </div>
+                <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                  PRO
+                </span>
+              </div>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="font-display text-4xl font-extrabold">$12</span>
+                <span className="text-sm text-muted-foreground">/ month · cancel anytime</span>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                For ambitious professionals, executives, and frequent presenters.
+              </p>
+
+              <ul className="mt-6 space-y-3.5 border-t border-border pt-6 text-sm">
+                <li className="flex items-center gap-3">
+                  <Check className="size-4 text-primary font-bold shrink-0" />
+                  <span><strong>Unlimited</strong> practice sessions with zero weekly cap</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="size-4 text-primary font-bold shrink-0" />
+                  <span><strong>Specialized high-stakes scenarios</strong> (Boardroom, Salary Negotiation, Crisis Keynotes)</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="size-4 text-primary font-bold shrink-0" />
+                  <span><strong>Advanced Speech Analytics</strong> (Filler distribution, Pacing stability, Vocabulary richness)</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check className="size-4 text-primary font-bold shrink-0" />
+                  <span>Priority AI transcription speed &amp; retry comparison</span>
+                </li>
+              </ul>
+            </div>
+
+            <Button asChild variant="hero" size="xl" className="mt-8 w-full shadow-glow">
+              <Link to="/onboarding">
+                Upgrade to Pro <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
         <div className="bg-brand relative overflow-hidden rounded-[2rem] px-8 py-14 text-center shadow-glow sm:px-16">

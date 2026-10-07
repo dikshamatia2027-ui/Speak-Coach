@@ -120,6 +120,57 @@ function Settings() {
         </div>
 
         <div className="surface p-6">
+          <h2 className="text-lg font-semibold">Subscription &amp; Plan</h2>
+          <div className="mt-4 rounded-2xl bg-secondary/80 p-4 border border-border/60">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Plan</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-lg font-bold capitalize">{profile.plan} Plan</span>
+                  {profile.plan === "pro" ? (
+                    <span className="rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-xs font-extrabold">
+                      PRO UNLOCKED
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-xs font-medium">
+                      3 sessions / week
+                    </span>
+                  )}
+                </div>
+              </div>
+              {profile.plan === "pro" ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    store.setProfile({ plan: "free" });
+                    toast.info("Switched to Free plan");
+                  }}
+                >
+                  Downgrade to Free
+                </Button>
+              ) : (
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={() => {
+                    store.setProfile({ plan: "pro" });
+                    toast.success("Upgraded to SpeakCoach Pro!");
+                  }}
+                >
+                  Upgrade to Pro ($12/mo)
+                </Button>
+              )}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {profile.plan === "pro"
+                ? "You have unlimited weekly practice sessions, full access to specialized executive scenarios, and deep-dive speech analytics."
+                : "Free plan includes 3 sessions per week and foundational metrics. Upgrade to Pro for unlimited sessions and specialized scenarios."}
+            </p>
+          </div>
+        </div>
+
+        <div className="surface p-6">
           <h2 className="text-lg font-semibold">Account</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Sessions are saved on this device for now. Sign-in and cloud sync can be switched on

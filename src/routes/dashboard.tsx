@@ -1,12 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Flame, Mic, Target, TrendingUp } from "lucide-react";
+import { ArrowRight, Crown, Flame, Mic, Target, TrendingUp, Zap } from "lucide-react";
+import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { ProgressPanel } from "@/components/progress";
 import { ScoreRing, Sparkline } from "@/components/score";
 import { Button } from "@/components/ui/button";
+import { ProUpgradeModal } from "@/components/pro-upgrade-modal";
 import { useStore } from "@/hooks/use-store";
 import {
   averageScore,
+  currentWeekSessions,
+  FREE_WEEKLY_LIMIT,
   goalById,
   scoreTone,
   sortedSessions,
@@ -39,6 +43,12 @@ export const Route = createFileRoute("/dashboard")({
 
 function Dashboard() {
   const { profile, sessions } = useStore();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const isPro = profile.plan === "pro";
+  const thisWeekSessions = currentWeekSessions(sessions);
+  const sessionsThisWeek = thisWeekSessions.length;
+  const isLimitReached = !isPro && sessionsThisWeek >= FREE_WEEKLY_LIMIT;
+
   const recent = sortedSessions(sessions).slice(0, 5);
   const avg = averageScore(sessions);
   const delta = trend(sessions);
@@ -50,6 +60,8 @@ function Dashboard() {
 
   return (
     <AppShell>
+      <ProUpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
+
       <div className="animate-rise flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm text-muted-foreground">
@@ -57,12 +69,67 @@ function Dashboard() {
           </p>
           <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Ready to speak?</h1>
         </div>
-        <Button asChild variant="hero" size="xl">
-          <Link to="/practice">
-            <Mic className="size-4" /> Practice now
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          {!isPro && (
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-bold gap-1.5"
+              onClick={() => setShowUpgradeModal(true)}
+            >
+              <Crown className="size-4 fill-amber-500" /> Go Pro
+            </Button>
+          )}
+          <Button asChild variant="hero" size="xl">
+            <Link to="/practice">
+              <Mic className="size-4" /> Practice now
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      {/* Free tier usage alert if limit reached or getting close */}
+      {!isPro && (
+        <div
+          className={cn(
+            "mt-6 rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all",
+            isLimitReached
+              ? "border-amber-500/40 bg-amber-500/10"
+              : "border-border/80 bg-card shadow-soft",
+          )}
+        >
+          <div className="flex items-start gap-3.5">
+            <div
+              className={cn(
+                "size-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5",
+                isLimitReached ? "bg-amber-500/20 text-amber-600 dark:text-amber-400" : "bg-primary/10 text-primary",
+              )}
+            >
+              <Zap className="size-4" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm text-foreground">
+                {isLimitReached
+                  ? `Free Weekly Limit Reached (${sessionsThisWeek}/${FREE_WEEKLY_LIMIT} sessions completed)`
+                  : `Free Plan: ${sessionsThisWeek} of ${FREE_WEEKLY_LIMIT} weekly sessions used`}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isLimitReached
+                  ? "Upgrade to Pro to practice without restrictions, access specialized executive scenarios, and view advanced analytics."
+                  : `You have ${Math.max(0, FREE_WEEKLY_LIMIT - sessionsThisWeek)} practice session${FREE_WEEKLY_LIMIT - sessionsThisWeek === 1 ? "" : "s"} left this week.`}
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant={isLimitReached ? "hero" : "outline"}
+            className="shrink-0 gap-1.5 font-bold"
+            onClick={() => setShowUpgradeModal(true)}
+          >
+            <Crown className="size-3.5 fill-current" /> {isLimitReached ? "Unlock Unlimited with Pro" : "Upgrade to Pro"}
+          </Button>
+        </div>
+      )}
 
       <div className="mt-8 grid gap-5 lg:grid-cols-3">
         <div className="surface flex flex-col items-center justify-center gap-3 p-8">

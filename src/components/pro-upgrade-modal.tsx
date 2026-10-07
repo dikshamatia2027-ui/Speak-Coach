@@ -1,0 +1,154 @@
+import * as React from "react";
+import { Check, Crown, Sparkles, X, Zap } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useStore } from "@/hooks/use-store";
+import { FREE_WEEKLY_LIMIT, store } from "@/lib/speakcoach";
+
+const PRO_BENEFITS = [
+  {
+    title: "Unlimited practice sessions",
+    desc: `Free tier is limited to ${FREE_WEEKLY_LIMIT} sessions/week. Pro has zero limits.`,
+    icon: Zap,
+  },
+  {
+    title: "Specialized high-stakes scenarios",
+    desc: "Executive defense, salary negotiation, crisis town halls & procurement pitch scenarios.",
+    icon: Crown,
+  },
+  {
+    title: "Advanced Deep-Dive Analytics",
+    desc: "Filler word distribution radar, pacing cadence graphs, sentiment & vocabulary diversity metrics.",
+    icon: Sparkles,
+  },
+  {
+    title: "Granular speech breakdown",
+    desc: "Word-by-word pause detection and tailored syllable clarity feedback.",
+    icon: Check,
+  },
+];
+
+export function ProUpgradeModal({
+  open,
+  onOpenChange,
+  triggerReason,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  triggerReason?: "quota_reached" | "scenario_locked" | "advanced_analytics" | null;
+}) {
+  const { profile } = useStore();
+  const isPro = profile.plan === "pro";
+
+  function handleUpgrade() {
+    store.setProfile({ plan: "pro" });
+    toast.success("Welcome to SpeakCoach Pro! All features unlocked.");
+    onOpenChange(false);
+  }
+
+  function handleDowngrade() {
+    store.setProfile({ plan: "free" });
+    toast.info("Switched back to Free plan.");
+    onOpenChange(false);
+  }
+
+  const headline =
+    triggerReason === "quota_reached"
+      ? `You've reached your free limit of ${FREE_WEEKLY_LIMIT} sessions this week`
+      : triggerReason === "scenario_locked"
+        ? "Unlock Specialized Pro Scenarios"
+        : triggerReason === "advanced_analytics"
+          ? "Unlock Advanced Pro Analytics"
+          : "Upgrade to SpeakCoach Pro";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl p-0 overflow-hidden border border-border shadow-2xl rounded-3xl bg-card">
+        {/* Header gradient banner */}
+        <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 sm:p-8 text-white">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/80">
+            <Crown className="size-4 text-amber-300 fill-amber-300" />
+            SpeakCoach Pro
+          </div>
+          <DialogHeader className="mt-2 text-left">
+            <DialogTitle className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+              {headline}
+            </DialogTitle>
+            <DialogDescription className="text-white/90 text-sm sm:text-base mt-1.5">
+              Take your spoken communication to executive level with unlimited AI coaching and deeper analytics.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        {/* Feature comparison list */}
+        <div className="p-6 sm:p-8 space-y-6">
+          <div className="grid gap-4">
+            {PRO_BENEFITS.map((b) => (
+              <div key={b.title} className="flex items-start gap-3.5">
+                <div className="size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                  <b.icon className="size-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground">{b.title}</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{b.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pricing pill */}
+          <div className="rounded-2xl bg-secondary/80 p-4 flex items-center justify-between border border-border/60">
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Monthly Plan</p>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <span className="text-2xl font-extrabold tabular-nums">$12</span>
+                <span className="text-xs text-muted-foreground">/ month · cancel anytime</span>
+              </div>
+            </div>
+            <span className="rounded-full bg-primary/15 text-primary text-xs font-bold px-3 py-1">
+              7-day risk-free
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            {!isPro ? (
+              <Button
+                variant="hero"
+                size="xl"
+                className="w-full flex-1 gap-2 text-base font-bold shadow-glow"
+                onClick={handleUpgrade}
+              >
+                <Zap className="size-4 fill-primary-foreground" /> Upgrade to Pro now
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full flex-1"
+                onClick={handleDowngrade}
+              >
+                Switch to Free Plan
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="lg"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => onOpenChange(false)}
+            >
+              Maybe later
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
