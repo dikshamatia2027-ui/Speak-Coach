@@ -124,21 +124,21 @@ function Landing() {
             </div>
 
             <div className="animate-rise relative [animation-delay:120ms]">
-              <div className="surface overflow-hidden p-2 shadow-lift">
+              <div className="surface overflow-hidden p-2 shadow-soft">
                 <img
                   src={heroImage}
                   alt="Abstract visualisation of a spoken voice waveform"
                   width={1440}
                   height={1088}
-                  className="w-full rounded-[1.4rem] object-cover"
+                  className="w-full rounded-xl object-cover"
                 />
               </div>
-              <div className="surface absolute -bottom-6 -left-2 hidden w-56 p-4 shadow-lift sm:block">
-                <p className="text-xs font-semibold text-muted-foreground">Latest attempt</p>
-                <p className="font-display mt-1 text-3xl font-bold">
-                  84<span className="text-base text-muted-foreground">/100</span>
+              <div className="surface absolute -bottom-5 -left-2 hidden w-52 p-3.5 shadow-lift sm:block">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Latest attempt</p>
+                <p className="font-display mt-0.5 text-2xl font-bold">
+                  84<span className="text-sm font-normal text-muted-foreground">/100</span>
                 </p>
-                <p className="mt-1 text-xs text-success">+11 vs. previous</p>
+                <p className="mt-0.5 text-xs font-medium text-success">+11 vs. previous</p>
               </div>
             </div>
           </div>
@@ -146,22 +146,22 @@ function Landing() {
       </section>
 
       {/* Steps */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <h2 className="text-2xl font-bold sm:text-3xl">How a session works</h2>
-        <p className="mt-2 max-w-xl text-muted-foreground">
-          Four steps, about five minutes, and a number you can actually move.
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-18">
+        <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">How a session works</h2>
+        <p className="mt-1.5 max-w-xl text-sm text-muted-foreground sm:text-base">
+          Four steps, about five minutes, and clear metrics you can measure and improve.
         </p>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s, i) => (
-            <div key={s.title} className="surface p-6 transition-shadow hover:shadow-lift">
-              <span className="bg-accent flex size-11 items-center justify-center rounded-2xl">
-                <s.icon className="size-5 text-accent-foreground" />
+            <div key={s.title} className="surface p-5 transition-all hover:border-border hover:shadow-lift">
+              <span className="bg-primary/10 flex size-9 items-center justify-center rounded-lg text-primary">
+                <s.icon className="size-4.5" />
               </span>
-              <p className="mt-5 text-xs font-bold tracking-widest text-muted-foreground">
+              <p className="mt-4 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
                 STEP {i + 1}
               </p>
-              <h3 className="mt-1 text-lg font-semibold">{s.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+              <h3 className="mt-1 text-base font-semibold">{s.title}</h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{s.body}</p>
             </div>
           ))}
         </div>
@@ -209,99 +209,100 @@ function Landing() {
 
       {/* Free vs Pro Pricing Section */}
       <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-20">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-3xl font-bold sm:text-4xl">Simple, transparent plans</h2>
-          <p className="mt-3 text-muted-foreground">
-            Start for free to test the waters, or go Pro to unlock unlimited practice and executive-level analytics.
+        <div className="mx-auto mb-10 max-w-2xl text-center">
+          <span className="text-xs font-semibold uppercase tracking-wider text-primary">Transparent pricing</span>
+          <h2 className="mt-1.5 text-2xl font-bold tracking-tight sm:text-3xl">Simple plans built for progress</h2>
+          <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+            Start free to build your baseline, or go Pro to unlock unlimited practice and executive-level acoustic analytics.
           </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2 max-w-4xl mx-auto">
+        <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-2">
           {/* Free Tier */}
-          <div className="surface p-8 flex flex-col justify-between border-2 border-border/80 relative">
+          <div className="surface flex flex-col justify-between p-6 sm:p-7 border border-border/80">
             <div>
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">Free Plan</h3>
-                <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-muted-foreground">
-                  Get Started
+                <h3 className="text-lg font-bold">Free Plan</h3>
+                <span className="rounded-md bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                  Starter
                 </span>
               </div>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="font-display text-4xl font-extrabold">$0</span>
-                <span className="text-sm text-muted-foreground">/ month forever</span>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="font-display text-3xl font-extrabold sm:text-4xl">$0</span>
+                <span className="text-xs text-muted-foreground">/ month forever</span>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Perfect for casual speakers and trying out AI speech scoring.
+              <p className="mt-2.5 text-xs text-muted-foreground">
+                Ideal for casual speakers testing AI speech feedback.
               </p>
 
-              <ul className="mt-6 space-y-3.5 border-t border-border pt-6 text-sm">
-                <li className="flex items-center gap-3">
-                  <Check className="size-4 text-success shrink-0" />
+              <ul className="mt-6 space-y-3 border-t border-border/60 pt-5 text-xs sm:text-sm">
+                <li className="flex items-center gap-2.5">
+                  <Check className="size-4 shrink-0 text-success" />
                   <span><strong>3 practice sessions</strong> per week</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="size-4 text-success shrink-0" />
+                <li className="flex items-center gap-2.5">
+                  <Check className="size-4 shrink-0 text-success" />
                   <span>Foundational speaking scenarios</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="size-4 text-success shrink-0" />
-                  <span>Instant AI transcription &amp; basic score report</span>
+                <li className="flex items-center gap-2.5">
+                  <Check className="size-4 shrink-0 text-success" />
+                  <span>Instant transcription &amp; 6-metric scorecard</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="size-4 text-success shrink-0" />
-                  <span>Pace &amp; filler count tracking</span>
+                <li className="flex items-center gap-2.5">
+                  <Check className="size-4 shrink-0 text-success" />
+                  <span>Basic pace &amp; filler tracking</span>
                 </li>
               </ul>
             </div>
 
-            <Button asChild variant="outline" size="xl" className="mt-8 w-full">
+            <Button asChild variant="outline" size="lg" className="mt-7 w-full">
               <Link to="/onboarding">Get started for free</Link>
             </Button>
           </div>
 
           {/* Pro Tier */}
-          <div className="surface p-8 flex flex-col justify-between border-2 border-primary relative shadow-lift bg-card">
-            <div className="absolute -top-3.5 right-6 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white px-3.5 py-1 text-xs font-bold uppercase tracking-wider shadow-sm">
-              Most Popular
+          <div className="surface relative flex flex-col justify-between border-2 border-primary/80 bg-card p-6 shadow-lift sm:p-7">
+            <div className="absolute -top-3 right-5 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-primary-foreground uppercase shadow-sm">
+              Recommended
             </div>
             <div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold">SpeakCoach Pro</h3>
+                  <h3 className="text-lg font-bold">SpeakCoach Pro</h3>
                 </div>
-                <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
                   PRO
                 </span>
               </div>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="font-display text-4xl font-extrabold">$12</span>
-                <span className="text-sm text-muted-foreground">/ month · cancel anytime</span>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="font-display text-3xl font-extrabold sm:text-4xl">$12</span>
+                <span className="text-xs text-muted-foreground">/ month · cancel anytime</span>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">
-                For ambitious professionals, executives, and frequent presenters.
+              <p className="mt-2.5 text-xs text-muted-foreground">
+                For ambitious professionals, managers, and frequent presenters.
               </p>
 
-              <ul className="mt-6 space-y-3.5 border-t border-border pt-6 text-sm">
-                <li className="flex items-center gap-3">
-                  <Check className="size-4 text-primary font-bold shrink-0" />
-                  <span><strong>Unlimited</strong> practice sessions with zero weekly cap</span>
+              <ul className="mt-6 space-y-3 border-t border-border/60 pt-5 text-xs sm:text-sm">
+                <li className="flex items-center gap-2.5">
+                  <Check className="size-4 shrink-0 font-bold text-primary" />
+                  <span><strong>Unlimited practice</strong> with no weekly limit</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="size-4 text-primary font-bold shrink-0" />
-                  <span><strong>Specialized high-stakes scenarios</strong> (Boardroom, Salary Negotiation, Crisis Keynotes)</span>
+                <li className="flex items-center gap-2.5">
+                  <Check className="size-4 shrink-0 font-bold text-primary" />
+                  <span><strong>High-stakes scenarios</strong> (Boardroom, Negotiation, Pitches)</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="size-4 text-primary font-bold shrink-0" />
-                  <span><strong>Advanced Speech Analytics</strong> (Filler distribution, Pacing stability, Vocabulary richness)</span>
+                <li className="flex items-center gap-2.5">
+                  <Check className="size-4 shrink-0 font-bold text-primary" />
+                  <span><strong>Advanced Speech Analytics</strong> (Pacing stability, fillers, variety)</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="size-4 text-primary font-bold shrink-0" />
-                  <span>Priority AI transcription speed &amp; retry comparison</span>
+                <li className="flex items-center gap-2.5">
+                  <Check className="size-4 shrink-0 font-bold text-primary" />
+                  <span>Attempt diff comparisons &amp; priority coaching</span>
                 </li>
               </ul>
             </div>
 
-            <Button asChild variant="hero" size="xl" className="mt-8 w-full shadow-glow">
+            <Button asChild variant="hero" size="lg" className="mt-7 w-full shadow-soft">
               <Link to="/onboarding">
                 Upgrade to Pro <ArrowRight className="size-4" />
               </Link>
@@ -311,19 +312,21 @@ function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-        <div className="bg-brand relative overflow-hidden rounded-[2rem] px-8 py-14 text-center shadow-glow sm:px-16">
-          <h2 className="text-3xl font-bold text-primary-foreground sm:text-4xl">
+      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-b from-card via-card to-secondary/30 p-8 text-center shadow-soft sm:p-12">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Your next talk deserves a rehearsal.
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-primary-foreground/85">
+          <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground sm:text-base">
             Pick a goal, speak for sixty seconds, and see exactly what to change.
           </p>
-          <Button asChild size="xl" variant="secondary" className="mt-8">
-            <Link to="/onboarding">
-              Start your first session <ArrowRight className="size-4" />
-            </Link>
-          </Button>
+          <div className="mt-6 flex justify-center">
+            <Button asChild size="lg" variant="hero">
+              <Link to="/onboarding">
+                Start your first session <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 

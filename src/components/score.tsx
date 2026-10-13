@@ -12,24 +12,24 @@ function tone(score: number) {
 
 export function ScoreRing({
   score,
-  size = 168,
+  size = 148,
   label = "Overall score",
 }: {
   score: number;
   size?: number;
   label?: string;
 }) {
-  const stroke = size / 12;
+  const stroke = Math.max(6, Math.round(size / 14));
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
 
   return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+    <div className="relative inline-flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="oklch(0.55 0.21 268)" />
-            <stop offset="100%" stopColor="oklch(0.64 0.19 320)" />
+            <stop offset="0%" stopColor="oklch(0.48 0.22 264)" />
+            <stop offset="100%" stopColor="oklch(0.58 0.2 315)" />
           </linearGradient>
         </defs>
         <circle
@@ -54,8 +54,8 @@ export function ScoreRing({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-display text-4xl font-bold tabular-nums">{score}</span>
-        <span className="mt-0.5 text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
+        <span className="font-display text-3xl sm:text-4xl font-extrabold tabular-nums tracking-tight text-foreground">{score}</span>
+        <span className="mt-0.5 text-[0.65rem] font-semibold tracking-wider text-muted-foreground uppercase">
           {label}
         </span>
       </div>
@@ -108,10 +108,10 @@ export function MetricBar({
 
 export function Sparkline({ values }: { values: number[] }) {
   if (values.length < 2) {
-    return <p className="text-xs text-muted-foreground">Two sessions unlock your trend line.</p>;
+    return <p className="text-xs text-muted-foreground">Record at least two sessions to unlock your historical trajectory.</p>;
   }
   const w = 220;
-  const h = 56;
+  const h = 50;
   const min = Math.min(...values) - 4;
   const max = Math.max(...values) + 4;
   const pts = values.map((v, i) => {
@@ -121,19 +121,19 @@ export function Sparkline({ values }: { values: number[] }) {
   });
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-14 w-full" preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${w} ${h}`} className="h-12 w-full" preserveAspectRatio="none">
       <defs>
         <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="oklch(0.55 0.21 278 / 0.35)" />
-          <stop offset="100%" stopColor="oklch(0.55 0.21 278 / 0)" />
+          <stop offset="0%" stopColor="oklch(0.48 0.22 264 / 0.25)" />
+          <stop offset="100%" stopColor="oklch(0.48 0.22 264 / 0)" />
         </linearGradient>
       </defs>
       <polygon points={`0,${h} ${pts.join(" ")} ${w},${h}`} fill="url(#sparkFill)" />
       <polyline
         points={pts.join(" ")}
         fill="none"
-        stroke="oklch(0.55 0.21 285)"
-        strokeWidth="2.5"
+        stroke="oklch(0.48 0.22 264)"
+        strokeWidth="2"
         strokeLinejoin="round"
         strokeLinecap="round"
         vectorEffect="non-scaling-stroke"

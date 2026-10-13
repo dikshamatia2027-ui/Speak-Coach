@@ -35,138 +35,156 @@ function Settings() {
 
   return (
     <AppShell>
-      <h1 className="text-3xl font-bold sm:text-4xl">Profile & settings</h1>
-      <p className="mt-2 text-muted-foreground">
-        {sessions.length} sessions recorded · average score {averageScore(sessions)}
-      </p>
-
-      <div className="mt-8 grid gap-5 lg:grid-cols-2">
-        <div className="surface p-6">
-          <h2 className="text-lg font-semibold">Your details</h2>
-          <label className="mt-5 block text-sm font-medium">Name</label>
-          <Input
-            value={profile.name}
-            placeholder="Your name"
-            onChange={(e) => store.setProfile({ name: e.target.value })}
-            className="mt-2 h-12 rounded-2xl px-4"
-          />
-          <p className="mt-6 text-sm font-medium">Sessions per week</p>
-          <div className="mt-2 flex gap-2">
-            {[2, 3, 5, 7].map((n) => (
-              <button
-                key={n}
-                onClick={() => store.setProfile({ weeklyTarget: n })}
-                className={cn(
-                  "h-11 flex-1 rounded-2xl border text-sm font-semibold transition-colors",
-                  profile.weeklyTarget === n
-                    ? "border-primary bg-accent text-accent-foreground"
-                    : "border-border bg-card text-muted-foreground",
-                )}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
+      <div className="max-w-4xl mx-auto">
+        <div className="border-b border-border/60 pb-5">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Profile &amp; Preferences</h1>
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+            Manage your practice cadence, coaching strictness, and plan subscription.
+          </p>
         </div>
 
-        <div className="surface p-6">
-          <h2 className="text-lg font-semibold">Practice goal</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Drives the scenarios you get.</p>
-          <div className="mt-4 space-y-2">
-            {GOALS.map((g) => (
-              <button
-                key={g.id}
-                onClick={() => store.setProfile({ goal: g.id })}
-                className={cn(
-                  "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-colors",
-                  profile.goal === g.id ? "border-primary bg-accent" : "border-border bg-card",
-                )}
-              >
-                <span className="text-sm font-medium">
-                  {g.emoji} {g.label}
-                </span>
-                {profile.goal === g.id && <Check className="size-4 text-primary" />}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="surface p-6">
-          <h2 className="text-lg font-semibold">Coaching preferences</h2>
-          <div className="mt-5 flex items-center justify-between gap-4">
-            <span>
-              <span className="block text-sm font-medium">Practice reminders</span>
-              <span className="block text-xs text-muted-foreground">
-                Nudge me when I fall behind my weekly target.
-              </span>
-            </span>
-            <Switch
-              checked={profile.reminders}
-              onCheckedChange={(v) => store.setProfile({ reminders: v })}
-            />
-          </div>
-          <div className="mt-5 flex items-center justify-between gap-4">
-            <span>
-              <span className="block text-sm font-medium">Strict filler detection</span>
-              <span className="block text-xs text-muted-foreground">
-                Count softer fillers like "so" and "right".
-              </span>
-            </span>
-            <Switch
-              checked={profile.strictFillers}
-              onCheckedChange={(v) => store.setProfile({ strictFillers: v })}
-            />
-          </div>
-        </div>
-
-        <div className="surface p-6">
-          <h2 className="text-lg font-semibold">Subscription &amp; Plan</h2>
-          <div className="mt-4 rounded-2xl bg-secondary/80 p-4 border border-border/60">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Plan</span>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-lg font-bold capitalize">{profile.plan} Plan</span>
-                  {profile.plan === "pro" ? (
-                    <span className="rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-xs font-extrabold">
-                      PRO UNLOCKED
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-xs font-medium">
-                      3 sessions / week
-                    </span>
-                  )}
-                </div>
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          {/* User details & weekly target */}
+          <div className="surface p-5 flex flex-col justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-foreground">Speaker Profile</h2>
+              <label className="mt-4 block text-xs font-semibold text-muted-foreground uppercase tracking-wider">Display Name</label>
+              <Input
+                value={profile.name}
+                placeholder="e.g. Alex Chen"
+                onChange={(e) => store.setProfile({ name: e.target.value })}
+                className="mt-1.5 h-10 rounded-lg px-3 text-sm"
+              />
+              <label className="mt-4 block text-xs font-semibold text-muted-foreground uppercase tracking-wider">Weekly Target (Sessions)</label>
+              <div className="mt-1.5 flex gap-1.5">
+                {[2, 3, 5, 7].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => store.setProfile({ weeklyTarget: n })}
+                    className={cn(
+                      "h-9 flex-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer",
+                      profile.weeklyTarget === n
+                        ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                        : "border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    )}
+                  >
+                    {n} / wk
+                  </button>
+                ))}
               </div>
-              {profile.plan === "pro" ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    store.setProfile({ plan: "free" });
-                    toast.info("Switched to Free plan");
-                  }}
-                >
-                  Downgrade to Free
-                </Button>
-              ) : (
-                <Button
-                  variant="hero"
-                  size="sm"
-                  onClick={() => {
-                    store.setProfile({ plan: "pro" });
-                    toast.success("Upgraded to SpeakCoach Pro!");
-                  }}
-                >
-                  Upgrade to Pro ($12/mo)
-                </Button>
-              )}
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              {profile.plan === "pro"
-                ? "You have unlimited weekly practice sessions, full access to specialized executive scenarios, and deep-dive speech analytics."
-                : "Free plan includes 3 sessions per week and foundational metrics. Upgrade to Pro for unlimited sessions and specialized scenarios."}
+            <p className="mt-4 text-[11px] text-muted-foreground">
+              Total sessions recorded: <span className="font-semibold text-foreground">{sessions.length}</span> · Average speech score: <span className="font-semibold text-foreground">{averageScore(sessions)} pts</span>
             </p>
+          </div>
+
+          {/* Goal selection */}
+          <div className="surface p-5">
+            <h2 className="text-sm font-bold text-foreground">Primary Focus Goal</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">Drives your scenario recommendations in the practice tab.</p>
+            <div className="mt-3 space-y-1.5">
+              {GOALS.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => store.setProfile({ goal: g.id })}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left transition-colors cursor-pointer",
+                    profile.goal === g.id
+                      ? "border-primary bg-primary/5 text-foreground font-semibold"
+                      : "border-border bg-card text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+                  )}
+                >
+                  <span className="text-xs flex items-center gap-2">
+                    <span>{g.emoji}</span>
+                    <span>{g.label}</span>
+                  </span>
+                  {profile.goal === g.id && <Check className="size-3.5 text-primary" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Coaching preferences */}
+          <div className="surface p-5">
+            <h2 className="text-sm font-bold text-foreground">Coaching Engine Preferences</h2>
+            <div className="mt-3 flex items-center justify-between gap-4 py-2 border-b border-border/50">
+              <div>
+                <span className="block text-xs font-semibold text-foreground">Practice reminders</span>
+                <span className="block text-[11px] text-muted-foreground">
+                  Nudge when falling behind weekly commitment.
+                </span>
+              </div>
+              <Switch
+                checked={profile.reminders}
+                onCheckedChange={(v) => store.setProfile({ reminders: v })}
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4 py-2">
+              <div>
+                <span className="block text-xs font-semibold text-foreground">Strict filler detection</span>
+                <span className="block text-[11px] text-muted-foreground">
+                  Include softer conversational words like "so", "well", and "right".
+                </span>
+              </div>
+              <Switch
+                checked={profile.strictFillers}
+                onCheckedChange={(v) => store.setProfile({ strictFillers: v })}
+              />
+            </div>
+          </div>
+
+          {/* Plan management */}
+          <div className="surface p-5">
+            <h2 className="text-sm font-bold text-foreground">Subscription &amp; Quota</h2>
+            <div className="mt-3 rounded-lg bg-secondary/60 p-3.5 border border-border/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Current Status</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-sm font-bold capitalize text-foreground">{profile.plan} Membership</span>
+                    {profile.plan === "pro" ? (
+                      <span className="rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-extrabold">
+                        PRO UNLIMITED
+                      </span>
+                    ) : (
+                      <span className="rounded-md bg-muted text-muted-foreground px-1.5 py-0.5 text-[10px] font-semibold border border-border">
+                        3 sessions / wk
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {profile.plan === "pro" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs font-medium"
+                    onClick={() => {
+                      store.setProfile({ plan: "free" });
+                      toast.info("Switched to Free plan");
+                    }}
+                  >
+                    Downgrade
+                  </Button>
+                ) : (
+                  <Button
+                    variant="hero"
+                    size="sm"
+                    className="h-8 text-xs font-bold"
+                    onClick={() => {
+                      store.setProfile({ plan: "pro" });
+                      toast.success("Upgraded to SpeakCoach Pro!");
+                    }}
+                  >
+                    Go Pro ($12/mo)
+                  </Button>
+                )}
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+                {profile.plan === "pro"
+                  ? "Unlimited sessions, specialized executive scenarios, and acoustic analytics enabled."
+                  : "3 sessions/week included. Upgrade for unlimited practice and executive scenarios."}
+              </p>
+            </div>
           </div>
         </div>
 

@@ -15,12 +15,12 @@ const NAV = [
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <Link to="/" className={cn("flex items-center gap-2.5", className)}>
-      <span className="bg-brand flex size-9 items-center justify-center rounded-xl shadow-glow">
+    <Link to="/" className={cn("flex items-center gap-2.5 group transition-opacity hover:opacity-90", className)}>
+      <span className="bg-brand flex size-8 items-center justify-center rounded-lg shadow-sm">
         <Mic className="size-4 text-primary-foreground" strokeWidth={2.5} />
       </span>
-      <span className="font-display text-[1.05rem] leading-none font-bold tracking-tight">
-        Speak<span className="text-brand">Coach</span>
+      <span className="font-display text-base leading-none font-bold tracking-tight text-foreground">
+        Speak<span className="text-primary">Coach</span>
       </span>
     </Link>
   );
@@ -33,22 +33,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isPro = profile.plan === "pro";
 
   return (
-    <div className="bg-soft min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary/20">
+      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur-md transition-all">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+          <div className="flex items-center gap-4">
             <Logo />
             {isPro ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+              <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
                 <Crown className="size-3 fill-amber-500 text-amber-500" /> PRO
               </span>
             ) : (
               <button
                 onClick={() => setShowUpgradeModal(true)}
-                className="hidden md:inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                className="hidden md:inline-flex items-center gap-1 rounded-md bg-secondary border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors cursor-pointer"
                 title="Upgrade to Pro"
               >
-                <Zap className="size-3 text-primary fill-primary" /> Free Plan · Upgrade
+                <Zap className="size-3 text-amber-500 fill-amber-500" /> Free Plan · Upgrade
               </button>
             )}
           </div>
@@ -58,29 +58,31 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                  "rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
                   path === item.to
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    ? "bg-secondary text-foreground font-semibold shadow-xs"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                 )}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {!isPro && (
               <Button
                 variant="outline"
                 size="sm"
-                className="hidden sm:inline-flex border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-semibold gap-1.5"
+                className="hidden sm:inline-flex border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-semibold gap-1 text-xs h-8 px-3"
                 onClick={() => setShowUpgradeModal(true)}
               >
-                <Crown className="size-3.5 fill-amber-500" /> Go Pro
+                <Crown className="size-3.5 fill-amber-500" /> Upgrade
               </Button>
             )}
-            <Button asChild variant="hero" size="sm">
-              <Link to="/practice">Practice</Link>
+            <Button asChild variant="hero" size="sm" className="h-8 px-3.5 text-xs font-semibold shadow-xs">
+              <Link to="/practice">
+                <Mic className="size-3.5" /> Practice
+              </Link>
             </Button>
           </div>
         </div>
@@ -88,17 +90,19 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <ProUpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
 
-      <main className="mx-auto max-w-6xl px-4 pt-8 pb-28 sm:px-6 sm:pb-16">{children}</main>
+      <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-24 sm:px-6 sm:pb-16 flex-1">
+        {children}
+      </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-background/90 backdrop-blur-xl sm:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-md sm:hidden">
         <div className="mx-auto flex max-w-md">
           {NAV.map((item) => (
             <Link
               key={item.to}
               to={item.to}
               className={cn(
-                "flex-1 py-3.5 text-center text-xs font-semibold transition-colors",
-                path === item.to ? "text-primary" : "text-muted-foreground",
+                "flex-1 py-3 text-center text-xs font-medium transition-colors",
+                path === item.to ? "text-primary font-semibold" : "text-muted-foreground",
               )}
             >
               {item.label}

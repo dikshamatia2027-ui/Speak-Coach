@@ -190,10 +190,10 @@ function Home({ onStart }: { onStart: (m: "learn" | "review") => void }) {
                 key={d}
                 onClick={() => vocabStore.setSettings({ difficulty: d })}
                 className={cn(
-                  "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                  "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
                   s.difficulty === d
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card hover:border-primary/40",
+                    ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                    : "border-border/70 bg-card hover:border-border hover:text-foreground",
                 )}
               >
                 {d === "auto" ? "Adaptive" : TIER_LABEL[d]}
@@ -308,16 +308,16 @@ function Round({ mode, onExit }: { mode: "learn" | "review"; onExit: () => void 
   if (!word || i >= queue.length) {
     return (
       <div className="animate-rise mx-auto max-w-md py-12 text-center">
-        <span className="bg-brand shadow-glow mx-auto flex size-16 items-center justify-center rounded-full">
-          <Trophy className="size-7 text-primary-foreground" />
+        <span className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 text-primary shadow-xs">
+          <Trophy className="size-6" />
         </span>
-        <h1 className="mt-6 text-2xl font-bold">{queue.length ? "Round complete" : "Nothing to review"}</h1>
+        <h1 className="mt-5 text-2xl font-bold tracking-tight">{queue.length ? "Round complete" : "Nothing to review"}</h1>
         {queue.length > 0 && (
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             {roundCorrect}/{queue.length} correct · +{roundPoints} pts · {answerStreak(s.attempts)} in a row
           </p>
         )}
-        <Button variant="hero" size="lg" className="mt-8" onClick={onExit}>
+        <Button variant="hero" size="lg" className="mt-6" onClick={onExit}>
           Back to overview
         </Button>
       </div>
@@ -516,7 +516,7 @@ function WordList({ label, words, muted }: { label: string; words: string[]; mut
         {words.map((w) => (
           <span
             key={w}
-            className={cn("rounded-full border px-2.5 py-0.5 text-sm", muted ? "border-border text-muted-foreground" : "border-primary/25 bg-primary/5")}
+            className={cn("rounded-md border px-2 py-0.5 text-xs font-medium", muted ? "border-border text-muted-foreground" : "border-primary/25 bg-primary/5 text-foreground")}
           >
             {w}
           </span>

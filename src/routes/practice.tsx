@@ -375,33 +375,33 @@ function Practice() {
 
           {/* Warning banner if free limit reached */}
           {isWeeklyLimitReached && (
-            <div className="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="mt-5 rounded-xl border border-amber-500/35 bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
               <div className="flex items-start gap-3">
-                <Zap className="size-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <Zap className="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-sm text-foreground">
-                    You've reached your free weekly limit ({FREE_WEEKLY_LIMIT}/{FREE_WEEKLY_LIMIT} sessions)
+                  <h3 className="font-semibold text-xs sm:text-sm text-foreground">
+                    Weekly free sessions cap reached ({FREE_WEEKLY_LIMIT}/{FREE_WEEKLY_LIMIT})
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Your quota resets every Monday. Upgrade to SpeakCoach Pro for unlimited practice attempts, specialized executive scenarios, and advanced analytics.
+                    Your allocation resets next Monday. Unlock unlimited recordings and specialized executive scenarios with Pro.
                   </p>
                 </div>
               </div>
               <Button
                 variant="hero"
                 size="sm"
-                className="shrink-0 gap-1.5"
+                className="shrink-0 h-8 text-xs font-semibold gap-1.5 self-start sm:self-auto"
                 onClick={() => {
                   setModalTriggerReason("quota_reached");
                   setShowUpgradeModal(true);
                 }}
               >
-                <Crown className="size-3.5 fill-primary-foreground" /> Upgrade to Pro
+                <Crown className="size-3 fill-primary-foreground" /> Upgrade to Pro
               </Button>
             </div>
           )}
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {goalScenarios.map((sc) => {
               const isLocked = !isPro && sc.tier === "pro";
               return (
@@ -409,29 +409,35 @@ function Practice() {
                   key={sc.id}
                   onClick={() => handleSelectScenario(sc)}
                   className={cn(
-                    "surface group relative p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-lift cursor-pointer",
-                    isLocked && "border-dashed border-primary/30 bg-card/60",
+                    "surface group relative p-5 text-left transition-all hover:border-primary/50 hover:shadow-xs cursor-pointer flex flex-col justify-between",
+                    isLocked && "border-dashed bg-secondary/30",
                   )}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-lg font-semibold group-hover:text-primary leading-snug">
-                      {sc.prompt}
-                    </p>
-                    {sc.tier === "pro" && (
-                      <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
-                        {isLocked ? <Lock className="size-3" /> : <Crown className="size-3 fill-amber-500" />}
-                        PRO {sc.badge ? `· ${sc.badge}` : ""}
-                      </span>
-                    )}
+                  <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-base font-semibold group-hover:text-primary leading-snug text-foreground">
+                        {sc.prompt}
+                      </p>
+                      {sc.tier === "pro" && (
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                          {isLocked ? <Lock className="size-2.5" /> : <Crown className="size-2.5 fill-amber-500" />}
+                          PRO {sc.badge ? `· ${sc.badge}` : ""}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{sc.context}</p>
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{sc.context}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <p className="text-xs font-semibold tracking-wide text-primary uppercase">
-                      {sc.seconds}s target
-                    </p>
-                    {isLocked && (
+                  <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
+                    <span className="text-[11px] font-semibold tracking-wider text-primary uppercase">
+                      {sc.seconds}s target duration
+                    </span>
+                    {isLocked ? (
                       <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                        <Lock className="size-3" /> Unlock with Pro
+                        <Lock className="size-3" /> Pro scenario
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                        Select →
                       </span>
                     )}
                   </div>
@@ -449,27 +455,26 @@ function Practice() {
         <div className="animate-rise mx-auto max-w-xl text-center">
           <button
             onClick={() => setPhase("pick")}
-            className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            className="mb-5 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
-            <ArrowLeft className="size-4" /> All scenarios
+            <ArrowLeft className="size-3.5" /> Back to scenario selection
           </button>
-          <div className="surface p-8">
-            <p className="text-xs font-semibold tracking-wide text-primary uppercase">
+          <div className="surface p-6 sm:p-8">
+            <span className="inline-block rounded-md bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
               {goalById(scenario.goal)?.label}
-            </p>
-            <h1 className="mt-3 text-2xl font-bold sm:text-3xl">{scenario.prompt}</h1>
-            <p className="mt-3 text-sm text-muted-foreground">{scenario.context}</p>
-            <p className="mt-6 text-sm">
-              Speak for about <strong>{scenario.seconds} seconds</strong>. Talk naturally — the
-              coach handles the rest.
-            </p>
+            </span>
+            <h1 className="mt-3 text-xl font-bold sm:text-2xl text-foreground">{scenario.prompt}</h1>
+            <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">{scenario.context}</p>
+            <div className="mt-6 rounded-lg bg-secondary/60 border border-border/40 p-3 text-xs text-muted-foreground">
+              Speak for approximately <strong>{scenario.seconds} seconds</strong>. Speak naturally as if in person—the AI engine will measure pacing, fillers, and clarity.
+            </div>
             {error && (
-              <p role="alert" className="mt-6 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              <p role="alert" className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive font-medium">
                 {error}
               </p>
             )}
-            <Button variant="hero" size="xl" className="mt-8" onClick={() => void startCountdown()}>
-              <Mic className="size-5" /> Start recording
+            <Button variant="hero" size="lg" className="mt-6 h-11 px-8 gap-2 font-semibold shadow-xs" onClick={() => void startCountdown()}>
+              <Mic className="size-4" /> Start recording
             </Button>
           </div>
         </div>
@@ -477,98 +482,100 @@ function Practice() {
 
       {phase === "countdown" && scenario && (
         <div className="animate-rise mx-auto flex max-w-xl flex-col items-center py-16 text-center">
-          <p className="text-sm font-medium text-muted-foreground">{scenario.prompt}</p>
-          <div className="relative mt-12 flex size-36 items-center justify-center">
-            <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/25" />
-            <span className="bg-soft absolute inset-0 rounded-full border border-border" />
-            <span className="font-display text-brand text-7xl font-bold tabular-nums">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{scenario.prompt}</p>
+          <div className="relative mt-8 flex size-32 items-center justify-center">
+            <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/20" />
+            <span className="absolute inset-0 rounded-full border border-border bg-card" />
+            <span className="font-display text-primary text-6xl font-bold tabular-nums relative">
               {countdown}
             </span>
           </div>
-          <p className="mt-10 text-sm font-medium text-muted-foreground">
-            Get ready — take a breath
+          <p className="mt-6 text-sm font-medium text-foreground">
+            Take a breath and prepare to speak
           </p>
         </div>
       )}
 
       {inSession && scenario && (
         <div className="animate-rise mx-auto max-w-xl text-center">
-          <p className="text-sm font-medium text-muted-foreground">{scenario.prompt}</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{scenario.prompt}</p>
 
           {/* Status chip */}
-          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-semibold tracking-wide uppercase shadow-soft">
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1 text-xs font-semibold shadow-xs">
             <span
               className={cn(
                 "size-2 rounded-full",
                 isLive ? "animate-pulse bg-destructive" : "bg-warning",
               )}
             />
-            {isLive ? "Recording" : "Paused"}
+            <span className="text-[11px] uppercase tracking-wider">
+              {isLive ? "Live Recording" : "Paused"}
+            </span>
           </div>
 
-          {/* Big mic */}
-          <div className="mt-8 flex flex-col items-center">
-            <div className="relative flex size-32 items-center justify-center sm:size-36">
+          {/* Timer & Mic area */}
+          <div className="mt-6 flex flex-col items-center">
+            <div className="relative flex size-28 items-center justify-center">
               {isLive && (
                 <>
-                  <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/30" />
+                  <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/25" />
                   <span
-                    className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/20"
+                    className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/15"
                     style={{ animationDelay: "0.8s" }}
                   />
                 </>
               )}
               <div
                 className={cn(
-                  "bg-brand shadow-glow relative flex size-28 items-center justify-center rounded-full transition-all duration-300 sm:size-32",
-                  isPaused && "scale-95 opacity-80 shadow-soft",
+                  "bg-brand shadow-md relative flex size-24 items-center justify-center rounded-full transition-all duration-300",
+                  isPaused && "scale-95 opacity-80 shadow-xs",
                 )}
               >
-                <Mic className="size-11 text-primary-foreground sm:size-12" />
+                <Mic className="size-9 text-primary-foreground" />
               </div>
             </div>
 
             {/* Timer */}
-            <p className="font-display mt-7 text-6xl font-bold tabular-nums tracking-tight">
+            <p className="font-display mt-5 text-5xl font-bold tabular-nums tracking-tight text-foreground">
               {formatTime(elapsed)}
             </p>
-            <p className="mt-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            <p className="mt-1 text-xs font-medium text-muted-foreground">
               {isLive
-                ? `Listening… target ${formatTime(scenario.seconds)}`
-                : "Paused — resume when ready"}
+                ? `Recommended duration: ${formatTime(scenario.seconds)}`
+                : "Paused — resume speaking when ready"}
             </p>
           </div>
 
           {/* Waveform */}
-          <div className="surface mt-8 px-4 py-3">
+          <div className="surface mt-6 p-4">
             <Waveform active={isLive} analyser={analyserRef} />
           </div>
 
           {/* Controls */}
-          <div className="mt-8 flex items-center justify-center gap-4">
+          <div className="mt-6 flex items-center justify-center gap-3">
             <button
               onClick={togglePause}
               aria-label={isLive ? "Pause recording" : "Resume recording"}
-              className="surface flex size-14 items-center justify-center rounded-full transition-all hover:-translate-y-0.5 hover:shadow-lift"
+              className="surface flex size-12 items-center justify-center rounded-xl transition-all hover:bg-secondary cursor-pointer"
             >
               {isLive ? (
-                <Pause className="size-6 fill-foreground text-foreground" />
+                <Pause className="size-5 fill-foreground text-foreground" />
               ) : (
-                <Play className="size-6 fill-foreground text-foreground" />
+                <Play className="size-5 fill-foreground text-foreground" />
               )}
             </button>
             <button
               onClick={() => void finish()}
-              aria-label="Stop and analyse"
-              className="bg-brand shadow-glow flex h-14 items-center gap-2.5 rounded-full px-7 text-sm font-semibold text-primary-foreground transition-all hover:-translate-y-0.5 hover:shadow-lift"
+              aria-label="Finish and generate feedback"
+              className="bg-brand shadow-xs flex h-12 items-center gap-2 rounded-xl px-6 text-sm font-semibold text-primary-foreground transition-all hover:brightness-105 cursor-pointer"
             >
-              <Square className="size-4 fill-primary-foreground" />
-              Stop &amp; analyse
+              <Square className="size-3.5 fill-primary-foreground" />
+              Complete &amp; Analyse
             </button>
           </div>
 
-          <p className="mt-8 text-xs text-muted-foreground">
-            Your transcript and report appear as soon as you stop.
+          <p className="mt-6 text-xs text-muted-foreground">
+            Transcripts are parsed on completion for speech rate, filler detection, and clarity scoring.
           </p>
         </div>
       )}

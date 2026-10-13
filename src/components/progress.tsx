@@ -18,75 +18,104 @@ export function ProgressPanel({ sessions, profile }: { sessions: Session[]; prof
 
   return (
     <section className="mt-8" aria-labelledby="progress-heading">
-      <h2 id="progress-heading" className="text-xl font-bold">Progress</h2>
-      <div className="mt-4 grid gap-5 lg:grid-cols-3">
-        <div className="surface p-6">
-          <div className="flex items-baseline justify-between">
-            <p className="text-sm font-semibold">This week</p>
-            <p className="text-sm tabular-nums text-muted-foreground">{done} / {profile.weeklyTarget} sessions</p>
+      <div className="mb-4">
+        <h2 id="progress-heading" className="text-lg font-bold tracking-tight text-foreground">Weekly Milestones &amp; Consistency</h2>
+        <p className="text-xs text-muted-foreground">Keep momentum across consecutive days to lock in vocal habits</p>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Weekly target & calendar */}
+        <div className="surface p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-foreground uppercase tracking-wider text-[11px]">Weekly Goal</span>
+              <span className="font-semibold tabular-nums text-foreground">{done} / {profile.weeklyTarget} sessions</span>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
+              <div className="bg-brand h-full rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="mt-4 grid grid-cols-7 gap-1 text-center">
+              {week.map((d, i) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <span className={cn(
+                    "size-7 rounded-md border flex items-center justify-center text-[10px] font-bold transition-colors",
+                    d.count > 0 ? "bg-primary text-primary-foreground border-transparent shadow-xs" : "border-border/80 bg-secondary/40 text-muted-foreground",
+                    d.isFuture && "opacity-40",
+                    d.isToday && d.count === 0 && "border-primary text-primary font-extrabold"
+                  )}>
+                    {d.count > 0 ? d.count : ""}
+                  </span>
+                  <span className={cn("text-[10px] text-muted-foreground", d.isToday && "font-bold text-foreground")}>{d.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
-            <div className="bg-brand h-full rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
-          </div>
-          <div className="mt-5 grid grid-cols-7 gap-1.5 text-center">
-            {week.map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5">
-                <span className={cn("size-7 rounded-lg border transition-colors",
-                  d.count > 0 ? "bg-brand border-transparent" : "border-border bg-card",
-                  d.isFuture && "opacity-50", d.isToday && d.count === 0 && "border-primary")} />
-                <span className={cn("text-[11px] text-muted-foreground", d.isToday && "font-semibold text-foreground")}>{d.label}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 flex items-center gap-3 border-t border-border pt-4">
-            <Flame className="size-5 text-warning" />
-            <p className="text-sm"><span className="font-semibold tabular-nums">{current}-day streak</span>
-              <span className="text-muted-foreground"> · best {best}</span></p>
+          <div className="mt-4 flex items-center gap-2.5 border-t border-border pt-3">
+            <Flame className="size-4 text-warning" />
+            <p className="text-xs">
+              <span className="font-bold tabular-nums text-foreground">{current}-day active streak</span>
+              <span className="text-muted-foreground"> · all-time best: {best}d</span>
+            </p>
           </div>
         </div>
 
-        <div className="surface p-6">
-          <p className="flex items-center gap-2 text-sm font-semibold"><Trophy className="size-4 text-primary" /> Personal bests</p>
-          {pb.overall ? (
-            <Link to="/results/$sessionId" params={{ sessionId: pb.overall.id }} className="mt-4 flex items-baseline gap-2 hover:opacity-80">
-              <span className="font-display text-4xl font-bold tabular-nums text-brand">{pb.overall.analysis.overall}</span>
-              <span className="text-xs text-muted-foreground">overall · view report</span>
-            </Link>
-          ) : <p className="mt-4 text-sm text-muted-foreground">Record a session to set your first best.</p>}
-          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5">
+        {/* Personal bests */}
+        <div className="surface p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[11px] text-foreground">
+                <Trophy className="size-3.5 text-amber-500" /> High Score
+              </span>
+              {pb.overall && (
+                <span className="text-xs text-muted-foreground">Best single attempt</span>
+              )}
+            </div>
+            {pb.overall ? (
+              <Link to="/results/$sessionId" params={{ sessionId: pb.overall.id }} className="mt-2.5 flex items-baseline gap-2 hover:opacity-85 transition-opacity group">
+                <span className="font-display text-3xl font-extrabold tabular-nums text-foreground group-hover:text-primary transition-colors">{pb.overall.analysis.overall}</span>
+                <span className="text-xs text-muted-foreground">/ 100 pts · inspect details →</span>
+              </Link>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground">Complete one practice session to record your baseline personal best.</p>
+            )}
+          </div>
+          <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-border pt-3">
             {pb.metrics.map((m) => (
-              <div key={m.id} className="flex items-baseline justify-between gap-2 text-sm">
-                <dt className="truncate text-muted-foreground">{m.label}</dt>
-                <dd className="font-semibold tabular-nums">{m.score || "—"}</dd>
+              <div key={m.id} className="flex items-baseline justify-between gap-1 text-xs">
+                <dt className="truncate text-muted-foreground text-[11px]">{m.label}</dt>
+                <dd className="font-bold tabular-nums text-foreground">{m.score || "—"}</dd>
               </div>
             ))}
           </dl>
         </div>
 
-        <div className="surface p-6">
-          <div className="flex items-baseline justify-between">
-            <p className="flex items-center gap-2 text-sm font-semibold"><Award className="size-4 text-primary" /> Milestones</p>
-            <p className="text-sm tabular-nums text-muted-foreground">{achieved} / {ms.length}</p>
+        {/* Milestones */}
+        <div className="surface p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[11px] text-foreground">
+                <Award className="size-3.5 text-primary" /> Core Milestones
+              </span>
+              <span className="text-xs font-semibold tabular-nums text-muted-foreground">{achieved} / {ms.length}</span>
+            </div>
+            <ul className="mt-3 space-y-2.5">
+              {next.map((m) => (
+                <li key={m.id}>
+                  <div className="flex items-baseline justify-between gap-1 text-xs">
+                    <span className="font-medium text-foreground">{m.title}</span>
+                    <span className="tabular-nums text-[11px] text-muted-foreground">{m.current}/{m.target}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary">
+                    <div className="h-full rounded-full bg-primary/80 transition-all duration-500" style={{ width: `${(m.current / m.target) * 100}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="mt-4 flex flex-col gap-3.5">
-            {next.map((m) => (
-              <li key={m.id}>
-                <div className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className="font-medium">{m.title}</span>
-                  <span className="tabular-nums text-xs text-muted-foreground">{m.current}/{m.target}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">{m.detail}</p>
-                <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-secondary">
-                  <div className="h-full rounded-full bg-primary/70" style={{ width: `${(m.current / m.target) * 100}%` }} />
-                </div>
-              </li>
-            ))}
-          </ul>
           {achieved > 0 && (
-            <div className="mt-4 flex flex-wrap gap-1.5 border-t border-border pt-4">
+            <div className="mt-3 flex flex-wrap gap-1 border-t border-border pt-3">
               {ms.filter((m) => m.done).map((m) => (
-                <span key={m.id} className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
-                  <Check className="size-3" /> {m.title}
+                <span key={m.id} className="inline-flex items-center gap-1 rounded-md bg-secondary/80 border border-border/60 px-2 py-0.5 text-[10px] font-medium text-foreground">
+                  <Check className="size-2.5 text-success" /> {m.title}
                 </span>
               ))}
             </div>

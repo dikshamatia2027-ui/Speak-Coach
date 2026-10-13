@@ -67,12 +67,12 @@ function Onboarding() {
           ))}
         </div>
 
-        <div key={step} className="surface animate-rise mt-6 p-6 sm:p-9">
+        <div key={step} className="surface animate-rise mt-6 p-6 sm:p-8">
           {step === 0 && (
             <>
-              <h1 className="text-2xl font-bold sm:text-3xl">First, what should we call you?</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Your reports are written to you, personally.
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">First, what should we call you?</h1>
+              <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
+                Your coaching reports and feedback will be addressed to you.
               </p>
               <Input
                 autoFocus
@@ -80,35 +80,35 @@ function Onboarding() {
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && canNext && setStep(1)}
                 placeholder="e.g. Diksha"
-                className="mt-6 h-14 rounded-2xl px-5 text-base"
+                className="mt-6 h-11 rounded-lg px-3.5 text-sm sm:text-base"
               />
             </>
           )}
 
           {step === 1 && (
             <>
-              <h1 className="text-2xl font-bold sm:text-3xl">What are you practising for?</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                This picks your scenarios. You can change it any time.
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">What are you practising for?</h1>
+              <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
+                Select your primary goal to personalise recommended scenarios.
               </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
                 {GOALS.map((g) => (
                   <button
                     key={g.id}
                     onClick={() => setGoal(g.id)}
                     className={cn(
-                      "rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-soft",
+                      "rounded-xl border p-3.5 text-left transition-all hover:border-border",
                       goal === g.id
-                        ? "border-primary bg-accent shadow-soft"
-                        : "border-border bg-card",
+                        ? "border-primary bg-primary/5 shadow-xs ring-1 ring-primary"
+                        : "border-border/70 bg-card hover:bg-secondary/40",
                     )}
                   >
                     <span className="flex items-center justify-between">
-                      <span className="text-xl">{g.emoji}</span>
+                      <span className="text-lg">{g.emoji}</span>
                       {goal === g.id && <Check className="size-4 text-primary" />}
                     </span>
-                    <span className="mt-3 block text-sm font-semibold">{g.label}</span>
-                    <span className="mt-1 block text-xs text-muted-foreground">{g.blurb}</span>
+                    <span className="mt-2 block text-xs font-semibold text-foreground sm:text-sm">{g.label}</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">{g.blurb}</span>
                   </button>
                 ))}
               </div>
@@ -117,22 +117,24 @@ function Onboarding() {
 
           {step === 2 && (
             <>
-              <h1 className="text-2xl font-bold sm:text-3xl">How does speaking feel today?</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                We tune the difficulty and tone of your feedback.
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">How does speaking feel today?</h1>
+              <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
+                We calibrate difficulty benchmarks and the tone of your feedback.
               </p>
-              <div className="mt-6 space-y-3">
+              <div className="mt-5 space-y-2.5">
                 {LEVELS.map((l) => (
                   <button
                     key={l.id}
                     onClick={() => setLevel(l.id)}
                     className={cn(
-                      "flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-all",
-                      level === l.id ? "border-primary bg-accent" : "border-border bg-card",
+                      "flex w-full items-center justify-between rounded-xl border p-3.5 text-left transition-all",
+                      level === l.id
+                        ? "border-primary bg-primary/5 shadow-xs ring-1 ring-primary"
+                        : "border-border/70 bg-card hover:bg-secondary/40",
                     )}
                   >
                     <span>
-                      <span className="block text-sm font-semibold">{l.label}</span>
+                      <span className="block text-xs font-semibold text-foreground sm:text-sm">{l.label}</span>
                       <span className="block text-xs text-muted-foreground">{l.body}</span>
                     </span>
                     {level === l.id && <Check className="size-4 shrink-0 text-primary" />}
@@ -140,18 +142,18 @@ function Onboarding() {
                 ))}
               </div>
 
-              <div className="mt-8">
-                <p className="text-sm font-semibold">Sessions per week</p>
+              <div className="mt-6 border-t border-border/60 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target sessions per week</p>
                 <div className="mt-3 flex gap-2">
                   {[2, 3, 5, 7].map((n) => (
                     <button
                       key={n}
                       onClick={() => setWeeklyTarget(n)}
                       className={cn(
-                        "h-12 flex-1 rounded-2xl border text-sm font-semibold transition-colors",
+                        "h-10 flex-1 rounded-lg border text-xs font-semibold transition-colors",
                         weeklyTarget === n
-                          ? "border-primary bg-accent text-accent-foreground"
-                          : "border-border bg-card text-muted-foreground",
+                          ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                          : "border-border/70 bg-card text-muted-foreground hover:border-border hover:text-foreground",
                       )}
                     >
                       {n}

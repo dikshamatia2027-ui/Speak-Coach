@@ -62,27 +62,33 @@ function Dashboard() {
     <AppShell>
       <ProUpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
 
-      <div className="animate-rise flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      {/* Top Banner / Welcome header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-6">
         <div>
-          <p className="text-sm text-muted-foreground">
-            {profile.name ? `Welcome back, ${profile.name}` : "Welcome back"}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-primary uppercase tracking-wider">Public Speaking Workspace</span>
+          </div>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            {profile.name ? `Welcome back, ${profile.name}` : "Speaking Dashboard"}
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Track your delivery pace, tone clarity, and prepare for your next talk.
           </p>
-          <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Ready to speak?</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {!isPro && (
             <Button
               variant="outline"
-              size="lg"
-              className="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-bold gap-1.5"
+              size="sm"
+              className="border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-medium gap-1.5 h-9"
               onClick={() => setShowUpgradeModal(true)}
             >
-              <Crown className="size-4 fill-amber-500" /> Go Pro
+              <Crown className="size-3.5 fill-amber-500" /> Go Pro
             </Button>
           )}
-          <Button asChild variant="hero" size="xl">
+          <Button asChild variant="hero" size="sm" className="h-9 px-4 gap-1.5 font-semibold">
             <Link to="/practice">
-              <Mic className="size-4" /> Practice now
+              <Mic className="size-3.5" /> Start Practice Session
             </Link>
           </Button>
         </div>
@@ -92,94 +98,105 @@ function Dashboard() {
       {!isPro && (
         <div
           className={cn(
-            "mt-6 rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all",
+            "mt-5 rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm transition-all",
             isLimitReached
-              ? "border-amber-500/40 bg-amber-500/10"
-              : "border-border/80 bg-card shadow-soft",
+              ? "border-amber-500/40 bg-amber-500/5 text-amber-950 dark:text-amber-200"
+              : "border-border bg-card text-foreground shadow-xs",
           )}
         >
-          <div className="flex items-start gap-3.5">
+          <div className="flex items-start sm:items-center gap-3">
             <div
               className={cn(
-                "size-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5",
-                isLimitReached ? "bg-amber-500/20 text-amber-600 dark:text-amber-400" : "bg-primary/10 text-primary",
+                "size-8 rounded-lg flex items-center justify-center shrink-0",
+                isLimitReached ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" : "bg-primary/10 text-primary",
               )}
             >
               <Zap className="size-4" />
             </div>
             <div>
-              <h3 className="font-semibold text-sm text-foreground">
+              <p className="font-semibold text-xs sm:text-sm">
                 {isLimitReached
-                  ? `Free Weekly Limit Reached (${sessionsThisWeek}/${FREE_WEEKLY_LIMIT} sessions completed)`
+                  ? `Weekly Limit Reached (${sessionsThisWeek}/${FREE_WEEKLY_LIMIT} free sessions completed)`
                   : `Free Plan: ${sessionsThisWeek} of ${FREE_WEEKLY_LIMIT} weekly sessions used`}
-              </h3>
+              </p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {isLimitReached
-                  ? "Upgrade to Pro to practice without restrictions, access specialized executive scenarios, and view advanced analytics."
-                  : `You have ${Math.max(0, FREE_WEEKLY_LIMIT - sessionsThisWeek)} practice session${FREE_WEEKLY_LIMIT - sessionsThisWeek === 1 ? "" : "s"} left this week.`}
+                  ? "Resets next Monday. Upgrade to Pro for unlimited sessions and specialized executive scenarios."
+                  : `${Math.max(0, FREE_WEEKLY_LIMIT - sessionsThisWeek)} session${FREE_WEEKLY_LIMIT - sessionsThisWeek === 1 ? "" : "s"} remaining this week.`}
               </p>
             </div>
           </div>
           <Button
             size="sm"
             variant={isLimitReached ? "hero" : "outline"}
-            className="shrink-0 gap-1.5 font-bold"
+            className="shrink-0 h-8 text-xs font-semibold gap-1 self-start sm:self-auto"
             onClick={() => setShowUpgradeModal(true)}
           >
-            <Crown className="size-3.5 fill-current" /> {isLimitReached ? "Unlock Unlimited with Pro" : "Upgrade to Pro"}
+            <Crown className="size-3 fill-current" /> {isLimitReached ? "Unlock Unlimited" : "Upgrade"}
           </Button>
         </div>
       )}
 
-      <div className="mt-8 grid gap-5 lg:grid-cols-3">
-        <div className="surface flex flex-col items-center justify-center gap-3 p-8">
-          <ScoreRing score={avg} label="Average score" />
-          <p className="text-sm text-muted-foreground">
-            Across {sessions.length} session{sessions.length === 1 ? "" : "s"}
-          </p>
-        </div>
-
-        <div className="surface p-6 lg:col-span-2">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold">Improvement trend</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Recent attempts compared with your earlier ones
-              </p>
-            </div>
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold",
-                delta >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
-              )}
-            >
-              <TrendingUp className="size-4" />
-              {delta > 0 ? "+" : ""}
-              {delta} pts
+      {/* Main KPI Stats Grid */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        {/* Average score card */}
+        <div className="surface flex flex-col items-center justify-center p-6 text-center">
+          <ScoreRing score={avg} size={148} label="Average Score" />
+          <div className="mt-3 text-center">
+            <span className="text-xs font-medium text-muted-foreground">
+              Evaluated across {sessions.length} total attempt{sessions.length === 1 ? "" : "s"}
             </span>
           </div>
-          <div className="mt-4">
-            <Sparkline values={series} />
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <div className="flex items-center gap-3 rounded-2xl bg-secondary px-4 py-3">
-              <Target className="size-5 text-primary" />
-              <span>
-                <span className="block text-xs text-muted-foreground">Current goal</span>
-                <span className="text-sm font-semibold">
-                  {goal.emoji} {goal.label}
-                </span>
+        </div>
+
+        {/* Improvement trend & goals */}
+        <div className="surface p-6 lg:col-span-2 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Performance Trajectory</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Overall score trends over your last 8 sessions
+                </p>
+              </div>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold",
+                  delta >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
+                )}
+              >
+                <TrendingUp className="size-3.5" />
+                {delta > 0 ? "+" : ""}
+                {delta} pts
               </span>
             </div>
-            <div className="flex items-center gap-3 rounded-2xl bg-secondary px-4 py-3">
-              <Flame className="size-5 text-warning" />
-              <span>
-                <span className="block text-xs text-muted-foreground">Practice streak</span>
-                <span className="text-sm font-semibold">
-                  {streak(sessions)} day{streak(sessions) === 1 ? "" : "s"} · target{" "}
-                  {profile.weeklyTarget}/week
+            <div className="mt-3">
+              <Sparkline values={series} />
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 pt-4 border-t border-border">
+            <div className="flex items-center gap-3 rounded-lg bg-secondary/60 border border-border/40 px-3.5 py-2.5">
+              <div className="size-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Target className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Active Focus</span>
+                <span className="text-sm font-semibold truncate block">
+                  {goal.emoji} {goal.label}
                 </span>
-              </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-lg bg-secondary/60 border border-border/40 px-3.5 py-2.5">
+              <div className="size-8 rounded-md bg-warning/15 text-warning flex items-center justify-center shrink-0">
+                <Flame className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Practice Habit</span>
+                <span className="text-sm font-semibold block">
+                  {streak(sessions)} day streak · target {profile.weeklyTarget}/wk
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -187,55 +204,69 @@ function Dashboard() {
 
       <ProgressPanel sessions={sessions} profile={profile} />
 
-      <div className="mt-8 flex items-center justify-between">
-        <h2 className="text-xl font-bold">Recent sessions</h2>
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/history">
-            View all <ArrowRight className="size-4" />
-          </Link>
-        </Button>
-      </div>
-
-      <div className="mt-4 grid gap-3">
-        {recent.length === 0 && (
-          <div className="surface p-10 text-center">
-            <p className="font-semibold">No sessions yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Your first recording takes about a minute.
-            </p>
-            <Button asChild variant="hero" className="mt-5">
-              <Link to="/practice">Start now</Link>
-            </Button>
+      {/* Recent Sessions List */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight text-foreground">Recent Sessions</h2>
+            <p className="text-xs text-muted-foreground">Review your recorded transcripts and AI coaching feedback</p>
           </div>
-        )}
-        {recent.map((s) => (
-          <Link
-            key={s.id}
-            to="/results/$sessionId"
-            params={{ sessionId: s.id }}
-            className="surface flex items-center gap-4 p-5 transition-all hover:-translate-y-0.5 hover:shadow-lift"
-          >
-            <span
-              className={cn(
-                "font-display flex size-14 shrink-0 items-center justify-center rounded-2xl text-lg font-bold",
-                scoreTone(s.analysis.overall) === "success" && "bg-success/10 text-success",
-                scoreTone(s.analysis.overall) === "warning" && "bg-warning/15 text-warning",
-                scoreTone(s.analysis.overall) === "destructive" &&
-                  "bg-destructive/10 text-destructive",
-              )}
+          <Button asChild variant="ghost" size="sm" className="h-8 text-xs font-semibold gap-1 text-muted-foreground hover:text-foreground">
+            <Link to="/history">
+              View all history <ArrowRight className="size-3.5" />
+            </Link>
+          </Button>
+        </div>
+
+        <div className="grid gap-2.5">
+          {recent.length === 0 && (
+            <div className="surface p-8 text-center border-dashed">
+              <div className="size-10 rounded-full bg-secondary flex items-center justify-center mx-auto mb-2 text-muted-foreground">
+                <Mic className="size-5" />
+              </div>
+              <p className="font-semibold text-sm">No practice sessions recorded yet</p>
+              <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
+                Select any speaking scenario and record a 60-second answer to generate your first score.
+              </p>
+              <Button asChild variant="hero" size="sm" className="mt-4 h-8 text-xs font-medium">
+                <Link to="/practice">Start your first session</Link>
+              </Button>
+            </div>
+          )}
+          {recent.map((s) => (
+            <Link
+              key={s.id}
+              to="/results/$sessionId"
+              params={{ sessionId: s.id }}
+              className="surface flex items-center gap-4 p-4 transition-all hover:border-primary/40 hover:shadow-xs group"
             >
-              {s.analysis.overall}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold">{s.prompt}</span>
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {goalById(s.goal)?.label} · {timeAgo(s.createdAt)} · {s.durationSec}s
-                {s.attempt > 1 ? ` · attempt ${s.attempt}` : ""}
+              <span
+                className={cn(
+                  "font-display flex size-12 shrink-0 items-center justify-center rounded-xl text-base font-bold tabular-nums border",
+                  scoreTone(s.analysis.overall) === "success" && "bg-success/10 text-success border-success/20",
+                  scoreTone(s.analysis.overall) === "warning" && "bg-warning/15 text-warning border-warning/20",
+                  scoreTone(s.analysis.overall) === "destructive" && "bg-destructive/10 text-destructive border-destructive/20",
+                )}
+              >
+                {s.analysis.overall}
               </span>
-            </span>
-            <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-          </Link>
-        ))}
+              <div className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                  {s.prompt}
+                </span>
+                <span className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground/80">{goalById(s.goal)?.label}</span>
+                  <span>•</span>
+                  <span>{timeAgo(s.createdAt)}</span>
+                  <span>•</span>
+                  <span>{s.durationSec}s</span>
+                  {s.attempt > 1 && <span>• Attempt #{s.attempt}</span>}
+                </span>
+              </div>
+              <ArrowRight className="size-4 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
+          ))}
+        </div>
       </div>
     </AppShell>
   );

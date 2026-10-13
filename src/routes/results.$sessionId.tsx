@@ -82,118 +82,138 @@ function Results() {
         triggerReason="advanced_analytics"
       />
 
-      <div className="animate-rise">
+      <div className="animate-rise max-w-4xl mx-auto">
         <button
           onClick={() => void navigate({ to: "/dashboard" })}
-          className="mb-5 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          <ArrowLeft className="size-4" /> Dashboard
+          <ArrowLeft className="size-3.5" /> Back to Dashboard
         </button>
 
-        <div className="surface flex flex-col items-center gap-6 p-8 sm:flex-row sm:gap-10">
-          <ScoreRing score={session.analysis.overall} size={180} />
-          <div className="text-center sm:text-left">
-            <p className="text-xs font-semibold tracking-wide text-primary uppercase">
-              {goalById(session.goal)?.label} · {timeAgo(session.createdAt)}
-              {session.attempt > 1 ? ` · attempt ${session.attempt}` : ""}
-            </p>
-            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{session.prompt}</h1>
-            <p className="mt-3 max-w-md text-sm text-muted-foreground">
+        {/* Hero score overview */}
+        <div className="surface flex flex-col items-center gap-6 p-6 sm:p-8 sm:flex-row sm:gap-8">
+          <ScoreRing score={session.analysis.overall} size={150} />
+          <div className="text-center sm:text-left flex-1 min-w-0">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs">
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 font-bold uppercase tracking-wider text-primary text-[10px]">
+                {goalById(session.goal)?.label}
+              </span>
+              <span className="text-muted-foreground">•</span>
+              <span className="text-muted-foreground">{timeAgo(session.createdAt)}</span>
+              {session.attempt > 1 && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-muted-foreground">Attempt #{session.attempt}</span>
+                </>
+              )}
+            </div>
+            <h1 className="mt-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">{session.prompt}</h1>
+            <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
               {session.analysis.summary}
             </p>
             {delta !== 0 && (
-              <p
-                className={cn(
-                  "mt-3 inline-flex rounded-full px-3 py-1 text-sm font-bold",
-                  delta > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
-                )}
-              >
-                {delta > 0 ? "+" : ""}
-                {delta} vs your last attempt
-              </p>
+              <div className="mt-3">
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
+                    delta > 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
+                  )}
+                >
+                  {delta > 0 ? "+" : ""}{delta} pts vs previous attempt
+                </span>
+              </div>
             )}
           </div>
         </div>
 
         {focusAreas.length > 0 && (
-          <section className="mt-8" aria-labelledby="focus-areas-heading">
-            <h2 id="focus-areas-heading" className="text-xl font-bold">Your focus areas</h2>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <section className="mt-6" aria-labelledby="focus-areas-heading">
+            <div className="mb-3">
+              <h2 id="focus-areas-heading" className="text-base font-bold text-foreground">Priority Focus Areas</h2>
+              <p className="text-xs text-muted-foreground">Specific excerpts from your speech that impacted your score</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
               {focusAreas.map(({ metric, coaching }) => (
-                <article key={metric.id} className="surface p-6">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h3 className="font-semibold">{metric.label}</h3>
-                    <span className="text-sm font-bold tabular-nums text-warning">{metric.score}/100</span>
+                <article key={metric.id} className="surface p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-3 pb-2 border-b border-border">
+                      <h3 className="font-semibold text-sm text-foreground">{metric.label}</h3>
+                      <span className="text-xs font-bold tabular-nums text-warning">{metric.score}/100</span>
+                    </div>
+                    <p className="mt-2.5 text-xs text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-foreground">Observation: </span>{coaching.why}
+                    </p>
+                    <blockquote className="mt-2.5 rounded-md bg-secondary/50 border-l-2 border-primary p-2.5 text-xs italic text-foreground/90 leading-relaxed">
+                      “{coaching.quote}”
+                    </blockquote>
                   </div>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    <span className="font-semibold text-foreground">Why it matters: </span>{coaching.why}
-                  </p>
-                  <blockquote className="mt-4 border-l-2 border-primary pl-4 text-sm italic leading-relaxed">
-                    “{coaching.quote}”
-                  </blockquote>
-                  <p className="mt-4 text-sm leading-relaxed">
-                    <span className="font-semibold">Try this: </span>{coaching.exercise}
-                  </p>
+                  <div className="mt-3 pt-2.5 border-t border-border/60">
+                    <p className="text-xs leading-relaxed text-foreground">
+                      <span className="font-semibold text-primary">Drill: </span>{coaching.exercise}
+                    </p>
+                  </div>
                 </article>
               ))}
             </div>
           </section>
         )}
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div className="surface p-6">
-            <h2 className="text-lg font-bold">Metric breakdown</h2>
-            <div className="mt-5 flex flex-col gap-5">
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {/* Metric breakdown */}
+          <div className="surface p-5">
+            <h2 className="text-base font-bold text-foreground">Scored Metric Breakdown</h2>
+            <div className="mt-4 flex flex-col gap-4">
               {session.analysis.metrics.map((m) => (
                 <MetricBar key={m.id} label={m.label} score={m.score} detail={m.detail} />
               ))}
             </div>
-            <div className="mt-6 grid grid-cols-3 gap-3 border-t border-border pt-5 text-center">
-              <div>
-                <p className="font-display text-xl font-bold tabular-nums">
+            <div className="mt-5 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+              <div className="rounded-lg bg-secondary/50 p-2.5">
+                <p className="font-display text-lg font-bold tabular-nums text-foreground">
                   {session.analysis.wordsPerMinute}
                 </p>
-                <p className="text-xs text-muted-foreground">words / min</p>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Words / min</p>
               </div>
-              <div>
-                <p className="font-display text-xl font-bold tabular-nums">
+              <div className="rounded-lg bg-secondary/50 p-2.5">
+                <p className="font-display text-lg font-bold tabular-nums text-foreground">
                   {session.analysis.fillerCount}
                 </p>
-                <p className="text-xs text-muted-foreground">filler words</p>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Fillers</p>
               </div>
-              <div>
-                <p className="font-display text-xl font-bold tabular-nums">
+              <div className="rounded-lg bg-secondary/50 p-2.5">
+                <p className="font-display text-lg font-bold tabular-nums text-foreground">
                   {session.analysis.wordCount}
                 </p>
-                <p className="text-xs text-muted-foreground">total words</p>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Total words</p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-6">
-            <div className="surface p-6">
-              <h2 className="flex items-center gap-2 text-lg font-bold">
-                <CheckCircle2 className="size-5 text-success" /> What worked
+          {/* Strengths & Improvements */}
+          <div className="flex flex-col gap-4">
+            <div className="surface p-5">
+              <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+                <CheckCircle2 className="size-4 text-success" /> Strengths Identified
               </h2>
-              <ul className="mt-4 flex flex-col gap-4">
+              <ul className="mt-3 space-y-3">
                 {session.analysis.strengths.map((s) => (
-                  <li key={s.title}>
-                    <p className="text-sm font-semibold">{s.title}</p>
-                    <p className="mt-0.5 text-sm text-muted-foreground">{s.example}</p>
+                  <li key={s.title} className="text-xs">
+                    <p className="font-semibold text-foreground">{s.title}</p>
+                    <p className="mt-0.5 text-muted-foreground leading-relaxed">{s.example}</p>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="surface p-6">
-              <h2 className="flex items-center gap-2 text-lg font-bold">
-                <Lightbulb className="size-5 text-warning" /> What to improve
+            <div className="surface p-5">
+              <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+                <Lightbulb className="size-4 text-warning" /> Growth Opportunities
               </h2>
-              <ul className="mt-4 flex flex-col gap-4">
+              <ul className="mt-3 space-y-3">
                 {session.analysis.improvements.map((i) => (
-                  <li key={i.title}>
-                    <p className="text-sm font-semibold">{i.title}</p>
-                    <p className="mt-0.5 text-sm text-muted-foreground">{i.example}</p>
-                    <p className="mt-1 text-sm font-medium text-primary">Try: {i.fix}</p>
+                  <li key={i.title} className="text-xs">
+                    <p className="font-semibold text-foreground">{i.title}</p>
+                    <p className="mt-0.5 text-muted-foreground leading-relaxed">{i.example}</p>
+                    <p className="mt-1 text-primary font-medium">Suggestion: {i.fix}</p>
                   </li>
                 ))}
               </ul>
@@ -202,16 +222,16 @@ function Results() {
         </div>
 
         {/* --- Advanced Pro Analytics Section --- */}
-        <div className="surface mt-6 p-6 sm:p-8 relative overflow-hidden">
+        <div className="surface mt-5 p-5 sm:p-6 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="size-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                <Crown className="size-5 fill-amber-500" />
+              <span className="size-9 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <Crown className="size-4.5 fill-amber-500" />
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold">Advanced Speech Analytics</h2>
-                  <span className="rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-xs font-extrabold uppercase">
+                  <h2 className="text-sm font-bold text-foreground">Advanced Acoustic Analytics</h2>
+                  <span className="rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-extrabold uppercase">
                     PRO
                   </span>
                 </div>
@@ -225,57 +245,57 @@ function Results() {
               <Button
                 variant="hero"
                 size="sm"
-                className="shrink-0 gap-1.5"
+                className="shrink-0 h-8 text-xs font-semibold gap-1.5"
                 onClick={() => setShowUpgradeModal(true)}
               >
-                <Crown className="size-3.5 fill-primary-foreground" /> Unlock Pro Analytics
+                <Crown className="size-3 fill-primary-foreground" /> Unlock Pro Analytics
               </Button>
             )}
           </div>
 
           {isPro ? (
-            <div className="mt-6 grid gap-5 sm:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {/* Filler words list */}
-              <div className="rounded-2xl bg-secondary/70 p-5 border border-border/60">
+              <div className="rounded-lg bg-secondary/50 p-4 border border-border/50">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Filler Frequency
                   </p>
-                  <PieChart className="size-4 text-primary" />
+                  <PieChart className="size-3.5 text-primary" />
                 </div>
                 {session.analysis.fillerWords.length > 0 ? (
-                  <div className="mt-4 space-y-2.5">
+                  <div className="mt-3 space-y-2">
                     {session.analysis.fillerWords.map((fw) => (
-                      <div key={fw.word} className="flex items-center justify-between text-sm">
-                        <span className="font-mono text-xs font-semibold bg-background/80 px-2 py-1 rounded-lg">
+                      <div key={fw.word} className="flex items-center justify-between text-xs">
+                        <span className="font-mono text-[11px] font-semibold bg-background px-1.5 py-0.5 rounded border border-border">
                           “{fw.word}”
                         </span>
-                        <span className="font-bold tabular-nums text-muted-foreground">
-                          {fw.count} {fw.count === 1 ? "time" : "times"}
+                        <span className="font-semibold tabular-nums text-muted-foreground">
+                          {fw.count}×
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-4 text-xs text-success font-medium">Zero filler words detected! Outstanding control.</p>
+                  <p className="mt-3 text-xs text-success font-medium">Zero filler words detected! Outstanding control.</p>
                 )}
               </div>
 
               {/* Pacing cadence */}
-              <div className="rounded-2xl bg-secondary/70 p-5 border border-border/60">
+              <div className="rounded-lg bg-secondary/50 p-4 border border-border/50">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Pacing Stability
                   </p>
-                  <Activity className="size-4 text-primary" />
+                  <Activity className="size-3.5 text-primary" />
                 </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-baseline justify-between text-sm">
-                    <span className="text-xs text-muted-foreground">Target speech rate</span>
-                    <span className="font-semibold text-xs">130 – 160 wpm</span>
+                <div className="mt-3 space-y-2 text-xs">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-muted-foreground">Target rate</span>
+                    <span className="font-semibold">130 – 160 wpm</span>
                   </div>
-                  <div className="flex items-baseline justify-between text-sm">
-                    <span className="text-xs text-muted-foreground">Your rate</span>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-muted-foreground">Recorded rate</span>
                     <span className={cn(
                       "font-bold tabular-nums",
                       session.analysis.wordsPerMinute >= 130 && session.analysis.wordsPerMinute <= 160
@@ -285,7 +305,7 @@ function Results() {
                       {session.analysis.wordsPerMinute} wpm
                     </span>
                   </div>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
                     <div
                       className="bg-brand h-full rounded-full"
                       style={{
@@ -293,101 +313,93 @@ function Results() {
                       }}
                     />
                   </div>
-                  <p className="text-[11px] text-muted-foreground pt-1">
-                    {session.analysis.wordsPerMinute > 160
-                      ? "Pacing is slightly fast. Try inserting 1-second strategic pauses."
-                      : session.analysis.wordsPerMinute < 120
-                        ? "Pacing is measured. Aim to energize transitions."
-                        : "Optimal conversational tempo for audience retention."}
-                  </p>
                 </div>
               </div>
 
               {/* Vocabulary density */}
-              <div className="rounded-2xl bg-secondary/70 p-5 border border-border/60">
+              <div className="rounded-lg bg-secondary/50 p-4 border border-border/50">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Vocabulary Range
                   </p>
-                  <Sparkles className="size-4 text-amber-500" />
+                  <Sparkles className="size-3.5 text-amber-500" />
                 </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-baseline justify-between text-sm">
-                    <span className="text-xs text-muted-foreground">Unique word ratio</span>
+                <div className="mt-3 space-y-2 text-xs">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-muted-foreground">Lexical variety</span>
                     <span className="font-bold tabular-nums text-foreground">
                       {Math.round((new Set(session.transcript.toLowerCase().split(/\s+/)).size / Math.max(1, session.analysis.wordCount)) * 100)}%
                     </span>
                   </div>
-                  <div className="flex items-baseline justify-between text-sm">
-                    <span className="text-xs text-muted-foreground">Total word count</span>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-muted-foreground">Word count</span>
                     <span className="font-bold tabular-nums text-foreground">{session.analysis.wordCount} words</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground pt-2">
-                    Advanced linguistic scoring detects repetition and flags opportunities for higher-impact verbs.
-                  </p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="mt-6 rounded-2xl border border-dashed border-border/80 bg-secondary/40 p-6 sm:p-8 text-center flex flex-col items-center justify-center">
-              <div className="size-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
-                <Lock className="size-6" />
+            <div className="mt-4 rounded-lg border border-dashed border-border bg-secondary/30 p-5 text-center flex flex-col items-center justify-center">
+              <div className="size-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-2">
+                <Lock className="size-4" />
               </div>
-              <h3 className="text-base font-bold text-foreground">
-                Advanced Analytics are Locked
+              <h3 className="text-xs sm:text-sm font-bold text-foreground">
+                Advanced Speech Metrics Locked
               </h3>
-              <p className="mt-1 text-xs text-muted-foreground max-w-md">
-                Pro members receive in-depth syllable-level pacing stability, filler frequency charts, vocabulary diversity ratios, and vocal confidence heatmaps.
+              <p className="mt-0.5 text-xs text-muted-foreground max-w-sm">
+                Pro members receive in-depth syllable-level pacing stability, filler frequency charts, and vocabulary richness diagnostics.
               </p>
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-4 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-bold gap-1.5"
+                className="mt-3 h-7 text-xs border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-bold gap-1"
                 onClick={() => setShowUpgradeModal(true)}
               >
-                <Crown className="size-3.5 fill-amber-500" /> Upgrade to Pro to view
+                <Crown className="size-3 fill-amber-500" /> Upgrade to Pro to view
               </Button>
             </div>
           )}
         </div>
 
-        <div className="surface mt-6 p-6">
-          <h2 className="flex items-center gap-2 text-lg font-bold">
-            <Sparkles className="size-5 text-primary" /> Your practice plan
+        {/* Practice Plan */}
+        <div className="surface mt-5 p-5">
+          <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <Sparkles className="size-4 text-primary" /> Recommended Practice Drills
           </h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {session.analysis.exercises.map((e) => (
-              <div key={e.title} className="rounded-2xl bg-secondary p-4">
-                <p className="text-sm font-semibold">{e.title}</p>
-                <p className="mt-0.5 text-xs font-medium text-primary">{e.minutes} min</p>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{e.how}</p>
+              <div key={e.title} className="rounded-lg bg-secondary/50 border border-border/40 p-3.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-foreground">{e.title}</p>
+                    <span className="text-[10px] font-semibold text-primary">{e.minutes} min</span>
+                  </div>
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{e.how}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild variant="hero" size="xl">
+        {/* Action Buttons */}
+        <div className="mt-6 flex flex-wrap justify-center gap-2.5">
+          <Button asChild variant="hero" size="sm" className="h-9 px-5 gap-1.5 font-semibold">
             <Link to="/practice">
-              <RefreshCw className="size-4" /> Retry this scenario
+              <RefreshCw className="size-3.5" /> Re-attempt This Scenario
             </Link>
           </Button>
-          <Button asChild variant="outline" size="xl">
-            <Link to="/history">View history</Link>
+          <Button asChild variant="outline" size="sm" className="h-9 px-4 text-xs font-semibold">
+            <Link to="/history">Browse All Sessions</Link>
           </Button>
         </div>
 
-        <div className="surface mt-8 p-6">
-          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-            Your transcript
+        {/* Transcript Card */}
+        <div className="surface mt-6 p-5">
+          <h2 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+            Spoken Transcript
           </h2>
-          <p
-            className={cn(
-              "mt-3 text-sm leading-relaxed",
-              scoreTone(session.analysis.overall) === "success" && "text-foreground",
-            )}
-          >
-            {session.transcript}
+          <p className="mt-2 text-xs sm:text-sm leading-relaxed text-foreground font-normal">
+            “{session.transcript}”
           </p>
         </div>
       </div>
