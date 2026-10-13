@@ -9,7 +9,7 @@ import {
   Timer,
   Waves,
 } from "lucide-react";
-import heroImage from "@/assets/hero-waves.jpg";
+import heroImage from "@/assets/hero-waves-palette.jpg";
 import { Logo } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { GOALS } from "@/lib/speakcoach";
@@ -154,7 +154,7 @@ function Landing() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s, i) => (
             <div key={s.title} className="surface p-5 transition-all hover:border-border hover:shadow-lift">
-              <span className="bg-primary/10 flex size-9 items-center justify-center rounded-lg text-primary">
+              <span className="bg-brand-orange/15 flex size-9 items-center justify-center rounded-lg text-warning">
                 <s.icon className="size-4.5" />
               </span>
               <p className="mt-4 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
@@ -270,7 +270,7 @@ function Landing() {
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-bold">SpeakCoach Pro</h3>
                 </div>
-                <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                <span className="rounded-md border border-brand-yellow/30 bg-brand-yellow/10 px-2 py-0.5 text-[10px] font-bold text-warning ">
                   PRO
                 </span>
               </div>
@@ -313,7 +313,7 @@ function Landing() {
 
       {/* CTA */}
       <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
-        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-b from-card via-card to-secondary/30 p-8 text-center shadow-soft sm:p-12">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-accent/25 p-8 text-center shadow-soft sm:p-12">
           <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Your next talk deserves a rehearsal.
           </h2>

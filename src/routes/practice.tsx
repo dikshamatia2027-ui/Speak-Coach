@@ -86,9 +86,10 @@ function Waveform({
       const gap = width / BAR_COUNT;
       const barWidth = Math.max(2 * dpr, gap * 0.45);
       const gradient = ctx.createLinearGradient(0, 0, width, 0);
-      gradient.addColorStop(0, "rgba(99, 102, 241, 0.95)");
-      gradient.addColorStop(0.55, "rgba(139, 92, 246, 0.95)");
-      gradient.addColorStop(1, "rgba(217, 70, 239, 0.9)");
+      const colors = getComputedStyle(canvas);
+      gradient.addColorStop(0, colors.getPropertyValue("--primary").trim());
+      gradient.addColorStop(0.55, colors.getPropertyValue("--brand-orange").trim());
+      gradient.addColorStop(1, colors.getPropertyValue("--brand-yellow").trim());
       ctx.fillStyle = gradient;
 
       const node = analyser.current;
@@ -357,27 +358,27 @@ function Practice() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 text-xs font-bold gap-1"
+                  className="border-brand-yellow/40 text-warning  hover:bg-brand-yellow/10 text-xs font-bold gap-1"
                   onClick={() => {
                     setModalTriggerReason(isWeeklyLimitReached ? "quota_reached" : null);
                     setShowUpgradeModal(true);
                   }}
                 >
-                  <Crown className="size-3 fill-amber-500" /> Unlock Unlimited
+                  <Crown className="size-3 fill-brand-yellow" /> Unlock Unlimited
                 </Button>
               </div>
             ) : (
-              <div className="inline-flex items-center gap-2 rounded-2xl bg-amber-500/10 border border-amber-500/30 px-4 py-2 text-xs font-bold text-amber-600 dark:text-amber-400">
-                <Crown className="size-4 fill-amber-500" /> Pro Member · Unlimited Practice
+              <div className="inline-flex items-center gap-2 rounded-2xl bg-brand-yellow/10 border border-brand-yellow/30 px-4 py-2 text-xs font-bold text-warning ">
+                <Crown className="size-4 fill-brand-yellow" /> Pro Member · Unlimited Practice
               </div>
             )}
           </div>
 
           {/* Warning banner if free limit reached */}
           {isWeeklyLimitReached && (
-            <div className="mt-5 rounded-xl border border-amber-500/35 bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+            <div className="mt-5 rounded-xl border border-brand-yellow/35 bg-brand-yellow/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
               <div className="flex items-start gap-3">
-                <Zap className="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <Zap className="size-4 text-warning  shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-semibold text-xs sm:text-sm text-foreground">
                     Weekly free sessions cap reached ({FREE_WEEKLY_LIMIT}/{FREE_WEEKLY_LIMIT})
@@ -419,8 +420,8 @@ function Practice() {
                         {sc.prompt}
                       </p>
                       {sc.tier === "pro" && (
-                        <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                          {isLocked ? <Lock className="size-2.5" /> : <Crown className="size-2.5 fill-amber-500" />}
+                        <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-brand-yellow/10 border border-brand-yellow/25 px-2 py-0.5 text-[10px] font-bold text-warning ">
+                          {isLocked ? <Lock className="size-2.5" /> : <Crown className="size-2.5 fill-brand-yellow" />}
                           PRO {sc.badge ? `· ${sc.badge}` : ""}
                         </span>
                       )}
@@ -432,7 +433,7 @@ function Practice() {
                       {sc.seconds}s target duration
                     </span>
                     {isLocked ? (
-                      <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                      <span className="text-xs font-semibold text-warning  flex items-center gap-1">
                         <Lock className="size-3" /> Pro scenario
                       </span>
                     ) : (

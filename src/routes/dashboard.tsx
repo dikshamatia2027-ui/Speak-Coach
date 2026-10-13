@@ -80,10 +80,10 @@ function Dashboard() {
             <Button
               variant="outline"
               size="sm"
-              className="border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-medium gap-1.5 h-9"
+              className="border-brand-yellow/30 text-warning  hover:bg-brand-yellow/10 font-medium gap-1.5 h-9"
               onClick={() => setShowUpgradeModal(true)}
             >
-              <Crown className="size-3.5 fill-amber-500" /> Go Pro
+              <Crown className="size-3.5 fill-brand-yellow" /> Go Pro
             </Button>
           )}
           <Button asChild variant="hero" size="sm" className="h-9 px-4 gap-1.5 font-semibold">
@@ -100,7 +100,7 @@ function Dashboard() {
           className={cn(
             "mt-5 rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm transition-all",
             isLimitReached
-              ? "border-amber-500/40 bg-amber-500/5 text-amber-950 dark:text-amber-200"
+              ? "border-brand-yellow/40 bg-brand-yellow/5 text-warning "
               : "border-border bg-card text-foreground shadow-xs",
           )}
         >
@@ -108,7 +108,7 @@ function Dashboard() {
             <div
               className={cn(
                 "size-8 rounded-lg flex items-center justify-center shrink-0",
-                isLimitReached ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" : "bg-primary/10 text-primary",
+                isLimitReached ? "bg-brand-yellow/15 text-warning " : "bg-primary/10 text-primary",
               )}
             >
               <Zap className="size-4" />
