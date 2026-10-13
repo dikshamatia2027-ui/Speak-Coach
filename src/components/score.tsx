@@ -28,8 +28,8 @@ export function ScoreRing({
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="oklch(0.48 0.22 264)" />
-            <stop offset="100%" stopColor="oklch(0.58 0.2 315)" />
+            <stop offset="0%" stopColor="var(--primary)" />
+            <stop offset="100%" stopColor="var(--brand-orange)" />
           </linearGradient>
         </defs>
         <circle
@@ -124,15 +124,15 @@ export function Sparkline({ values }: { values: number[] }) {
     <svg viewBox={`0 0 ${w} ${h}`} className="h-12 w-full" preserveAspectRatio="none">
       <defs>
         <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="oklch(0.48 0.22 264 / 0.25)" />
-          <stop offset="100%" stopColor="oklch(0.48 0.22 264 / 0)" />
+          <stop offset="0%" stopColor="color-mix(in oklab, var(--primary) 25%, transparent)" />
+          <stop offset="100%" stopColor="transparent" />
         </linearGradient>
       </defs>
       <polygon points={`0,${h} ${pts.join(" ")} ${w},${h}`} fill="url(#sparkFill)" />
       <polyline
         points={pts.join(" ")}
         fill="none"
-        stroke="oklch(0.48 0.22 264)"
+        stroke="var(--primary)"
         strokeWidth="2"
         strokeLinejoin="round"
         strokeLinecap="round"

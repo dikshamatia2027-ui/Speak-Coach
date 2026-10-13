@@ -39,8 +39,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-4">
             <Logo />
             {isPro ? (
-              <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
-                <Crown className="size-3 fill-amber-500 text-amber-500" /> PRO
+              <span className="inline-flex items-center gap-1 rounded-md bg-brand-yellow/10 border border-brand-yellow/25 px-2 py-0.5 text-[11px] font-bold text-warning ">
+                <Crown className="size-3 fill-brand-yellow text-warning" /> PRO
               </span>
             ) : (
               <button
@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="hidden md:inline-flex items-center gap-1 rounded-md bg-secondary border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors cursor-pointer"
                 title="Upgrade to Pro"
               >
-                <Zap className="size-3 text-amber-500 fill-amber-500" /> Free Plan · Upgrade
+                <Zap className="size-3 text-warning fill-brand-yellow" /> Free Plan · Upgrade
               </button>
             )}
           </div>
@@ -73,10 +73,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Button
                 variant="outline"
                 size="sm"
-                className="hidden sm:inline-flex border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-semibold gap-1 text-xs h-8 px-3"
+                className="hidden sm:inline-flex border-brand-yellow/30 text-warning  hover:bg-brand-yellow/10 font-semibold gap-1 text-xs h-8 px-3"
                 onClick={() => setShowUpgradeModal(true)}
               >
-                <Crown className="size-3.5 fill-amber-500" /> Upgrade
+                <Crown className="size-3.5 fill-brand-yellow" /> Upgrade
               </Button>
             )}
             <Button asChild variant="hero" size="sm" className="h-8 px-3.5 text-xs font-semibold shadow-xs">

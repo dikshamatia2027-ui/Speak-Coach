@@ -72,16 +72,16 @@ export function ProUpgradeModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl p-0 overflow-hidden border border-border shadow-2xl rounded-3xl bg-card">
         {/* Header gradient banner */}
-        <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 sm:p-8 text-white">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/80">
-            <Crown className="size-4 text-amber-300 fill-amber-300" />
+        <div className="relative bg-brand p-6 sm:p-8 text-primary-foreground">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary-foreground/80">
+            <Crown className="size-4 text-warning fill-brand-yellow" />
             SpeakCoach Pro
           </div>
           <DialogHeader className="mt-2 text-left">
-            <DialogTitle className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+            <DialogTitle className="text-2xl sm:text-3xl font-extrabold tracking-tight text-primary-foreground">
               {headline}
             </DialogTitle>
-            <DialogDescription className="text-white/90 text-sm sm:text-base mt-1.5">
+            <DialogDescription className="text-primary-foreground/90 text-sm sm:text-base mt-1.5">
               Take your spoken communication to executive level with unlimited AI coaching and deeper analytics.
             </DialogDescription>
           </DialogHeader>

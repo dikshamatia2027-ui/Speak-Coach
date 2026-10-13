@@ -225,13 +225,13 @@ function Results() {
         <div className="surface mt-5 p-5 sm:p-6 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="size-9 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                <Crown className="size-4.5 fill-amber-500" />
+              <span className="size-9 rounded-lg bg-brand-yellow/10 text-warning  flex items-center justify-center shrink-0">
+                <Crown className="size-4.5 fill-brand-yellow" />
               </span>
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-foreground">Advanced Acoustic Analytics</h2>
-                  <span className="rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-extrabold uppercase">
+                  <span className="rounded-md bg-brand-yellow/15 text-warning  px-1.5 py-0.5 text-[10px] font-extrabold uppercase">
                     PRO
                   </span>
                 </div>
@@ -322,7 +322,7 @@ function Results() {
                   <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Vocabulary Range
                   </p>
-                  <Sparkles className="size-3.5 text-amber-500" />
+                  <Sparkles className="size-3.5 text-warning" />
                 </div>
                 <div className="mt-3 space-y-2 text-xs">
                   <div className="flex items-baseline justify-between">
@@ -340,7 +340,7 @@ function Results() {
             </div>
           ) : (
             <div className="mt-4 rounded-lg border border-dashed border-border bg-secondary/30 p-5 text-center flex flex-col items-center justify-center">
-              <div className="size-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-2">
+              <div className="size-8 rounded-lg bg-brand-yellow/10 text-warning  flex items-center justify-center mb-2">
                 <Lock className="size-4" />
               </div>
               <h3 className="text-xs sm:text-sm font-bold text-foreground">
@@ -352,10 +352,10 @@ function Results() {
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-3 h-7 text-xs border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-bold gap-1"
+                className="mt-3 h-7 text-xs border-brand-yellow/30 text-warning  hover:bg-brand-yellow/10 font-bold gap-1"
                 onClick={() => setShowUpgradeModal(true)}
               >
-                <Crown className="size-3 fill-amber-500" /> Upgrade to Pro to view
+                <Crown className="size-3 fill-brand-yellow" /> Upgrade to Pro to view
               </Button>
             </div>
           )}

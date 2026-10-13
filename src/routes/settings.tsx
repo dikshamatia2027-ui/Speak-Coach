@@ -143,7 +143,7 @@ function Settings() {
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-sm font-bold capitalize text-foreground">{profile.plan} Membership</span>
                     {profile.plan === "pro" ? (
-                      <span className="rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-extrabold">
+                      <span className="rounded-md bg-brand-yellow/15 text-warning  px-1.5 py-0.5 text-[10px] font-extrabold">
                         PRO UNLIMITED
                       </span>
                     ) : (
