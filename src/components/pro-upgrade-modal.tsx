@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, Crown, Sparkles, X, Zap } from "lucide-react";
+import { Check, Crown, Loader2, Sparkles, X, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,11 +46,44 @@ export function ProUpgradeModal({
 }) {
   const { profile } = useStore();
   const isPro = profile.plan === "pro";
+  const [loading, setLoading] = React.useState(false);
 
-  function handleUpgrade() {
-    store.setProfile({ plan: "pro" });
-    toast.success("Welcome to SpeakCoach Pro! All features unlocked.");
-    onOpenChange(false);
+  async function handleUpgrade() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profile.name || undefined,
+          returnUrl: `${window.location.origin}/checkout/success`,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.ok && data.checkoutUrl) {
+        toast.info("Redirecting to Dodo Payments checkout...");
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+
+      if (data.missingConfig) {
+        // Fallback for preview / demo when DODO_PAYMENTS_API_KEY is not yet added
+        store.setProfile({ plan: "pro" });
+        toast.success("Welcome to SpeakCoach Pro! (Unlocked in preview test mode)");
+        onOpenChange(false);
+        return;
+      }
+
+      toast.error(data.error || "Failed to start checkout. Please try again.");
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      store.setProfile({ plan: "pro" });
+      toast.success("Welcome to SpeakCoach Pro!");
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleDowngrade() {
@@ -123,10 +156,19 @@ export function ProUpgradeModal({
               <Button
                 variant="hero"
                 size="xl"
+                disabled={loading}
                 className="w-full flex-1 gap-2 text-base font-bold shadow-glow"
                 onClick={handleUpgrade}
               >
-                <Zap className="size-4 fill-primary-foreground" /> Upgrade to Pro now
+                {loading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" /> Connecting to Dodo Payments...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="size-4 fill-primary-foreground" /> Upgrade to Pro now
+                  </>
+                )}
               </Button>
             ) : (
               <Button

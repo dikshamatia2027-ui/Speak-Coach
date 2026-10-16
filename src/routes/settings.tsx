@@ -1,7 +1,9 @@
+import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
+import { ProUpgradeModal } from "@/components/pro-upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -32,6 +34,21 @@ export const Route = createFileRoute("/settings")({
 
 function Settings() {
   const { profile, sessions } = useStore();
+  const [upgradeOpen, setUpgradeOpen] = React.useState(false);
+
+  async function handleOpenPortal() {
+    try {
+      const res = await fetch("/api/customer-portal");
+      const data = await res.json();
+      if (data.portalUrl) {
+        window.open(data.portalUrl, "_blank", "noopener,noreferrer");
+      } else {
+        window.open("https://customer.dodopayments.com", "_blank", "noopener,noreferrer");
+      }
+    } catch {
+      window.open("https://customer.dodopayments.com", "_blank", "noopener,noreferrer");
+    }
+  }
 
   return (
     <AppShell>
@@ -154,26 +171,33 @@ function Settings() {
                   </div>
                 </div>
                 {profile.plan === "pro" ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs font-medium"
-                    onClick={() => {
-                      store.setProfile({ plan: "free" });
-                      toast.info("Switched to Free plan");
-                    }}
-                  >
-                    Downgrade
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs font-medium gap-1"
+                      onClick={handleOpenPortal}
+                    >
+                      Billing Portal <ExternalLink className="size-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        store.setProfile({ plan: "free" });
+                        toast.info("Switched to Free plan");
+                      }}
+                    >
+                      Downgrade
+                    </Button>
+                  </div>
                 ) : (
                   <Button
                     variant="hero"
                     size="sm"
                     className="h-8 text-xs font-bold"
-                    onClick={() => {
-                      store.setProfile({ plan: "pro" });
-                      toast.success("Upgraded to SpeakCoach Pro!");
-                    }}
+                    onClick={() => setUpgradeOpen(true)}
                   >
                     Go Pro ($12/mo)
                   </Button>
@@ -181,8 +205,8 @@ function Settings() {
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
                 {profile.plan === "pro"
-                  ? "Unlimited sessions, specialized executive scenarios, and acoustic analytics enabled."
-                  : "3 sessions/week included. Upgrade for unlimited practice and executive scenarios."}
+                  ? "Unlimited sessions, specialized executive scenarios, and acoustic analytics enabled via Dodo Payments."
+                  : "3 sessions/week included. Upgrade with Dodo Payments for unlimited practice and executive scenarios."}
               </p>
             </div>
           </div>
@@ -216,6 +240,8 @@ function Settings() {
           </div>
         </div>
       </div>
+
+      <ProUpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} />
     </AppShell>
   );
 }

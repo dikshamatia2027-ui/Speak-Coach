@@ -34,3 +34,30 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Dodo Payments Integration
+
+SpeakCoach includes built-in integration with [Dodo Payments](https://dodopayments.com) for Pro subscriptions ($12/month) and customer billing management.
+
+### Environment Variables
+
+Copy `.env.example` to `.env` or set the following in your hosting provider (Vercel / Cloudflare):
+
+| Variable | Description |
+| :--- | :--- |
+| `DODO_PAYMENTS_API_KEY` | Secret API key from [Dodo Payments Dashboard](https://app.dodopayments.com) (`test_...` or `live_...`) |
+| `DODO_PAYMENTS_PRODUCT_ID` | Product ID for the Pro Tier subscription (`pdt_...`) |
+| `DODO_PAYMENTS_WEBHOOK_KEY` | Webhook secret for verifying webhook signatures (`whsec_...`) |
+| `DODO_PAYMENTS_ENVIRONMENT` | `test_mode` (default) or `live_mode` |
+| `DODO_PAYMENTS_BUSINESS_ID` | Optional: Business ID for self-service Customer Portal |
+
+### Webhook Endpoint
+Configure your Dodo Payments webhook destination URL:
+`https://your-domain.com/api/webhooks/dodo`
+
+## Deploy to Vercel
+
+1. Import this repository into [Vercel](https://vercel.com/new).
+2. Framework Preset: **Other** or **Vite** (our `vercel.json` and Nitro Build Output API v3 handle the build automatically).
+3. Set your environment variables (`DODO_PAYMENTS_API_KEY`, `DODO_PAYMENTS_PRODUCT_ID`, etc.).
+4. Click **Deploy**.

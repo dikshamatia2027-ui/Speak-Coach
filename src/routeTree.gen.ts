@@ -17,7 +17,11 @@ import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as ApiAnalyzeRouteImport } from './routes/api/analyze'
+import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
+import { Route as ApiCustomerPortalRouteImport } from './routes/api/customer-portal'
+import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as ResultsSessionIdRouteImport } from './routes/results.$sessionId'
+import { Route as ApiWebhooksDodoRouteImport } from './routes/api/webhooks/dodo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -59,9 +63,29 @@ const ApiAnalyzeRoute = ApiAnalyzeRouteImport.update({
   path: '/api/analyze',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
+  id: '/api/checkout',
+  path: '/api/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCustomerPortalRoute = ApiCustomerPortalRouteImport.update({
+  id: '/api/customer-portal',
+  path: '/api/customer-portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
+  id: '/checkout/success',
+  path: '/checkout/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultsSessionIdRoute = ResultsSessionIdRouteImport.update({
   id: '/results/$sessionId',
   path: '/results/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksDodoRoute = ApiWebhooksDodoRouteImport.update({
+  id: '/api/webhooks/dodo',
+  path: '/api/webhooks/dodo',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -74,7 +98,11 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/vocabulary': typeof VocabularyRoute
   '/api/analyze': typeof ApiAnalyzeRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/customer-portal': typeof ApiCustomerPortalRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
+  '/api/webhooks/dodo': typeof ApiWebhooksDodoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,7 +113,11 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/vocabulary': typeof VocabularyRoute
   '/api/analyze': typeof ApiAnalyzeRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/customer-portal': typeof ApiCustomerPortalRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
+  '/api/webhooks/dodo': typeof ApiWebhooksDodoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,7 +129,11 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/vocabulary': typeof VocabularyRoute
   '/api/analyze': typeof ApiAnalyzeRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/customer-portal': typeof ApiCustomerPortalRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
+  '/api/webhooks/dodo': typeof ApiWebhooksDodoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,7 +146,11 @@ export interface FileRouteTypes {
     | '/settings'
     | '/vocabulary'
     | '/api/analyze'
+    | '/api/checkout'
+    | '/api/customer-portal'
+    | '/checkout/success'
     | '/results/$sessionId'
+    | '/api/webhooks/dodo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,7 +161,11 @@ export interface FileRouteTypes {
     | '/settings'
     | '/vocabulary'
     | '/api/analyze'
+    | '/api/checkout'
+    | '/api/customer-portal'
+    | '/checkout/success'
     | '/results/$sessionId'
+    | '/api/webhooks/dodo'
   id:
     | '__root__'
     | '/'
@@ -132,7 +176,11 @@ export interface FileRouteTypes {
     | '/settings'
     | '/vocabulary'
     | '/api/analyze'
+    | '/api/checkout'
+    | '/api/customer-portal'
+    | '/checkout/success'
     | '/results/$sessionId'
+    | '/api/webhooks/dodo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -144,7 +192,11 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   VocabularyRoute: typeof VocabularyRoute
   ApiAnalyzeRoute: typeof ApiAnalyzeRoute
+  ApiCheckoutRoute: typeof ApiCheckoutRoute
+  ApiCustomerPortalRoute: typeof ApiCustomerPortalRoute
+  CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ResultsSessionIdRoute: typeof ResultsSessionIdRoute
+  ApiWebhooksDodoRoute: typeof ApiWebhooksDodoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -205,11 +257,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAnalyzeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/checkout': {
+      id: '/api/checkout'
+      path: '/api/checkout'
+      fullPath: '/api/checkout'
+      preLoaderRoute: typeof ApiCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/customer-portal': {
+      id: '/api/customer-portal'
+      path: '/api/customer-portal'
+      fullPath: '/api/customer-portal'
+      preLoaderRoute: typeof ApiCustomerPortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/success': {
+      id: '/checkout/success'
+      path: '/checkout/success'
+      fullPath: '/checkout/success'
+      preLoaderRoute: typeof CheckoutSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/results/$sessionId': {
       id: '/results/$sessionId'
       path: '/results/$sessionId'
       fullPath: '/results/$sessionId'
       preLoaderRoute: typeof ResultsSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/dodo': {
+      id: '/api/webhooks/dodo'
+      path: '/api/webhooks/dodo'
+      fullPath: '/api/webhooks/dodo'
+      preLoaderRoute: typeof ApiWebhooksDodoRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -224,7 +304,11 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   VocabularyRoute: VocabularyRoute,
   ApiAnalyzeRoute: ApiAnalyzeRoute,
+  ApiCheckoutRoute: ApiCheckoutRoute,
+  ApiCustomerPortalRoute: ApiCustomerPortalRoute,
+  CheckoutSuccessRoute: CheckoutSuccessRoute,
   ResultsSessionIdRoute: ResultsSessionIdRoute,
+  ApiWebhooksDodoRoute: ApiWebhooksDodoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
