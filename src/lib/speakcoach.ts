@@ -592,6 +592,7 @@ export type Profile = {
   reminders: boolean;
   strictFillers: boolean;
   plan: SubscriptionTier;
+  dodoPaymentLink?: string;
 };
 
 export type StoreState = { profile: Profile; sessions: Session[] };

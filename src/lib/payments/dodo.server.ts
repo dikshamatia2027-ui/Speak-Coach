@@ -4,6 +4,7 @@ export interface CreateCheckoutInput {
   email?: string;
   name?: string;
   returnUrl?: string;
+  paymentLink?: string;
   metadata?: Record<string, string>;
 }
 
@@ -32,7 +33,18 @@ export function getDodoClient(): { client: DodoPayments | null; isTest: boolean;
 }
 
 export async function createDodoCheckout(input: CreateCheckoutInput): Promise<CheckoutResult> {
-  const { client, isTest, missingConfig } = getDodoClient();
+  // If a direct Dodo Payment link is provided via input or env, use it immediately
+  const directLink = input.paymentLink || process.env.DODO_PAYMENTS_PAYMENT_LINK;
+  const isTest = process.env.DODO_PAYMENTS_ENVIRONMENT !== "live_mode";
+  if (directLink && directLink.trim().startsWith("http")) {
+    return {
+      ok: true,
+      checkoutUrl: directLink.trim(),
+      testMode: isTest,
+    };
+  }
+
+  const { client, missingConfig } = getDodoClient();
   const productId = process.env.DODO_PAYMENTS_PRODUCT_ID || "pdt_speakcoach_pro";
 
   if (missingConfig || !client) {
@@ -40,7 +52,7 @@ export async function createDodoCheckout(input: CreateCheckoutInput): Promise<Ch
       ok: false,
       missingConfig: true,
       testMode: isTest,
-      error: "DODO_PAYMENTS_API_KEY is not configured in environment variables.",
+      error: "Dodo Payments is not configured yet. Please set DODO_PAYMENTS_API_KEY or your Dodo Product Payment Link to ask users to pay.",
     };
   }
 

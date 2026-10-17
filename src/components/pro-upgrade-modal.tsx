@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, Crown, Loader2, Sparkles, X, Zap } from "lucide-react";
+import { AlertCircle, Check, Crown, Loader2, Sparkles, X, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,8 +47,19 @@ export function ProUpgradeModal({
   const { profile } = useStore();
   const isPro = profile.plan === "pro";
   const [loading, setLoading] = React.useState(false);
+  const [showSetup, setShowSetup] = React.useState(false);
+  const [paymentLinkInput, setPaymentLinkInput] = React.useState(profile.dodoPaymentLink || "");
 
-  async function handleUpgrade() {
+  async function handleUpgrade(overrideLink?: string) {
+    const linkToUse = overrideLink || paymentLinkInput || profile.dodoPaymentLink;
+
+    // If a direct Dodo payment link is known, redirect immediately
+    if (linkToUse && linkToUse.trim().startsWith("http")) {
+      toast.info("Redirecting to Dodo Payments checkout...");
+      window.location.href = linkToUse.trim();
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/checkout", {
@@ -57,6 +68,7 @@ export function ProUpgradeModal({
         body: JSON.stringify({
           name: profile.name || undefined,
           returnUrl: `${window.location.origin}/checkout/success`,
+          paymentLink: linkToUse || undefined,
         }),
       });
 
@@ -68,27 +80,33 @@ export function ProUpgradeModal({
       }
 
       if (data.missingConfig) {
-        // Fallback for preview / demo when DODO_PAYMENTS_API_KEY is not yet added
-        store.setProfile({ plan: "pro" });
-        toast.success("Welcome to SpeakCoach Pro! (Unlocked in preview test mode)");
-        onOpenChange(false);
+        setShowSetup(true);
+        toast.error("Dodo Payments is not configured yet. Please provide your Dodo payment link or API key.");
         return;
       }
 
       toast.error(data.error || "Failed to start checkout. Please try again.");
     } catch (err: any) {
       console.error("Checkout error:", err);
-      store.setProfile({ plan: "pro" });
-      toast.success("Welcome to SpeakCoach Pro!");
-      onOpenChange(false);
+      setShowSetup(true);
+      toast.error("Could not connect to payment gateway. Please verify Dodo Payments setup.");
     } finally {
       setLoading(false);
     }
   }
 
-  function handleDowngrade() {
-    store.setProfile({ plan: "free" });
-    toast.info("Switched back to Free plan.");
+  function handleSaveAndPay() {
+    if (!paymentLinkInput.trim() || !paymentLinkInput.trim().startsWith("http")) {
+      toast.error("Please enter a valid Dodo checkout link (e.g. https://test.checkout.dodopayments.com/buy/...)");
+      return;
+    }
+    store.setProfile({ dodoPaymentLink: paymentLinkInput.trim() });
+    void handleUpgrade(paymentLinkInput.trim());
+  }
+
+  function handleDevBypass() {
+    store.setProfile({ plan: "pro" });
+    toast.success("Welcome to SpeakCoach Pro! (Unlocked in manual dev mode)");
     onOpenChange(false);
   }
 
@@ -149,6 +167,48 @@ export function ProUpgradeModal({
               7-day risk-free
             </span>
           </div>
+
+          {/* Dodo Payments Connection Panel (shows if API key is missing or user wants direct link) */}
+          {showSetup && !isPro && (
+            <div className="rounded-2xl border border-warning/40 bg-warning/5 p-4 space-y-3 animate-rise">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="size-5 text-warning shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-warning">Dodo Payments Checkout</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    To ask users for real payment, paste your <strong>Dodo Product Payment Link</strong> below (from Dodo Dashboard → Products → Share Link) or set <code className="text-[11px] bg-muted px-1 py-0.5 rounded">DODO_PAYMENTS_API_KEY</code> in Vercel.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  placeholder="https://test.checkout.dodopayments.com/buy/pdt_..."
+                  value={paymentLinkInput}
+                  onChange={(e) => setPaymentLinkInput(e.target.value)}
+                  className="flex-1 rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+                <Button
+                  size="sm"
+                  variant="hero"
+                  className="h-auto text-xs px-3 font-semibold"
+                  onClick={handleSaveAndPay}
+                >
+                  Pay with Dodo
+                </Button>
+              </div>
+              <div className="pt-1 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40">
+                <span>Testing without payment?</span>
+                <button
+                  type="button"
+                  onClick={handleDevBypass}
+                  className="underline hover:text-foreground transition-colors font-medium"
+                >
+                  (Dev Only) Skip payment &amp; unlock Pro
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">

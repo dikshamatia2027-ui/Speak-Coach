@@ -6,7 +6,7 @@ export const Route = createFileRoute("/api/checkout")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          let body: { email?: string; name?: string; returnUrl?: string } = {};
+          let body: { email?: string; name?: string; returnUrl?: string; paymentLink?: string } = {};
           try {
             body = await request.json();
           } catch {
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/api/checkout")({
             email: body.email,
             name: body.name,
             returnUrl,
+            paymentLink: body.paymentLink,
             metadata: {
               source: "speakcoach_web",
             },

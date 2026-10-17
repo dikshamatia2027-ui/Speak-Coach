@@ -208,6 +208,24 @@ function Settings() {
                   ? "Unlimited sessions, specialized executive scenarios, and acoustic analytics enabled via Dodo Payments."
                   : "3 sessions/week included. Upgrade with Dodo Payments for unlimited practice and executive scenarios."}
               </p>
+
+              {/* Optional Dodo Payment Link Configuration */}
+              <div className="mt-3 pt-3 border-t border-border/50">
+                <label className="text-[11px] font-semibold text-foreground block">
+                  Dodo Hosted Payment Link
+                </label>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Product payment link from Dodo Dashboard (Products → Share Link) to direct customers straight to checkout.
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    placeholder="https://test.checkout.dodopayments.com/buy/pdt_..."
+                    value={profile.dodoPaymentLink || ""}
+                    onChange={(e) => store.setProfile({ dodoPaymentLink: e.target.value })}
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
