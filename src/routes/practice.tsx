@@ -1,11 +1,28 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Mic, Square, ArrowLeft, RotateCcw, Pause, Play, Crown, Lock, Zap } from "lucide-react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Crown,
+  Heart,
+  Lock,
+  Mic,
+  Pause,
+  Play,
+  Repeat,
+  RotateCcw,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  SlidersHorizontal,
+  Square,
+  Volume2,
+  Zap,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { ProUpgradeModal } from "@/components/pro-upgrade-modal";
 import {
-  checkPracticeAccess,
   currentWeekSessions,
   FREE_WEEKLY_LIMIT,
   goalById,
@@ -20,13 +37,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/practice")({
   head: () => ({
     meta: [
-      { title: "Practice session — SpeakCoach" },
+      { title: "Practice studio — SpeakCoach" },
       {
         name: "description",
         content:
           "Pick a realistic speaking scenario, record your answer out loud, and get an instant coaching report.",
       },
-      { property: "og:title", content: "Practice session — SpeakCoach" },
+      { property: "og:title", content: "Practice studio — SpeakCoach" },
       {
         property: "og:description",
         content: "Speak, get analysed, retry — one scenario at a time.",
@@ -38,7 +55,7 @@ export const Route = createFileRoute("/practice")({
   component: Practice,
 });
 
-type Phase = "pick" | "ready" | "countdown" | "recording" | "paused" | "analysing";
+type Phase = "ready" | "countdown" | "recording" | "paused" | "analysing";
 
 function formatTime(totalSeconds: number) {
   const m = Math.floor(totalSeconds / 60);
@@ -46,7 +63,7 @@ function formatTime(totalSeconds: number) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/** Animated waveform bars driven by the live microphone AnalyserNode. */
+/** Animated waveform bars driven by the live microphone AnalyserNode using semantic palette */
 function Waveform({
   active,
   analyser,
@@ -73,7 +90,7 @@ function Waveform({
     resize();
     window.addEventListener("resize", resize);
 
-    const BAR_COUNT = 48;
+    const BAR_COUNT = 40;
     const levels = new Array<number>(BAR_COUNT).fill(0.08);
     let raf = 0;
     let buf: Uint8Array<ArrayBuffer> | null = null;
@@ -84,12 +101,11 @@ function Waveform({
       ctx.clearRect(0, 0, width, height);
 
       const gap = width / BAR_COUNT;
-      const barWidth = Math.max(2 * dpr, gap * 0.45);
+      const barWidth = Math.max(2.5 * dpr, gap * 0.45);
       const gradient = ctx.createLinearGradient(0, 0, width, 0);
-      const colors = getComputedStyle(canvas);
-      gradient.addColorStop(0, colors.getPropertyValue("--primary").trim());
-      gradient.addColorStop(0.55, colors.getPropertyValue("--brand-orange").trim());
-      gradient.addColorStop(1, colors.getPropertyValue("--brand-yellow").trim());
+      gradient.addColorStop(0, "#ff5277");
+      gradient.addColorStop(0.5, "#ff9e43");
+      gradient.addColorStop(1, "#8c9eff");
       ctx.fillStyle = gradient;
 
       const node = analyser.current;
@@ -99,14 +115,13 @@ function Waveform({
       }
 
       for (let i = 0; i < BAR_COUNT; i++) {
-        // Mirror around the centre so voice energy (low bins) sits in the middle.
         const dist = Math.abs(i - (BAR_COUNT - 1) / 2) / (BAR_COUNT / 2);
         const bin = buf ? (buf[Math.floor(dist * buf.length * 0.6)] ?? 0) / 255 : 0;
-        const target = activeRef.current && node ? 0.07 + bin * 0.9 : 0.07;
+        const target = activeRef.current && node ? 0.1 + bin * 0.85 : 0.08;
         const current = levels[i] ?? 0.08;
         const nextLevel = current + (target - current) * (activeRef.current ? 0.35 : 0.08);
         levels[i] = nextLevel;
-        const h = Math.max(3 * dpr, nextLevel * height);
+        const h = Math.max(4 * dpr, nextLevel * height);
         const x = i * gap + (gap - barWidth) / 2;
         const y = (height - h) / 2;
         const r = barWidth / 2;
@@ -148,12 +163,18 @@ function Practice() {
     () => scenariosForGoal(profile.goal ?? "confidence"),
     [profile.goal],
   );
-  const [scenario, setScenario] = useState<Scenario | null>(null);
-  const [phase, setPhase] = useState<Phase>("pick");
+
+  const [scenarioIndex, setScenarioIndex] = useState(0);
+  const scenario = goalScenarios[scenarioIndex] ?? goalScenarios[0];
+
+  const [phase, setPhase] = useState<Phase>("ready");
   const [elapsed, setElapsed] = useState(0);
   const [countdown, setCountdown] = useState(3);
   const [error, setError] = useState<string | null>(null);
   const [analysingStep, setAnalysingStep] = useState("Transcribing your answer…");
+  const [showScenarioDrawer, setShowScenarioDrawer] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef(0);
   const recorderRef = useRef<Recorder | null>(null);
@@ -170,19 +191,38 @@ function Practice() {
     [],
   );
 
-  function handleSelectScenario(sc: Scenario) {
+  function handleSelectScenario(index: number) {
+    const sc = goalScenarios[index];
+    if (!sc) return;
     if (!isPro && sc.tier === "pro") {
       setModalTriggerReason("scenario_locked");
       setShowUpgradeModal(true);
       return;
     }
-    if (!isPro && isWeeklyLimitReached) {
-      setModalTriggerReason("quota_reached");
-      setShowUpgradeModal(true);
-      return;
-    }
-    setScenario(sc);
+    setScenarioIndex(index);
+    setShowScenarioDrawer(false);
     setPhase("ready");
+    setElapsed(0);
+    elapsedRef.current = 0;
+  }
+
+  function handleNextScenario() {
+    if (goalScenarios.length === 0) return;
+    const nextIdx = (scenarioIndex + 1) % goalScenarios.length;
+    handleSelectScenario(nextIdx);
+  }
+
+  function handlePrevScenario() {
+    if (goalScenarios.length === 0) return;
+    const prevIdx = (scenarioIndex - 1 + goalScenarios.length) % goalScenarios.length;
+    handleSelectScenario(prevIdx);
+  }
+
+  function handleShuffleScenario() {
+    if (goalScenarios.length <= 1) return;
+    let rand = Math.floor(Math.random() * goalScenarios.length);
+    if (rand === scenarioIndex) rand = (rand + 1) % goalScenarios.length;
+    handleSelectScenario(rand);
   }
 
   async function startCountdown() {
@@ -198,7 +238,6 @@ function Practice() {
     }
 
     setError(null);
-    // Ask for the mic first so the permission prompt doesn't interrupt the countdown.
     try {
       const rec = await startRecording();
       rec.setPaused(true);
@@ -232,8 +271,7 @@ function Practice() {
     timerRef.current = setInterval(() => {
       elapsedRef.current += 1;
       setElapsed(elapsedRef.current);
-      // Hard cap well under the transcription size limit.
-      if (elapsedRef.current >= Math.max(scenario!.seconds * 3, 180)) void finish();
+      if (elapsedRef.current >= Math.max((scenario?.seconds ?? 60) * 3, 180)) void finish();
     }, 1000);
   }
 
@@ -266,8 +304,8 @@ function Practice() {
     const rec = recorderRef.current;
     recorderRef.current = null;
     analyserRef.current = null;
-    if (!rec) return;
-    const sc = scenario!;
+    if (!rec || !scenario) return;
+    const sc = scenario;
     const duration = Math.max(elapsedRef.current, 1);
     setPhase("analysing");
     setAnalysingStep("Transcribing your answer…");
@@ -320,278 +358,277 @@ function Practice() {
   const isLive = phase === "recording";
   const isPaused = phase === "paused";
   const inSession = isLive || isPaused;
+  const targetSeconds = scenario?.seconds ?? 60;
+  const progressPercent = Math.min(100, (elapsed / targetSeconds) * 100);
 
   return (
     <AppShell>
-      {/* Upgrade dialog */}
       <ProUpgradeModal
         open={showUpgradeModal}
         onOpenChange={setShowUpgradeModal}
         triggerReason={modalTriggerReason}
       />
 
-      {phase === "pick" && (
-        <div className="animate-rise">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold sm:text-4xl">Choose your scenario</h1>
-              <p className="mt-2 text-muted-foreground">
-                Based on your goal: {goalById(profile.goal ?? "confidence")?.label}. Each takes about a
-                minute.
-              </p>
-            </div>
-            
-            {/* Free tier weekly status badge */}
-            {!isPro ? (
-              <div className="rounded-2xl border border-border/80 bg-card p-3 sm:px-4 flex items-center gap-3">
-                <div className="text-right">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Free Plan Limit
-                  </div>
-                  <div className="text-sm font-bold text-foreground">
-                    <span className={cn(isWeeklyLimitReached ? "text-destructive" : "text-primary")}>
-                      {sessionsThisWeek} / {FREE_WEEKLY_LIMIT}
-                    </span>{" "}
-                    sessions this week
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-brand-yellow/40 text-warning  hover:bg-brand-yellow/10 text-xs font-bold gap-1"
-                  onClick={() => {
-                    setModalTriggerReason(isWeeklyLimitReached ? "quota_reached" : null);
-                    setShowUpgradeModal(true);
-                  }}
-                >
-                  <Crown className="size-3 fill-brand-yellow" /> Unlock Unlimited
-                </Button>
-              </div>
-            ) : (
-              <div className="inline-flex items-center gap-2 rounded-2xl bg-brand-yellow/10 border border-brand-yellow/30 px-4 py-2 text-xs font-bold text-warning ">
-                <Crown className="size-4 fill-brand-yellow" /> Pro Member · Unlimited Practice
-              </div>
-            )}
-          </div>
-
-          {/* Warning banner if free limit reached */}
-          {isWeeklyLimitReached && (
-            <div className="mt-5 rounded-xl border border-brand-yellow/35 bg-brand-yellow/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
-              <div className="flex items-start gap-3">
-                <Zap className="size-4 text-warning  shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-xs sm:text-sm text-foreground">
-                    Weekly free sessions cap reached ({FREE_WEEKLY_LIMIT}/{FREE_WEEKLY_LIMIT})
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Your allocation resets next Monday. Unlock unlimited recordings and specialized executive scenarios with Pro.
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="hero"
-                size="sm"
-                className="shrink-0 h-8 text-xs font-semibold gap-1.5 self-start sm:self-auto"
-                onClick={() => {
-                  setModalTriggerReason("quota_reached");
-                  setShowUpgradeModal(true);
-                }}
-              >
-                <Crown className="size-3 fill-primary-foreground" /> Upgrade to Pro
-              </Button>
-            </div>
-          )}
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {goalScenarios.map((sc) => {
-              const isLocked = !isPro && sc.tier === "pro";
-              return (
-                <button
-                  key={sc.id}
-                  onClick={() => handleSelectScenario(sc)}
-                  className={cn(
-                    "surface group relative p-5 text-left transition-all hover:border-primary/50 hover:shadow-xs cursor-pointer flex flex-col justify-between",
-                    isLocked && "border-dashed bg-secondary/30",
-                  )}
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-base font-semibold group-hover:text-primary leading-snug text-foreground">
-                        {sc.prompt}
-                      </p>
-                      {sc.tier === "pro" && (
-                        <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-brand-yellow/10 border border-brand-yellow/25 px-2 py-0.5 text-[10px] font-bold text-warning ">
-                          {isLocked ? <Lock className="size-2.5" /> : <Crown className="size-2.5 fill-brand-yellow" />}
-                          PRO {sc.badge ? `· ${sc.badge}` : ""}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{sc.context}</p>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
-                    <span className="text-[11px] font-semibold tracking-wider text-primary uppercase">
-                      {sc.seconds}s target duration
-                    </span>
-                    {isLocked ? (
-                      <span className="text-xs font-semibold text-warning  flex items-center gap-1">
-                        <Lock className="size-3" /> Pro scenario
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                        Select →
-                      </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          {goalScenarios.length === 0 && (
-            <p className="mt-8 text-sm text-muted-foreground">No scenarios for this goal yet.</p>
-          )}
-        </div>
-      )}
-
-      {phase === "ready" && scenario && (
-        <div className="animate-rise mx-auto max-w-xl text-center">
-          <button
-            onClick={() => setPhase("pick")}
-            className="mb-5 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+      <div className="max-w-xl mx-auto space-y-5 animate-rise">
+        {/* Practice Studio Top Navigation Bar (Screen 3 Header) */}
+        <div className="flex items-center justify-between">
+          <Link
+            to="/dashboard"
+            aria-label="Back to dashboard"
+            className="flex size-10 items-center justify-center rounded-2xl bg-white border border-[#ede8e1] text-foreground/80 hover:text-foreground hover:bg-[#f4f2ee] transition-colors shadow-xs"
           >
-            <ArrowLeft className="size-3.5" /> Back to scenario selection
+            <ChevronDown className="size-5" />
+          </Link>
+
+          <div className="text-center">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+              {goalById(scenario?.goal ?? "confidence")?.label}
+            </span>
+            <h2 className="font-serif text-base font-bold text-foreground">Practice Studio</h2>
+          </div>
+
+          <button
+            onClick={() => setShowScenarioDrawer((prev) => !prev)}
+            aria-label="Scenario selector drawer"
+            className="flex size-10 items-center justify-center rounded-2xl bg-white border border-[#ede8e1] text-foreground/80 hover:text-foreground hover:bg-[#f4f2ee] transition-colors shadow-xs cursor-pointer"
+          >
+            <SlidersHorizontal className="size-4.5" />
           </button>
-          <div className="surface p-6 sm:p-8">
-            <span className="inline-block rounded-md bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
-              {goalById(scenario.goal)?.label}
-            </span>
-            <h1 className="mt-3 text-xl font-bold sm:text-2xl text-foreground">{scenario.prompt}</h1>
-            <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">{scenario.context}</p>
-            <div className="mt-6 rounded-lg bg-secondary/60 border border-border/40 p-3 text-xs text-muted-foreground">
-              Speak for approximately <strong>{scenario.seconds} seconds</strong>. Speak naturally as if in person—the AI engine will measure pacing, fillers, and clarity.
+        </div>
+
+        {/* Analysing Loading Screen */}
+        {phase === "analysing" ? (
+          <div className="surface p-12 text-center rounded-[2.5rem] my-8 animate-rise">
+            <div className="flex size-20 items-center justify-center rounded-full bg-[#fdebf1] text-[#ff5277] mx-auto shadow-md shadow-[#ff5277]/20">
+              <RotateCcw className="size-8 animate-spin" />
             </div>
-            {error && (
-              <p role="alert" className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive font-medium">
-                {error}
-              </p>
-            )}
-            <Button variant="hero" size="lg" className="mt-6 h-11 px-8 gap-2 font-semibold shadow-xs" onClick={() => void startCountdown()}>
-              <Mic className="size-4" /> Start recording
-            </Button>
+            <h2 className="font-serif text-2xl font-bold mt-6">Analysing your delivery…</h2>
+            <p className="text-sm text-muted-foreground mt-2">{analysingStep}</p>
           </div>
-        </div>
-      )}
+        ) : (
+          <>
+            {/* Large Rounded Artwork / Player Container (Screen 3 Figma) */}
+            <div className="relative rounded-[2.25rem] bg-gradient-to-br from-[#fef3e7] via-[#fdebf1] to-[#e8f7f2] border border-[#ede8e1] p-6 sm:p-8 flex flex-col items-center justify-center text-center shadow-soft overflow-hidden min-h-[280px]">
+              {/* Status Chip */}
+              <div className="absolute top-5 left-5 inline-flex items-center gap-1.5 rounded-full bg-white/80 backdrop-blur-md border border-white/60 px-3 py-1 text-[11px] font-bold shadow-xs">
+                <span
+                  className={cn(
+                    "size-2 rounded-full",
+                    isLive ? "bg-red-500 animate-pulse" : isPaused ? "bg-amber-500" : "bg-emerald-500",
+                  )}
+                />
+                <span className="text-foreground/90 uppercase tracking-wider">
+                  {phase === "countdown"
+                    ? "Starting…"
+                    : isLive
+                      ? "Recording"
+                      : isPaused
+                        ? "Paused"
+                        : "Ready to speak"}
+                </span>
+              </div>
 
-      {phase === "countdown" && scenario && (
-        <div className="animate-rise mx-auto flex max-w-xl flex-col items-center py-16 text-center">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{scenario.prompt}</p>
-          <div className="relative mt-8 flex size-32 items-center justify-center">
-            <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/20" />
-            <span className="absolute inset-0 rounded-full border border-border bg-card" />
-            <span className="font-display text-primary text-6xl font-bold tabular-nums relative">
-              {countdown}
-            </span>
-          </div>
-          <p className="mt-6 text-sm font-medium text-foreground">
-            Take a breath and prepare to speak
-          </p>
-        </div>
-      )}
-
-      {inSession && scenario && (
-        <div className="animate-rise mx-auto max-w-xl text-center">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{scenario.prompt}</p>
-
-          {/* Status chip */}
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1 text-xs font-semibold shadow-xs">
-            <span
-              className={cn(
-                "size-2 rounded-full",
-                isLive ? "animate-pulse bg-destructive" : "bg-warning",
+              {/* Pro Badge if applicable */}
+              {scenario?.tier === "pro" && (
+                <div className="absolute top-5 right-5 inline-flex items-center gap-1 rounded-full bg-[#ff9e43] text-white px-2.5 py-0.5 text-[10px] font-bold shadow-xs">
+                  <Crown className="size-3 fill-white" /> PRO
+                </div>
               )}
-            />
-            <span className="text-[11px] uppercase tracking-wider">
-              {isLive ? "Live Recording" : "Paused"}
-            </span>
-          </div>
 
-          {/* Timer & Mic area */}
-          <div className="mt-6 flex flex-col items-center">
-            <div className="relative flex size-28 items-center justify-center">
-              {isLive && (
-                <>
-                  <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/25" />
-                  <span
-                    className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/15"
-                    style={{ animationDelay: "0.8s" }}
-                  />
-                </>
-              )}
-              <div
-                className={cn(
-                  "bg-brand shadow-md relative flex size-24 items-center justify-center rounded-full transition-all duration-300",
-                  isPaused && "scale-95 opacity-80 shadow-xs",
+              {/* Ambient Center Graphic / Live Waveform */}
+              <div className="w-full flex flex-col items-center justify-center py-4">
+                {phase === "countdown" ? (
+                  <div className="relative flex size-28 items-center justify-center">
+                    <span className="absolute inset-0 animate-pulse-ring rounded-full bg-[#ff5277]/30" />
+                    <div className="flex size-24 items-center justify-center rounded-full bg-white text-[#ff5277] font-serif text-5xl font-bold shadow-lift">
+                      {countdown}
+                    </div>
+                  </div>
+                ) : inSession ? (
+                  <div className="w-full max-w-sm">
+                    <Waveform active={isLive} analyser={analyserRef} />
+                  </div>
+                ) : (
+                  <div className="relative flex size-28 items-center justify-center">
+                    <span className="absolute inset-0 rounded-full bg-white/40 blur-md" />
+                    <div className="relative flex size-24 items-center justify-center rounded-full bg-white shadow-lift text-[#ff5277]">
+                      <Mic className="size-10 stroke-[2]" />
+                    </div>
+                  </div>
                 )}
+              </div>
+
+              {/* Error message if microphone blocked */}
+              {error && (
+                <div className="mt-3 rounded-xl bg-red-100 border border-red-200 text-red-700 p-2.5 text-xs font-medium max-w-xs">
+                  {error}
+                </div>
+              )}
+            </div>
+
+            {/* Track Info (Prompt title & Details) */}
+            <div className="flex items-start justify-between gap-4 pt-1">
+              <div className="min-w-0 flex-1">
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-snug">
+                  {scenario?.prompt || "Executive Boardroom Intro"}
+                </h1>
+                <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  {scenario?.context || "Speak naturally. We measure filler words, pacing and clarity."}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsBookmarked((prev) => !prev)}
+                aria-label="Favorite scenario"
+                className="flex size-10 items-center justify-center rounded-2xl bg-white border border-[#ede8e1] text-foreground/80 hover:text-[#ff5277] transition-colors shadow-xs shrink-0 cursor-pointer"
               >
-                <Mic className="size-9 text-primary-foreground" />
+                <Heart
+                  className={cn(
+                    "size-5 transition-colors",
+                    isBookmarked ? "fill-[#ff5277] text-[#ff5277]" : "text-muted-foreground",
+                  )}
+                />
+              </button>
+            </div>
+
+            {/* Scrubber / Progress Bar (Screen 3 Player) */}
+            <div className="space-y-1.5 pt-2">
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-[#ede8e1]">
+                <div
+                  className="h-full rounded-full bg-[#ff5277] transition-all duration-300"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground tabular-nums">
+                <span>{formatTime(elapsed)}</span>
+                <span>{formatTime(targetSeconds)}</span>
               </div>
             </div>
 
-            {/* Timer */}
-            <p className="font-display mt-5 text-5xl font-bold tabular-nums tracking-tight text-foreground">
-              {formatTime(elapsed)}
-            </p>
-            <p className="mt-1 text-xs font-medium text-muted-foreground">
-              {isLive
-                ? `Recommended duration: ${formatTime(scenario.seconds)}`
-                : "Paused — resume speaking when ready"}
-            </p>
-          </div>
+            {/* Playback & Recording 5-Button Control Bar (Exact Figma Screen 3) */}
+            <div className="flex items-center justify-center gap-5 sm:gap-7 py-3">
+              {/* 1. Shuffle */}
+              <button
+                onClick={handleShuffleScenario}
+                disabled={inSession}
+                title="Shuffle scenario"
+                className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[#ede8e1]/60 transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <Shuffle className="size-5" />
+              </button>
 
-          {/* Waveform */}
-          <div className="surface mt-6 p-4">
-            <Waveform active={isLive} analyser={analyserRef} />
-          </div>
+              {/* 2. Previous */}
+              <button
+                onClick={handlePrevScenario}
+                disabled={inSession}
+                title="Previous scenario"
+                className="flex size-11 items-center justify-center rounded-full text-foreground/80 hover:text-foreground hover:bg-[#ede8e1]/60 transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <SkipBack className="size-6 fill-current" />
+              </button>
 
-          {/* Controls */}
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <button
-              onClick={togglePause}
-              aria-label={isLive ? "Pause recording" : "Resume recording"}
-              className="surface flex size-12 items-center justify-center rounded-xl transition-all hover:bg-secondary cursor-pointer"
-            >
-              {isLive ? (
-                <Pause className="size-5 fill-foreground text-foreground" />
+              {/* 3. Center Giant Pink Circular Record / Stop Button */}
+              {inSession ? (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={togglePause}
+                    aria-label={isLive ? "Pause recording" : "Resume recording"}
+                    className="flex size-12 items-center justify-center rounded-full bg-white border border-[#ede8e1] text-foreground shadow-md hover:bg-[#f4f2ee] transition-all cursor-pointer"
+                  >
+                    {isLive ? <Pause className="size-5" /> : <Play className="size-5 fill-current" />}
+                  </button>
+                  <button
+                    onClick={() => void finish()}
+                    aria-label="Complete and analyze"
+                    className="flex size-20 items-center justify-center rounded-full bg-red-600 text-white shadow-xl shadow-red-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Square className="size-7 fill-white" />
+                  </button>
+                </div>
               ) : (
-                <Play className="size-5 fill-foreground text-foreground" />
+                <button
+                  onClick={() => void startCountdown()}
+                  disabled={phase === "countdown"}
+                  aria-label="Start recording"
+                  className="flex size-20 sm:size-22 items-center justify-center rounded-full bg-[#ff5277] text-white shadow-xl shadow-[#ff5277]/40 hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+                >
+                  <Mic className="size-9 text-white group-hover:scale-110 transition-transform stroke-[2.2]" />
+                </button>
               )}
-            </button>
-            <button
-              onClick={() => void finish()}
-              aria-label="Finish and generate feedback"
-              className="bg-brand shadow-xs flex h-12 items-center gap-2 rounded-xl px-6 text-sm font-semibold text-primary-foreground transition-all hover:brightness-105 cursor-pointer"
-            >
-              <Square className="size-3.5 fill-primary-foreground" />
-              Complete &amp; Analyse
-            </button>
-          </div>
 
-          <p className="mt-6 text-xs text-muted-foreground">
-            Transcripts are parsed on completion for speech rate, filler detection, and clarity scoring.
-          </p>
-        </div>
-      )}
+              {/* 4. Next */}
+              <button
+                onClick={handleNextScenario}
+                disabled={inSession}
+                title="Next scenario"
+                className="flex size-11 items-center justify-center rounded-full text-foreground/80 hover:text-foreground hover:bg-[#ede8e1]/60 transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <SkipForward className="size-6 fill-current" />
+              </button>
 
-      {phase === "analysing" && (
-        <div className="animate-rise mx-auto flex max-w-sm flex-col items-center py-24 text-center">
-          <span className="bg-brand shadow-glow flex size-16 items-center justify-center rounded-full">
-            <RotateCcw className="size-6 animate-spin text-primary-foreground" />
-          </span>
-          <h1 className="mt-6 text-2xl font-bold">Analysing your delivery…</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {analysingStep}
-          </p>
-        </div>
-      )}
+              {/* 5. Repeat / Reset */}
+              <button
+                onClick={() => {
+                  setElapsed(0);
+                  elapsedRef.current = 0;
+                  setPhase("ready");
+                }}
+                disabled={inSession}
+                title="Reset timer"
+                className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[#ede8e1]/60 transition-colors disabled:opacity-40 cursor-pointer"
+              >
+                <Repeat className="size-5" />
+              </button>
+            </div>
+
+            {/* Quick Scenario Selector Drawer */}
+            {showScenarioDrawer && (
+              <div className="surface p-5 rounded-3xl space-y-3 animate-fade border border-[#ede8e1]">
+                <div className="flex items-center justify-between pb-2 border-b border-[#ede8e1]">
+                  <h3 className="font-serif font-bold text-base">Select Speaking Scenario</h3>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {goalScenarios.length} available
+                  </span>
+                </div>
+                <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                  {goalScenarios.map((sc, idx) => {
+                    const isCurrent = idx === scenarioIndex;
+                    const isLocked = !isPro && sc.tier === "pro";
+
+                    return (
+                      <button
+                        key={sc.id}
+                        onClick={() => handleSelectScenario(idx)}
+                        className={cn(
+                          "w-full text-left p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer",
+                          isCurrent
+                            ? "border-[#ff5277] bg-[#fdebf1] text-foreground"
+                            : "border-[#ede8e1] bg-white hover:bg-[#f4f2ee]",
+                          isLocked && "opacity-75",
+                        )}
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-semibold truncate">{sc.prompt}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {sc.seconds}s target • {goalById(sc.goal)?.label}
+                          </p>
+                        </div>
+                        {isLocked ? (
+                          <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-[#ff9e43]">
+                            <Lock className="size-3" /> PRO
+                          </span>
+                        ) : isCurrent ? (
+                          <span className="shrink-0 size-2 rounded-full bg-[#ff5277]" />
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </AppShell>
   );
 }
