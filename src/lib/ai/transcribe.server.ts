@@ -1,67 +1,67 @@
-import { createParser } from "eventsource-parser";
+import { GatewayError, GROQ_TRANSCRIBE_MODEL, groqTranscribe } from "./groq.server";
 
-const GATEWAY = "https://ai.gateway.lovable.dev";
-const MODEL = "google/gemini-3.5-transcribe";
-/** Gemini transcription caps files at 14 MB. */
-export const MAX_AUDIO_BYTES = 13 * 1024 * 1024;
+/** Upload guard. Recordings are capped at 180s (≈6 MB WAV @ 16 kHz mono), and
+ * inline base64 stays comfortably under Groq's request-size limits.
+ */
+export const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
 
-export class GatewayError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
-/** Speech-to-text step: audio file in, full transcript out (streams SSE server-side). */
+/** Speech-to-text step: audio file in, verbatim transcript out.
+ * 
+ * Uses Groq's Whisper model (whisper-large-v3) via the audio transcriptions endpoint.
+ * VERBATIM is the default mode: it preserves filler words ("um", "uh",
+ * "like", "you know"), repetitions and false starts exactly as spoken — which
+ * the filler-word counter in the domain layer depends on. SMART mode (which
+ * strips disfluencies) is deliberately not enabled.
+ */
+/** Transcribe audio from a File using Groq's Whisper model. */
 export async function transcribeAudio(file: File, apiKey: string, signal?: AbortSignal) {
   if (!file.size || file.size > MAX_AUDIO_BYTES) throw new GatewayError(400, "Recording is empty or too large.");
+
   const type = file.type.startsWith("audio/") ? file.type : "audio/wav";
-  const form = new FormData();
-  form.append("model", MODEL);
-  form.append("file", new File([file], file.name || "recording.wav", { type }));
-  form.append("response_format", "json");
-  form.append("stream", "true");
 
-  const res = await fetch(`${GATEWAY}/v1/audio/transcriptions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}` },
-    body: form,
-    ...(signal ? { signal } : {}),
-  });
-  if (!res.ok || !res.body) {
-    throw new GatewayError(res.status, await safeMessage(res, "Transcription failed."));
-  }
+  const bytes = new Uint8Array(await file.arrayBuffer());
 
-  let deltas = "";
-  let final: string | null = null;
-  let streamError: string | null = null;
-  const parser = createParser({
-    onEvent(ev) {
-      if (!ev.data || ev.data === "[DONE]") return;
-      try {
-        const data = JSON.parse(ev.data) as { type?: string; delta?: string; text?: string; error?: { message?: string } };
-        if (data.type === "transcript.text.delta" && data.delta) deltas += data.delta;
-        else if (data.type === "transcript.text.done") final = data.text ?? deltas;
-        else if (data.error || data.type === "error") streamError = data.error?.message ?? "Transcription failed.";
-      } catch {
-        /* ignore keep-alives */
+  // Groq Whisper expects a FormData with the audio file
+  const formData = new FormData();
+  formData.append("file", new Blob([bytes]), "audio.wav");
+  formData.append("model", GROQ_TRANSCRIBE_MODEL);
+  // language omitted for auto-detection
+
+  const response = await groqTranscribe(bytes, apiKey, signal);
+
+  // Extract text from the Groq Whisper response
+  let transcript = "";
+  try {
+    const data = response as {
+      text?: string;
+      language?: string;
+      segments?: Array<{ id: number; start: number; end: number; text: string }>;
+      // fallback: any string-valued property
+      [key: string]: unknown;
+    };
+    if (data.text) {
+      transcript = data.text;
+    } else if (data.segments && data.segments.length > 0) {
+      transcript = data.segments.map((s) => s.text).join(" ");
+    } else {
+      // Fallback: iterate known keys
+      const possibleKeys = ["text", "transcript", "result", "response"];
+      for (const key of possibleKeys) {
+        if (key in data && typeof (data as any)[key] === "string") {
+          transcript = (data as any)[key];
+          break;
+        }
       }
-    },
-  });
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    parser.feed(decoder.decode(value, { stream: true }));
+    }
+  } catch {
+    // ignore
   }
-  if (streamError) throw new GatewayError(502, streamError);
-  if (final === null) throw new GatewayError(502, "Transcription ended before completing. Please try again.");
-  return (final as string).trim();
+
+  if (!transcript) throw new GatewayError(502, "Transcription ended before completing. Please try again.");
+  return transcript.trim();
 }
 
+/** Extract a human message from an error body. Kept for interface compatibility. */
 export async function safeMessage(res: Response, fallback: string) {
   try {
     const text = await res.text();
@@ -71,3 +71,4 @@ export async function safeMessage(res: Response, fallback: string) {
     return fallback;
   }
 }
+export { GatewayError }
