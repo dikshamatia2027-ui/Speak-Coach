@@ -50,8 +50,7 @@ function Onboarding() {
   }
 
   return (
-    <div className="bg-soft relative min-h-screen">
-      <div className="bg-halo pointer-events-none absolute inset-x-0 -top-40 h-[480px]" />
+    <div className="bg-background relative min-h-screen">
       <div className="relative mx-auto flex max-w-2xl flex-col px-4 py-8 sm:px-6 sm:py-12">
         <Logo />
 
@@ -70,8 +69,8 @@ function Onboarding() {
         <div key={step} className="surface animate-rise mt-6 p-6 sm:p-8">
           {step === 0 && (
             <>
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">First, what should we call you?</h1>
-              <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">First, what should we call you?</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground sm:text-base">
                 Your coaching reports and feedback will be addressed to you.
               </p>
               <Input
@@ -87,8 +86,8 @@ function Onboarding() {
 
           {step === 1 && (
             <>
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">What are you practising for?</h1>
-              <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">What are you practising for?</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground sm:text-base">
                 Select your primary goal to personalise recommended scenarios.
               </p>
               <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
@@ -107,8 +106,8 @@ function Onboarding() {
                       <span className="text-lg">{g.emoji}</span>
                       {goal === g.id && <Check className="size-4 text-primary" />}
                     </span>
-                    <span className="mt-2 block text-xs font-semibold text-foreground sm:text-sm">{g.label}</span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">{g.blurb}</span>
+                    <span className="mt-2 block text-sm font-semibold text-foreground sm:text-base">{g.label}</span>
+                    <span className="mt-0.5 block text-sm text-muted-foreground">{g.blurb}</span>
                   </button>
                 ))}
               </div>
@@ -117,8 +116,8 @@ function Onboarding() {
 
           {step === 2 && (
             <>
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">How does speaking feel today?</h1>
-              <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">How does speaking feel today?</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground sm:text-base">
                 We calibrate difficulty benchmarks and the tone of your feedback.
               </p>
               <div className="mt-5 space-y-2.5">
@@ -134,8 +133,8 @@ function Onboarding() {
                     )}
                   >
                     <span>
-                      <span className="block text-xs font-semibold text-foreground sm:text-sm">{l.label}</span>
-                      <span className="block text-xs text-muted-foreground">{l.body}</span>
+                      <span className="block text-sm font-semibold text-foreground sm:text-base">{l.label}</span>
+                      <span className="block text-sm text-muted-foreground">{l.body}</span>
                     </span>
                     {level === l.id && <Check className="size-4 shrink-0 text-primary" />}
                   </button>
@@ -143,14 +142,14 @@ function Onboarding() {
               </div>
 
               <div className="mt-6 border-t border-border/60 pt-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Target sessions per week</p>
+                <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Target sessions per week</p>
                 <div className="mt-3 flex gap-2">
                   {[2, 3, 5, 7].map((n) => (
                     <button
                       key={n}
                       onClick={() => setWeeklyTarget(n)}
                       className={cn(
-                        "h-10 flex-1 rounded-lg border text-xs font-semibold transition-colors",
+                        "h-10 flex-1 rounded-lg border text-sm font-semibold transition-colors",
                         weeklyTarget === n
                           ? "border-primary bg-primary text-primary-foreground shadow-xs"
                           : "border-border/70 bg-card text-muted-foreground hover:border-border hover:text-foreground",

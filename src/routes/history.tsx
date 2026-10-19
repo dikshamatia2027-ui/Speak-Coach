@@ -38,13 +38,12 @@ function History() {
     <AppShell>
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Practice history</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review past speaking recordings, check metric trajectories, and reopen coaching reports.
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Practice history</h1>            <p className="mt-1 text-base text-muted-foreground">
+              Review past speaking recordings, check metric trajectories, and reopen coaching reports.
+            </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-lg border border-border/80 bg-secondary/50 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+          <span className="rounded-lg border border-border/80 bg-secondary/50 px-3 py-1.5 text-sm font-medium text-muted-foreground">
             {all.length} session{all.length === 1 ? "" : "s"} · Avg {averageScore(all)}
           </span>
         </div>
@@ -57,7 +56,7 @@ function History() {
               key={f.id}
               onClick={() => setFilter(f.id)}
               className={cn(
-                "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
+                "shrink-0 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
                 filter === f.id
                   ? "border-primary bg-primary text-primary-foreground shadow-xs"
                   : "border-border/70 bg-card text-muted-foreground hover:border-border hover:text-foreground",
@@ -73,7 +72,7 @@ function History() {
         {list.length === 0 && (
           <div className="surface p-10 text-center">
             <p className="text-base font-semibold">Nothing here yet</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               Record a session for this goal and it will appear here.
             </p>
             <Button asChild variant="hero" size="sm" className="mt-5">
@@ -102,9 +101,9 @@ function History() {
               {s.analysis.overall}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold group-hover:text-primary transition-colors">{s.prompt}</span>
-              <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                <span className="rounded bg-secondary/80 px-1.5 py-0.5 text-[11px] font-medium text-foreground">
+              <span className="block truncate text-base font-semibold group-hover:text-primary transition-colors">{s.prompt}</span>
+              <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                <span className="rounded bg-secondary/80 px-1.5 py-0.5 text-xs font-medium text-foreground">
                   {goalById(s.goal)?.label}
                 </span>
                 <span>•</span>

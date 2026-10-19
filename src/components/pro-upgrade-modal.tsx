@@ -176,7 +176,7 @@ export function ProUpgradeModal({
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-warning">Dodo Payments Checkout</h4>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                    To ask users for real payment, paste your <strong>Dodo Product Payment Link</strong> below (from Dodo Dashboard → Products → Share Link) or set <code className="text-[11px] bg-muted px-1 py-0.5 rounded">DODO_PAYMENTS_API_KEY</code> in Vercel.
+                    To ask users for real payment, paste your <strong>Dodo Product Payment Link</strong> below (from Dodo Dashboard → Products → Share Link) or set <code className="text-xs bg-muted px-1 py-0.5 rounded">DODO_PAYMENTS_API_KEY</code> in Vercel.
                   </p>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export function ProUpgradeModal({
                   Pay with Dodo
                 </Button>
               </div>
-              <div className="pt-1 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40">
+              <div className="pt-1 flex items-center justify-between text-sm text-muted-foreground border-t border-border/40">
                 <span>Testing without payment?</span>
                 <button
                   type="button"

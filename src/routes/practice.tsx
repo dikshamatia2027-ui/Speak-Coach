@@ -103,9 +103,9 @@ function Waveform({
       const gap = width / BAR_COUNT;
       const barWidth = Math.max(2.5 * dpr, gap * 0.45);
       const gradient = ctx.createLinearGradient(0, 0, width, 0);
-      gradient.addColorStop(0, "#ff5277");
-      gradient.addColorStop(0.5, "#ff9e43");
-      gradient.addColorStop(1, "#8c9eff");
+      gradient.addColorStop(0, "#2563eb");
+      gradient.addColorStop(0.5, "#3b82f6");
+      gradient.addColorStop(1, "#60a5fa");
       ctx.fillStyle = gradient;
 
       const node = analyser.current;
@@ -369,28 +369,28 @@ function Practice() {
         triggerReason={modalTriggerReason}
       />
 
-      <div className="max-w-xl mx-auto space-y-5 animate-rise">
+      <div className="max-w-2xl lg:max-w-3xl mx-auto space-y-4 animate-rise">
         {/* Practice Studio Top Navigation Bar (Screen 3 Header) */}
         <div className="flex items-center justify-between">
           <Link
             to="/dashboard"
             aria-label="Back to dashboard"
-            className="flex size-10 items-center justify-center rounded-2xl bg-white border border-[#ede8e1] text-foreground/80 hover:text-foreground hover:bg-[#f4f2ee] transition-colors shadow-xs"
+            className="flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors shadow-xs"
           >
             <ChevronDown className="size-5" />
           </Link>
 
           <div className="text-center">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
               {goalById(scenario?.goal ?? "confidence")?.label}
             </span>
-            <h2 className="font-serif text-base font-bold text-foreground">Practice Studio</h2>
+            <h2 className="font-serif text-lg font-bold text-foreground">Practice Studio</h2>
           </div>
 
           <button
             onClick={() => setShowScenarioDrawer((prev) => !prev)}
             aria-label="Scenario selector drawer"
-            className="flex size-10 items-center justify-center rounded-2xl bg-white border border-[#ede8e1] text-foreground/80 hover:text-foreground hover:bg-[#f4f2ee] transition-colors shadow-xs cursor-pointer"
+            className="flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors shadow-xs cursor-pointer"
           >
             <SlidersHorizontal className="size-4.5" />
           </button>
@@ -398,26 +398,26 @@ function Practice() {
 
         {/* Analysing Loading Screen */}
         {phase === "analysing" ? (
-          <div className="surface p-12 text-center rounded-[2.5rem] my-8 animate-rise">
-            <div className="flex size-20 items-center justify-center rounded-full bg-[#fdebf1] text-[#ff5277] mx-auto shadow-md shadow-[#ff5277]/20">
+          <div className="surface p-10 text-center animate-rise sm:p-14">
+            <div className="flex size-20 items-center justify-center rounded-full bg-accent text-primary mx-auto shadow-md shadow-primary/10">
               <RotateCcw className="size-8 animate-spin" />
             </div>
             <h2 className="font-serif text-2xl font-bold mt-6">Analysing your delivery…</h2>
-            <p className="text-sm text-muted-foreground mt-2">{analysingStep}</p>
+            <p className="text-base text-muted-foreground mt-2">{analysingStep}</p>
           </div>
         ) : (
           <>
-            {/* Large Rounded Artwork / Player Container (Screen 3 Figma) */}
-            <div className="relative rounded-[2.25rem] bg-gradient-to-br from-[#fef3e7] via-[#fdebf1] to-[#e8f7f2] border border-[#ede8e1] p-6 sm:p-8 flex flex-col items-center justify-center text-center shadow-soft overflow-hidden min-h-[280px]">
-              {/* Status Chip */}
-              <div className="absolute top-5 left-5 inline-flex items-center gap-1.5 rounded-full bg-white/80 backdrop-blur-md border border-white/60 px-3 py-1 text-[11px] font-bold shadow-xs">
-                <span
-                  className={cn(
-                    "size-2 rounded-full",
-                    isLive ? "bg-red-500 animate-pulse" : isPaused ? "bg-amber-500" : "bg-emerald-500",
-                  )}
-                />
-                <span className="text-foreground/90 uppercase tracking-wider">
+            {/* Recording Panel — white surface card with an aligned header row (status · PRO) and a centered stage */}
+            <div className="surface overflow-hidden">
+              {/* Panel header: status chip and PRO badge share one aligned row */}
+              <div className="flex items-center justify-between gap-3 border-b border-border/70 px-4 py-2.5 sm:px-5">
+                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground/90">
+                  <span
+                    className={cn(
+                      "size-2 rounded-full",
+                      isLive ? "bg-destructive animate-pulse" : isPaused ? "bg-warning" : "bg-success",
+                    )}
+                  />
                   {phase === "countdown"
                     ? "Starting…"
                     : isLive
@@ -425,54 +425,54 @@ function Practice() {
                       : isPaused
                         ? "Paused"
                         : "Ready to speak"}
-                </span>
+                </div>
+                {scenario?.tier === "pro" ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-warning px-2.5 py-0.5 text-xs font-bold text-warning-foreground shadow-xs">
+                    <Crown className="size-3 fill-warning-foreground" /> PRO
+                  </span>
+                ) : (
+                  <span aria-hidden="true" className="w-1" />
+                )}
               </div>
 
-              {/* Pro Badge if applicable */}
-              {scenario?.tier === "pro" && (
-                <div className="absolute top-5 right-5 inline-flex items-center gap-1 rounded-full bg-[#ff9e43] text-white px-2.5 py-0.5 text-[10px] font-bold shadow-xs">
-                  <Crown className="size-3 fill-white" /> PRO
-                </div>
-              )}
-
-              {/* Ambient Center Graphic / Live Waveform */}
-              <div className="w-full flex flex-col items-center justify-center py-4">
+              {/* Stage: countdown, live waveform, or microphone — consistently centered */}
+              <div className="flex min-h-[230px] flex-col items-center justify-center gap-4 px-5 py-6 text-center sm:min-h-[260px] sm:px-8">
                 {phase === "countdown" ? (
-                  <div className="relative flex size-28 items-center justify-center">
-                    <span className="absolute inset-0 animate-pulse-ring rounded-full bg-[#ff5277]/30" />
-                    <div className="flex size-24 items-center justify-center rounded-full bg-white text-[#ff5277] font-serif text-5xl font-bold shadow-lift">
+                  <div className="relative flex size-24 items-center justify-center sm:size-28">
+                    <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/25" />
+                    <div className="flex size-20 items-center justify-center rounded-full bg-card text-primary font-serif text-5xl font-bold shadow-lift sm:size-24">
                       {countdown}
                     </div>
                   </div>
                 ) : inSession ? (
-                  <div className="w-full max-w-sm">
+                  <div className="w-full max-w-md">
                     <Waveform active={isLive} analyser={analyserRef} />
                   </div>
                 ) : (
-                  <div className="relative flex size-28 items-center justify-center">
-                    <span className="absolute inset-0 rounded-full bg-white/40 blur-md" />
-                    <div className="relative flex size-24 items-center justify-center rounded-full bg-white shadow-lift text-[#ff5277]">
-                      <Mic className="size-10 stroke-[2]" />
+                  <div className="relative flex size-24 items-center justify-center sm:size-28">
+                    <span className="absolute inset-0 rounded-full bg-card/60 blur-md" />
+                    <div className="relative flex size-20 items-center justify-center rounded-full bg-card shadow-lift text-primary sm:size-24">
+                      <Mic className="size-9 stroke-[2] sm:size-10" />
                     </div>
                   </div>
                 )}
-              </div>
 
-              {/* Error message if microphone blocked */}
-              {error && (
-                <div className="mt-3 rounded-xl bg-red-100 border border-red-200 text-red-700 p-2.5 text-xs font-medium max-w-xs">
-                  {error}
-                </div>
-              )}
+                {/* Microphone/analysis error — kept inside the stage so the layout never shifts out of view */}
+                {error && (
+                  <div className="w-full max-w-md rounded-xl border border-destructive/30 bg-destructive/10 p-2.5 text-sm font-medium text-destructive">
+                    {error}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Track Info (Prompt title & Details) */}
-            <div className="flex items-start justify-between gap-4 pt-1">
+            <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-snug">
                   {scenario?.prompt || "Executive Boardroom Intro"}
                 </h1>
-                <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                   {scenario?.context || "Speak naturally. We measure filler words, pacing and clarity."}
                 </p>
               </div>
@@ -480,39 +480,42 @@ function Practice() {
               <button
                 onClick={() => setIsBookmarked((prev) => !prev)}
                 aria-label="Favorite scenario"
-                className="flex size-10 items-center justify-center rounded-2xl bg-white border border-[#ede8e1] text-foreground/80 hover:text-[#ff5277] transition-colors shadow-xs shrink-0 cursor-pointer"
+                className="flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-primary transition-colors shadow-xs shrink-0 cursor-pointer"
               >
                 <Heart
                   className={cn(
                     "size-5 transition-colors",
-                    isBookmarked ? "fill-[#ff5277] text-[#ff5277]" : "text-muted-foreground",
+                    isBookmarked ? "fill-primary text-primary" : "text-muted-foreground",
                   )}
                 />
               </button>
             </div>
 
-            {/* Scrubber / Progress Bar (Screen 3 Player) */}
-            <div className="space-y-1.5 pt-2">
-              <div className="relative h-2 w-full overflow-hidden rounded-full bg-[#ede8e1]">
+            {/* Scrubber / Progress Bar */}
+            <div className="space-y-1.5">
+              <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-[#ff5277] transition-all duration-300"
+                  className="h-full rounded-full bg-primary transition-all duration-300"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground tabular-nums">
+              <div className="flex items-center justify-between text-sm font-semibold text-muted-foreground tabular-nums">
                 <span>{formatTime(elapsed)}</span>
                 <span>{formatTime(targetSeconds)}</span>
               </div>
             </div>
 
-            {/* Playback & Recording 5-Button Control Bar (Exact Figma Screen 3) */}
-            <div className="flex items-center justify-center gap-5 sm:gap-7 py-3">
+            {/* Recording & scenario control bar — compact on mobile, full on desktop */}
+            <div className="flex items-center justify-center gap-3 py-1 sm:gap-7 sm:py-3">
               {/* 1. Shuffle */}
               <button
                 onClick={handleShuffleScenario}
                 disabled={inSession}
                 title="Shuffle scenario"
-                className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[#ede8e1]/60 transition-colors disabled:opacity-40 cursor-pointer"
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer sm:size-11",
+                  inSession && "max-sm:hidden",
+                )}
               >
                 <Shuffle className="size-5" />
               </button>
@@ -522,27 +525,30 @@ function Practice() {
                 onClick={handlePrevScenario}
                 disabled={inSession}
                 title="Previous scenario"
-                className="flex size-11 items-center justify-center rounded-full text-foreground/80 hover:text-foreground hover:bg-[#ede8e1]/60 transition-colors disabled:opacity-40 cursor-pointer"
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-full text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer sm:size-11",
+                  inSession && "max-sm:hidden",
+                )}
               >
-                <SkipBack className="size-6 fill-current" />
+                <SkipBack className="size-5 fill-current sm:size-6" />
               </button>
 
-              {/* 3. Center Giant Pink Circular Record / Stop Button */}
+              {/* 3. Center Record / Stop Button */}
               {inSession ? (
                 <div className="flex items-center gap-3">
                   <button
                     onClick={togglePause}
                     aria-label={isLive ? "Pause recording" : "Resume recording"}
-                    className="flex size-12 items-center justify-center rounded-full bg-white border border-[#ede8e1] text-foreground shadow-md hover:bg-[#f4f2ee] transition-all cursor-pointer"
+                    className="flex size-12 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-md hover:bg-secondary transition-all cursor-pointer"
                   >
                     {isLive ? <Pause className="size-5" /> : <Play className="size-5 fill-current" />}
                   </button>
                   <button
                     onClick={() => void finish()}
                     aria-label="Complete and analyze"
-                    className="flex size-20 items-center justify-center rounded-full bg-red-600 text-white shadow-xl shadow-red-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="flex size-16 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-xl shadow-destructive/30 hover:scale-105 active:scale-95 transition-all cursor-pointer sm:size-20"
                   >
-                    <Square className="size-7 fill-white" />
+                    <Square className="size-5 fill-destructive-foreground sm:size-7" />
                   </button>
                 </div>
               ) : (
@@ -550,9 +556,9 @@ function Practice() {
                   onClick={() => void startCountdown()}
                   disabled={phase === "countdown"}
                   aria-label="Start recording"
-                  className="flex size-20 sm:size-22 items-center justify-center rounded-full bg-[#ff5277] text-white shadow-xl shadow-[#ff5277]/40 hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+                  className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all cursor-pointer group sm:size-20 lg:size-22"
                 >
-                  <Mic className="size-9 text-white group-hover:scale-110 transition-transform stroke-[2.2]" />
+                  <Mic className="size-7 text-primary-foreground group-hover:scale-110 transition-transform stroke-[2.2] sm:size-9" />
                 </button>
               )}
 
@@ -561,9 +567,12 @@ function Practice() {
                 onClick={handleNextScenario}
                 disabled={inSession}
                 title="Next scenario"
-                className="flex size-11 items-center justify-center rounded-full text-foreground/80 hover:text-foreground hover:bg-[#ede8e1]/60 transition-colors disabled:opacity-40 cursor-pointer"
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-full text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer sm:size-11",
+                  inSession && "max-sm:hidden",
+                )}
               >
-                <SkipForward className="size-6 fill-current" />
+                <SkipForward className="size-5 fill-current sm:size-6" />
               </button>
 
               {/* 5. Repeat / Reset */}
@@ -575,7 +584,10 @@ function Practice() {
                 }}
                 disabled={inSession}
                 title="Reset timer"
-                className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-[#ede8e1]/60 transition-colors disabled:opacity-40 cursor-pointer"
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer sm:size-11",
+                  inSession && "max-sm:hidden",
+                )}
               >
                 <Repeat className="size-5" />
               </button>
@@ -583,10 +595,10 @@ function Practice() {
 
             {/* Quick Scenario Selector Drawer */}
             {showScenarioDrawer && (
-              <div className="surface p-5 rounded-3xl space-y-3 animate-fade border border-[#ede8e1]">
-                <div className="flex items-center justify-between pb-2 border-b border-[#ede8e1]">
+              <div className="surface p-5 rounded-2xl space-y-3 animate-fade border border-border">
+                <div className="flex items-center justify-between pb-2 border-b border-border">
                   <h3 className="font-serif font-bold text-base">Select Speaking Scenario</h3>
-                  <span className="text-xs font-semibold text-muted-foreground">
+                  <span className="text-sm font-semibold text-muted-foreground">
                     {goalScenarios.length} available
                   </span>
                 </div>
@@ -600,25 +612,25 @@ function Practice() {
                         key={sc.id}
                         onClick={() => handleSelectScenario(idx)}
                         className={cn(
-                          "w-full text-left p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer",
+                          "w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer",
                           isCurrent
-                            ? "border-[#ff5277] bg-[#fdebf1] text-foreground"
-                            : "border-[#ede8e1] bg-white hover:bg-[#f4f2ee]",
+                            ? "border-primary bg-primary/5 text-foreground"
+                            : "border-border bg-card hover:bg-secondary/60",
                           isLocked && "opacity-75",
                         )}
                       >
                         <div className="min-w-0">
-                          <p className="text-xs sm:text-sm font-semibold truncate">{sc.prompt}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                          <p className="text-sm font-semibold truncate">{sc.prompt}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {sc.seconds}s target • {goalById(sc.goal)?.label}
                           </p>
                         </div>
                         {isLocked ? (
-                          <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold text-[#ff9e43]">
+                          <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-warning">
                             <Lock className="size-3" /> PRO
                           </span>
                         ) : isCurrent ? (
-                          <span className="shrink-0 size-2 rounded-full bg-[#ff5277]" />
+                          <span className="shrink-0 size-2 rounded-full bg-primary" />
                         ) : null}
                       </button>
                     );

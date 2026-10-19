@@ -64,7 +64,7 @@ function Settings() {
           {/* User details & weekly target */}
           <div className="surface p-5 flex flex-col justify-between">
             <div>
-              <h2 className="text-sm font-bold text-foreground">Speaker Profile</h2>
+              <h2 className="text-base font-bold text-foreground">Speaker Profile</h2>
               <label className="mt-4 block text-xs font-semibold text-muted-foreground uppercase tracking-wider">Display Name</label>
               <Input
                 value={profile.name}
@@ -90,14 +90,14 @@ function Settings() {
                 ))}
               </div>
             </div>
-            <p className="mt-4 text-[11px] text-muted-foreground">
+            <p className="mt-4 text-sm text-muted-foreground">
               Total sessions recorded: <span className="font-semibold text-foreground">{sessions.length}</span> · Average speech score: <span className="font-semibold text-foreground">{averageScore(sessions)} pts</span>
             </p>
           </div>
 
           {/* Goal selection */}
           <div className="surface p-5">
-            <h2 className="text-sm font-bold text-foreground">Primary Focus Goal</h2>
+            <h2 className="text-base font-bold text-foreground">Primary Focus Goal</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">Drives your scenario recommendations in the practice tab.</p>
             <div className="mt-3 space-y-1.5">
               {GOALS.map((g) => (
@@ -111,7 +111,7 @@ function Settings() {
                       : "border-border bg-card text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
                   )}
                 >
-                  <span className="text-xs flex items-center gap-2">
+                  <span className="text-sm flex items-center gap-2">
                     <span>{g.emoji}</span>
                     <span>{g.label}</span>
                   </span>
@@ -123,11 +123,11 @@ function Settings() {
 
           {/* Coaching preferences */}
           <div className="surface p-5">
-            <h2 className="text-sm font-bold text-foreground">Coaching Engine Preferences</h2>
+            <h2 className="text-base font-bold text-foreground">Coaching Engine Preferences</h2>
             <div className="mt-3 flex items-center justify-between gap-4 py-2 border-b border-border/50">
               <div>
-                <span className="block text-xs font-semibold text-foreground">Practice reminders</span>
-                <span className="block text-[11px] text-muted-foreground">
+                <span className="block text-sm font-semibold text-foreground">Practice reminders</span>
+                <span className="block text-sm text-muted-foreground">
                   Nudge when falling behind weekly commitment.
                 </span>
               </div>
@@ -138,8 +138,8 @@ function Settings() {
             </div>
             <div className="mt-2 flex items-center justify-between gap-4 py-2">
               <div>
-                <span className="block text-xs font-semibold text-foreground">Strict filler detection</span>
-                <span className="block text-[11px] text-muted-foreground">
+                <span className="block text-sm font-semibold text-foreground">Strict filler detection</span>
+                <span className="block text-sm text-muted-foreground">
                   Include softer conversational words like "so", "well", and "right".
                 </span>
               </div>
@@ -152,19 +152,19 @@ function Settings() {
 
           {/* Plan management */}
           <div className="surface p-5">
-            <h2 className="text-sm font-bold text-foreground">Subscription &amp; Quota</h2>
+            <h2 className="text-base font-bold text-foreground">Subscription &amp; Quota</h2>
             <div className="mt-3 rounded-lg bg-secondary/60 p-3.5 border border-border/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Current Status</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Current Status</span>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-sm font-bold capitalize text-foreground">{profile.plan} Membership</span>
                     {profile.plan === "pro" ? (
-                      <span className="rounded-md bg-brand-yellow/15 text-warning  px-1.5 py-0.5 text-[10px] font-extrabold">
+                      <span className="rounded-md bg-brand-yellow/15 text-warning  px-1.5 py-0.5 text-xs font-extrabold">
                         PRO UNLIMITED
                       </span>
                     ) : (
-                      <span className="rounded-md bg-muted text-muted-foreground px-1.5 py-0.5 text-[10px] font-semibold border border-border">
+                      <span className="rounded-md bg-muted text-muted-foreground px-1.5 py-0.5 text-xs font-semibold border border-border">
                         3 sessions / wk
                       </span>
                     )}
@@ -203,7 +203,7 @@ function Settings() {
                   </Button>
                 )}
               </div>
-              <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {profile.plan === "pro"
                   ? "Unlimited sessions, specialized executive scenarios, and acoustic analytics enabled via Dodo Payments."
                   : "3 sessions/week included. Upgrade with Dodo Payments for unlimited practice and executive scenarios."}
@@ -211,10 +211,10 @@ function Settings() {
 
               {/* Optional Dodo Payment Link Configuration */}
               <div className="mt-3 pt-3 border-t border-border/50">
-                <label className="text-[11px] font-semibold text-foreground block">
+                <label className="text-sm font-semibold text-foreground block">
                   Dodo Hosted Payment Link
                 </label>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Product payment link from Dodo Dashboard (Products → Share Link) to direct customers straight to checkout.
                 </p>
                 <div className="mt-2 flex gap-2">

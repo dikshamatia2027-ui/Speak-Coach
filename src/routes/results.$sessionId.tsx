@@ -95,7 +95,7 @@ function Results() {
           <ScoreRing score={session.analysis.overall} size={150} />
           <div className="text-center sm:text-left flex-1 min-w-0">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs">
-              <span className="rounded-md bg-primary/10 px-2 py-0.5 font-bold uppercase tracking-wider text-primary text-[10px]">
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 font-bold uppercase tracking-wider text-primary text-xs">
                 {goalById(session.goal)?.label}
               </span>
               <span className="text-muted-foreground">•</span>
@@ -108,7 +108,7 @@ function Results() {
               )}
             </div>
             <h1 className="mt-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">{session.prompt}</h1>
-            <p className="mt-2 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
               {session.analysis.summary}
             </p>
             {delta !== 0 && (
@@ -129,26 +129,26 @@ function Results() {
         {focusAreas.length > 0 && (
           <section className="mt-6" aria-labelledby="focus-areas-heading">
             <div className="mb-3">
-              <h2 id="focus-areas-heading" className="text-base font-bold text-foreground">Priority Focus Areas</h2>
-              <p className="text-xs text-muted-foreground">Specific excerpts from your speech that impacted your score</p>
+              <h2 id="focus-areas-heading" className="text-lg font-bold text-foreground">Priority Focus Areas</h2>
+              <p className="text-sm text-muted-foreground">Specific excerpts from your speech that impacted your score</p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               {focusAreas.map(({ metric, coaching }) => (
                 <article key={metric.id} className="surface p-5 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between gap-3 pb-2 border-b border-border">
-                      <h3 className="font-semibold text-sm text-foreground">{metric.label}</h3>
-                      <span className="text-xs font-bold tabular-nums text-warning">{metric.score}/100</span>
+                      <h3 className="font-semibold text-base text-foreground">{metric.label}</h3>
+                      <span className="text-sm font-bold tabular-nums text-warning">{metric.score}/100</span>
                     </div>
-                    <p className="mt-2.5 text-xs text-muted-foreground leading-relaxed">
+                    <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed">
                       <span className="font-semibold text-foreground">Observation: </span>{coaching.why}
                     </p>
-                    <blockquote className="mt-2.5 rounded-md bg-secondary/50 border-l-2 border-primary p-2.5 text-xs italic text-foreground/90 leading-relaxed">
+                    <blockquote className="mt-2.5 rounded-md bg-secondary/50 border-l-2 border-primary p-2.5 text-sm italic text-foreground/90 leading-relaxed">
                       “{coaching.quote}”
                     </blockquote>
                   </div>
                   <div className="mt-3 pt-2.5 border-t border-border/60">
-                    <p className="text-xs leading-relaxed text-foreground">
+                    <p className="text-sm leading-relaxed text-foreground">
                       <span className="font-semibold text-primary">Drill: </span>{coaching.exercise}
                     </p>
                   </div>
@@ -161,7 +161,7 @@ function Results() {
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
           {/* Metric breakdown */}
           <div className="surface p-5">
-            <h2 className="text-base font-bold text-foreground">Scored Metric Breakdown</h2>
+            <h2 className="text-lg font-bold text-foreground">Scored Metric Breakdown</h2>
             <div className="mt-4 flex flex-col gap-4">
               {session.analysis.metrics.map((m) => (
                 <MetricBar key={m.id} label={m.label} score={m.score} detail={m.detail} />
@@ -172,19 +172,19 @@ function Results() {
                 <p className="font-display text-lg font-bold tabular-nums text-foreground">
                   {session.analysis.wordsPerMinute}
                 </p>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Words / min</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Words / min</p>
               </div>
               <div className="rounded-lg bg-secondary/50 p-2.5">
                 <p className="font-display text-lg font-bold tabular-nums text-foreground">
                   {session.analysis.fillerCount}
                 </p>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Fillers</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Fillers</p>
               </div>
               <div className="rounded-lg bg-secondary/50 p-2.5">
                 <p className="font-display text-lg font-bold tabular-nums text-foreground">
                   {session.analysis.wordCount}
                 </p>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Total words</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Total words</p>
               </div>
             </div>
           </div>
@@ -192,12 +192,12 @@ function Results() {
           {/* Strengths & Improvements */}
           <div className="flex flex-col gap-4">
             <div className="surface p-5">
-              <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+              <h2 className="flex items-center gap-1.5 text-base font-bold text-foreground">
                 <CheckCircle2 className="size-4 text-success" /> Strengths Identified
               </h2>
               <ul className="mt-3 space-y-3">
                 {session.analysis.strengths.map((s) => (
-                  <li key={s.title} className="text-xs">
+                  <li key={s.title} className="text-sm">
                     <p className="font-semibold text-foreground">{s.title}</p>
                     <p className="mt-0.5 text-muted-foreground leading-relaxed">{s.example}</p>
                   </li>
@@ -205,12 +205,12 @@ function Results() {
               </ul>
             </div>
             <div className="surface p-5">
-              <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+              <h2 className="flex items-center gap-1.5 text-base font-bold text-foreground">
                 <Lightbulb className="size-4 text-warning" /> Growth Opportunities
               </h2>
               <ul className="mt-3 space-y-3">
                 {session.analysis.improvements.map((i) => (
-                  <li key={i.title} className="text-xs">
+                  <li key={i.title} className="text-sm">
                     <p className="font-semibold text-foreground">{i.title}</p>
                     <p className="mt-0.5 text-muted-foreground leading-relaxed">{i.example}</p>
                     <p className="mt-1 text-primary font-medium">Suggestion: {i.fix}</p>
@@ -231,11 +231,11 @@ function Results() {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-foreground">Advanced Acoustic Analytics</h2>
-                  <span className="rounded-md bg-brand-yellow/15 text-warning  px-1.5 py-0.5 text-[10px] font-extrabold uppercase">
+                  <span className="rounded-md bg-brand-yellow/15 text-warning  px-1.5 py-0.5 text-xs font-extrabold uppercase">
                     PRO
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                   Deep acoustic pacing distributions, filler density breakdown &amp; vocabulary uniqueness.
                 </p>
               </div>
@@ -258,16 +258,15 @@ function Results() {
               {/* Filler words list */}
               <div className="rounded-lg bg-secondary/50 p-4 border border-border/50">
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Filler Frequency
-                  </p>
-                  <PieChart className="size-3.5 text-primary" />
+                  </p>                  <PieChart className="size-3.5 text-primary" />
                 </div>
                 {session.analysis.fillerWords.length > 0 ? (
                   <div className="mt-3 space-y-2">
                     {session.analysis.fillerWords.map((fw) => (
                       <div key={fw.word} className="flex items-center justify-between text-xs">
-                        <span className="font-mono text-[11px] font-semibold bg-background px-1.5 py-0.5 rounded border border-border">
+                        <span className="font-mono text-xs font-semibold bg-background px-1.5 py-0.5 rounded border border-border">
                           “{fw.word}”
                         </span>
                         <span className="font-semibold tabular-nums text-muted-foreground">
@@ -284,7 +283,7 @@ function Results() {
               {/* Pacing cadence */}
               <div className="rounded-lg bg-secondary/50 p-4 border border-border/50">
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Pacing Stability
                   </p>
                   <Activity className="size-3.5 text-primary" />
@@ -319,7 +318,7 @@ function Results() {
               {/* Vocabulary density */}
               <div className="rounded-lg bg-secondary/50 p-4 border border-border/50">
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Vocabulary Range
                   </p>
                   <Sparkles className="size-3.5 text-warning" />
@@ -346,7 +345,7 @@ function Results() {
               <h3 className="text-xs sm:text-sm font-bold text-foreground">
                 Advanced Speech Metrics Locked
               </h3>
-              <p className="mt-0.5 text-xs text-muted-foreground max-w-sm">
+              <p className="mt-0.5 text-sm text-muted-foreground max-w-sm">
                 Pro members receive in-depth syllable-level pacing stability, filler frequency charts, and vocabulary richness diagnostics.
               </p>
               <Button
@@ -371,10 +370,10 @@ function Results() {
               <div key={e.title} className="rounded-lg bg-secondary/50 border border-border/40 p-3.5 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-foreground">{e.title}</p>
-                    <span className="text-[10px] font-semibold text-primary">{e.minutes} min</span>
+                    <p className="text-sm font-semibold text-foreground">{e.title}</p>
+                    <span className="text-xs font-semibold text-primary">{e.minutes} min</span>
                   </div>
-                  <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{e.how}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{e.how}</p>
                 </div>
               </div>
             ))}
@@ -398,7 +397,7 @@ function Results() {
           <h2 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
             Spoken Transcript
           </h2>
-          <p className="mt-2 text-xs sm:text-sm leading-relaxed text-foreground font-normal">
+          <p className="mt-2 text-sm sm:text-base leading-relaxed text-foreground font-normal">
             “{session.transcript}”
           </p>
         </div>

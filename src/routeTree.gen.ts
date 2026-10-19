@@ -14,7 +14,9 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as ApiAnalyzeRouteImport } from './routes/api/analyze'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
@@ -48,9 +50,19 @@ const PracticeRoute = PracticeRouteImport.update({
   path: '/practice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VocabularyRoute = VocabularyRouteImport.update({
@@ -95,7 +107,9 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
+  '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/vocabulary': typeof VocabularyRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/checkout': typeof ApiCheckoutRoute
@@ -110,7 +124,9 @@ export interface FileRoutesByTo {
   '/history': typeof HistoryRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
+  '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/vocabulary': typeof VocabularyRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/checkout': typeof ApiCheckoutRoute
@@ -126,7 +142,9 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
+  '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/vocabulary': typeof VocabularyRoute
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/checkout': typeof ApiCheckoutRoute
@@ -143,7 +161,9 @@ export interface FileRouteTypes {
     | '/history'
     | '/onboarding'
     | '/practice'
+    | '/privacy'
     | '/settings'
+    | '/terms'
     | '/vocabulary'
     | '/api/analyze'
     | '/api/checkout'
@@ -158,7 +178,9 @@ export interface FileRouteTypes {
     | '/history'
     | '/onboarding'
     | '/practice'
+    | '/privacy'
     | '/settings'
+    | '/terms'
     | '/vocabulary'
     | '/api/analyze'
     | '/api/checkout'
@@ -173,7 +195,9 @@ export interface FileRouteTypes {
     | '/history'
     | '/onboarding'
     | '/practice'
+    | '/privacy'
     | '/settings'
+    | '/terms'
     | '/vocabulary'
     | '/api/analyze'
     | '/api/checkout'
@@ -189,7 +213,9 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   OnboardingRoute: typeof OnboardingRoute
   PracticeRoute: typeof PracticeRoute
+  PrivacyRoute: typeof PrivacyRoute
   SettingsRoute: typeof SettingsRoute
+  TermsRoute: typeof TermsRoute
   VocabularyRoute: typeof VocabularyRoute
   ApiAnalyzeRoute: typeof ApiAnalyzeRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
@@ -236,11 +262,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vocabulary': {
@@ -301,7 +341,9 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   OnboardingRoute: OnboardingRoute,
   PracticeRoute: PracticeRoute,
+  PrivacyRoute: PrivacyRoute,
   SettingsRoute: SettingsRoute,
+  TermsRoute: TermsRoute,
   VocabularyRoute: VocabularyRoute,
   ApiAnalyzeRoute: ApiAnalyzeRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
