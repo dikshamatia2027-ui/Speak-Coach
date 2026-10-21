@@ -1,16 +1,17 @@
-import { createOpenAI } from "@ai-sdk/openai";
-import { APICallError, NoObjectGeneratedError, Output, streamText } from "ai";
-import { z } from "zod";
-import { createLovableAiGatewayRunIdFetch } from "./run-id.server";
+import { GatewayError, GROQ_TEXT_MODEL, groqGenerate, groqJson } from "./groq.server";
 
-const schema = z.object({
-  meaning: z.number(),
-  grammar: z.number(),
-  naturalness: z.number(),
-  verdict: z.enum(["excellent", "good", "needs_work", "incorrect"]),
-  explanation: z.string(),
-  improved: z.string().nullable(),
-});
+const feedbackSchema = {
+  type: "object",
+  properties: {
+    meaning: { type: "number" },
+    grammar: { type: "number" },
+    naturalness: { type: "number" },
+    verdict: { type: "string", enum: ["excellent", "good", "needs_work", "incorrect"] },
+    explanation: { type: "string" },
+    improved: { type: "string" },
+  },
+  required: ["meaning", "grammar", "naturalness", "verdict", "explanation"],
+};
 
 export type SentenceFeedback = {
   score: number;
@@ -23,15 +24,20 @@ export type SentenceFeedback = {
 };
 
 export class VocabAiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-  ) {
+  status: number;
+  constructor(status: number, message: string) {
     super(message);
+    this.status = status;
   }
 }
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+
+const SYSTEM =
+  "You are a demanding but encouraging English vocabulary tutor. Evaluate a learner's sentence using a target word. " +
+  "Score meaning (is the word used with its correct sense?), grammar, and naturalness (would a fluent writer phrase it this way?) each 0-100. " +
+  "If the target word (or an inflected form) is missing, meaning is 0 and verdict is incorrect. Trivial sentences that don't demonstrate meaning (e.g. 'X is a word') score low on meaning. " +
+  "explanation: 1-2 short sentences, specific, addressed to 'you'. improved: one natural improved version that keeps the learner's idea, or null if the sentence is already excellent.";
 
 export async function evaluateSentence(input: {
   word: string;
@@ -40,59 +46,57 @@ export async function evaluateSentence(input: {
   sentence: string;
   apiKey: string;
 }): Promise<SentenceFeedback> {
-  const runId = createLovableAiGatewayRunIdFetch();
-  const provider = createOpenAI({
-    baseURL: "https://ai.gateway.lovable.dev/v1",
-    apiKey: input.apiKey,
-    headers: { "Lovable-API-Key": input.apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-    fetch: runId.fetch,
-  });
-  const result = streamText({
-    model: provider.responses("openai/gpt-6-astra"),
-    output: Output.object({ schema }),
-    system:
-      "You are a demanding but encouraging English vocabulary tutor. Evaluate a learner's sentence using a target word. " +
-      "Score meaning (is the word used with its correct sense?), grammar, and naturalness (would a fluent writer phrase it this way?) each 0-100. " +
-      "If the target word (or an inflected form) is missing, meaning is 0 and verdict is incorrect. Trivial sentences that don't demonstrate meaning (e.g. 'X is a word') score low on meaning. " +
-      "explanation: 1-2 short sentences, specific, addressed to 'you'. improved: one natural improved version that keeps the learner's idea, or null if the sentence is already excellent.",
-    prompt: `Target word: ${input.word} (${input.pos}) — ${input.definition}\nLearner's sentence: """${input.sentence}"""`,
-    providerOptions: {
-      openai: {
-        store: false,
-        forceReasoning: true,
-        reasoningEffort: "low",
-        reasoningSummary: "auto",
-        include: ["reasoning.encrypted_content"],
-      },
-    },
-  });
+  type RawFeedback = {
+    meaning?: unknown;
+    grammar?: unknown;
+    naturalness?: unknown;
+    verdict?: unknown;
+    explanation?: unknown;
+    improved?: unknown;
+  };
+  let raw: RawFeedback;
   try {
-    const o = await result.output;
-    const meaning = clamp(o.meaning);
-    const grammar = clamp(o.grammar);
-    const naturalness = clamp(o.naturalness);
-    return {
-      meaning,
-      grammar,
-      naturalness,
-      score: clamp(meaning * 0.5 + grammar * 0.25 + naturalness * 0.25),
-      verdict: o.verdict,
-      explanation: o.explanation,
-      improved: o.improved,
-    };
+    const response = await groqGenerate(
+      GROQ_TEXT_MODEL,
+      [
+        { role: "system", content: SYSTEM },
+        {
+          role: "user",
+          content: `Target word: ${input.word} (${input.pos}) — ${input.definition}\nLearner's sentence: "${input.sentence}"`,
+        },
+      ],
+      input.apiKey,
+    );
+    raw = groqJson(response, "The tutor's reply was unreadable. Please try again.") as RawFeedback;
   } catch (err) {
-    if (APICallError.isInstance(err)) {
-      const s = err.statusCode ?? 502;
+    if (err instanceof GatewayError) {
       throw new VocabAiError(
-        s,
-        s === 402
+        err.status,
+        err.status === 402
           ? "AI credits have run out. Add credits to your workspace to keep practising."
-          : s === 429
+          : err.status === 429
             ? "The tutor is busy right now. Please wait a moment and try again."
             : "The tutor couldn't check your sentence. Please try again.",
       );
     }
-    if (NoObjectGeneratedError.isInstance(err)) throw new VocabAiError(502, "The tutor's reply was unreadable. Please try again.");
     throw err;
   }
+
+  const verdictRaw = String(raw.verdict ?? "");
+  const verdict: SentenceFeedback["verdict"] =
+    verdictRaw === "excellent" || verdictRaw === "good" || verdictRaw === "incorrect"
+      ? verdictRaw
+      : "needs_work";
+  const meaning = clamp(Number(raw.meaning) || 0);
+  const grammar = clamp(Number(raw.grammar) || 0);
+  const naturalness = clamp(Number(raw.naturalness) || 0);
+  return {
+    meaning,
+    grammar,
+    naturalness,
+    score: clamp(meaning * 0.5 + grammar * 0.25 + naturalness * 0.25),
+    verdict,
+    explanation: String(raw.explanation ?? ""),
+    improved: typeof raw.improved === "string" && raw.improved.trim() ? raw.improved : null,
+  };
 }

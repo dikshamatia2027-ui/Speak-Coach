@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/analyze")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env["LOVABLE_API_KEY"];
+        const apiKey = process.env["GROQ_API_KEY"];
         if (!apiKey) return json({ error: "AI is not configured." }, 500);
         const len = Number(request.headers.get("content-length") ?? 0);
         if (len > MAX_AUDIO_BYTES + 64 * 1024) return json({ error: "Recording is too long." }, 413);

@@ -8,7 +8,7 @@ export const checkSentence = createServerFn({ method: "POST" })
     const { evaluateSentence, VocabAiError } = await import("./ai/vocab.server");
     const word = wordById(data.wordId);
     if (!word) return { ok: false as const, error: "Unknown word." };
-    const apiKey = process.env["LOVABLE_API_KEY"];
+    const apiKey = process.env["GROQ_API_KEY"];
     if (!apiKey) return { ok: false as const, error: "AI is not configured." };
     try {
       const feedback = await evaluateSentence({ word: word.word, pos: word.pos, definition: word.definition, sentence: data.sentence, apiKey });

@@ -121,6 +121,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Scripts />
+        <script src="/clarity.js" type="text/javascript" defer></script>
       </body>
     </html>
   );
