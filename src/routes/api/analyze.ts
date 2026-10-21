@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { analyzeTranscript } from "@/lib/ai/analyze.server";
 import { GatewayError, MAX_AUDIO_BYTES, transcribeAudio } from "@/lib/ai/transcribe.server";
+import { allowRequest, clientIp } from "@/lib/rate-limit.server";
 
 /**
  * POST multipart: audio (file), durationSec, prompt, goal.
@@ -13,6 +14,10 @@ export const Route = createFileRoute("/api/analyze")({
       POST: async ({ request }) => {
         const apiKey = process.env["GROQ_API_KEY"];
         if (!apiKey) return json({ error: "AI is not configured." }, 500);
+        // Best-effort cap per visitor so a loop cannot burn the AI quota (see rate-limit.server.ts).
+        if (!allowRequest(`analyze:${clientIp(request)}`, 10, 60 * 60 * 1000)) {
+          return json({ error: "You've reached the hourly practice limit. Please try again a bit later." }, 429);
+        }
         const len = Number(request.headers.get("content-length") ?? 0);
         if (len > MAX_AUDIO_BYTES + 64 * 1024) return json({ error: "Recording is too long." }, 413);
 

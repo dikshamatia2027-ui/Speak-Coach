@@ -12,17 +12,18 @@ export const Route = createFileRoute("/api/webhooks/dodo")({
             headers[key] = value;
           });
 
+          // Fail closed: without the signing key we cannot tell real events from forged ones.
+          if (!process.env["DODO_PAYMENTS_WEBHOOK_KEY"]) {
+            console.error("[Dodo Webhook] DODO_PAYMENTS_WEBHOOK_KEY is not set; rejecting request");
+            return Response.json({ error: "Webhook not configured" }, { status: 500 });
+          }
+
           let event: any;
           try {
             event = verifyDodoWebhook(rawBody, headers);
           } catch (verifyErr: any) {
             console.warn("[Dodo Webhook] Verification failed:", verifyErr?.message);
-            // In dev or if key is omitted, allow json parse fallback if configured
-            if (!process.env.DODO_PAYMENTS_WEBHOOK_KEY) {
-              event = JSON.parse(rawBody);
-            } else {
-              return Response.json({ error: "Invalid signature" }, { status: 401 });
-            }
+            return Response.json({ error: "Invalid signature" }, { status: 401 });
           }
 
           console.log(`[Dodo Webhook] Received event: ${event.type || event.event_type || "unknown"}`);

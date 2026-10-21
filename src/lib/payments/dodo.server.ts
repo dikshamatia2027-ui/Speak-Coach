@@ -119,12 +119,13 @@ export function verifyDodoWebhook(
   }
 
   const { client } = getDodoClient();
-  if (client) {
-    return client.webhooks.unwrap(rawBody, {
-      headers: headers as Record<string, string>,
-      key: webhookKey,
-    });
+  if (!client) {
+    // Fail closed: never trust an unsigned body just because the payments client isn't set up.
+    throw new Error("Dodo Payments client is not configured; cannot verify webhook signature");
   }
 
-  return JSON.parse(rawBody);
+  return client.webhooks.unwrap(rawBody, {
+    headers: headers as Record<string, string>,
+    key: webhookKey,
+  });
 }
