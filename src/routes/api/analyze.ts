@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/analyze")({
           }
 
           const transcript = await transcribeAudio(audio, apiKey, request.signal);
-          if (transcript.split(/\s+/).filter(Boolean).length < 3) {
+          if (transcript.split(/\s+/).filter(Boolean).length < 8) {
             return json({ error: "We couldn't make out enough speech. Try again a little closer to the mic." }, 422);
           }
           const analysis = await analyzeTranscript({ transcript, durationSec, prompt, goal, apiKey, signal: request.signal });

@@ -33,16 +33,21 @@ export async function transcribeAudio(file: File, apiKey: string, signal?: Abort
   let transcript = "";
   try {
     const data = response as {
+      segments?: Array<{ text: string; no_speech_prob?: number; avg_logprob?: number }>;
       text?: string;
-      language?: string;
-      segments?: Array<{ id: number; start: number; end: number; text: string }>;
       // fallback: any string-valued property
       [key: string]: unknown;
     };
-    if (data.text) {
+    if (data.segments && data.segments.length > 0) {
+      // Keep only segments where NOT (no_speech_prob > 0.6 AND avg_logprob < -1)
+      const kept = data.segments.filter((s) => !(s.no_speech_prob > 0.6 && s.avg_logprob < -1));
+      if (kept.length > 0) {
+        transcript = kept.map((s) => s.text).join(" ").trim();
+      } else if (data.text) {
+        transcript = data.text;
+      }
+    } else if (data.text) {
       transcript = data.text;
-    } else if (data.segments && data.segments.length > 0) {
-      transcript = data.segments.map((s) => s.text).join(" ");
     } else {
       // Fallback: iterate known keys
       const possibleKeys = ["text", "transcript", "result", "response"];
@@ -57,7 +62,7 @@ export async function transcribeAudio(file: File, apiKey: string, signal?: Abort
     // ignore
   }
 
-  if (!transcript) throw new GatewayError(502, "Transcription ended before completing. Please try again.");
+  if (!transcript) throw new GatewayError(422, "We couldn't hear any speech. Check your microphone and try again a little closer to it.");
   return transcript.trim();
 }
 

@@ -12,8 +12,8 @@
 export const GROQ_API_BASE = "https://api.groq.com/openai/v1";
 
 /** Text generation models (verified on console.groq.com, Oct 2026). */
-export const GROQ_TEXT_MODEL = "llama-3.1-8b-instant";
-export const GROQ_VERSA_MODEL = "llama-3.3-70b-versatile";
+export const GROQ_TEXT_MODEL = "openai/gpt-oss-20b";
+export const GROQ_VERSA_MODEL = "openai/gpt-oss-120b";
 
 /** Speech-to-text model (Whisper-based, equivalent to gemini-3.5-transcribe). */
 export const GROQ_TRANSCRIBE_MODEL = "whisper-large-v3";
@@ -147,6 +147,8 @@ export async function groqTranscribe(
     const formData = new FormData();
     formData.append("file", new Blob([audioBytes] as any), "audio.wav");
     formData.append("model", GROQ_TRANSCRIBE_MODEL);
+    formData.append("response_format", "verbose_json");
+    formData.append("temperature", "0");
     // language omitted for auto-detect
 
     const res = await fetch(`${GROQ_API_BASE}/audio/transcriptions`, {
