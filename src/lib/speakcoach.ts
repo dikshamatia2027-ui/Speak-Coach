@@ -650,10 +650,8 @@ function read(): StoreState {
   try {
     const raw = window.localStorage.getItem(KEY);
     const parsed = raw ? (JSON.parse(raw) as StoreState) : initial();
-    // Ensure profile has default plan if migrating from older state
-    if (!parsed.profile.plan) {
-      parsed.profile.plan = "free";
-    }
+    // The plan is held on the server. Never trust a value read from the browser's storage.
+    parsed.profile.plan = "free";
     // Only AI-analysed sessions count toward scores; drop legacy mock/sample sessions.
     const real = parsed.sessions.filter((x) => x.source === "ai");
     state = { ...parsed, sessions: real };
@@ -688,6 +686,10 @@ export const store = {
   addSession(session: Session) {
     const s = read();
     write({ ...s, sessions: [...s.sessions, session] });
+  },
+  setSessions(sessions: Session[]) {
+    const s = read();
+    write({ ...s, sessions });
   },
   reset() {
     write(initial());

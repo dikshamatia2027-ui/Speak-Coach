@@ -1,4 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { saveSessionRemote } from "@/lib/auth";
+import { getAccessToken } from "@/lib/supabase";
 import {
   ArrowLeft,
   ChevronDown,
@@ -318,8 +320,10 @@ function Practice() {
       form.append("prompt", sc.prompt);
       form.append("goal", sc.goal);
       abortRef.current = new AbortController();
+      const token = await getAccessToken();
       const res = await fetch("/api/analyze", {
         method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: form,
         signal: abortRef.current.signal,
       });
@@ -345,6 +349,7 @@ function Practice() {
         source: "ai" as const,
       };
       store.addSession(session);
+      void saveSessionRemote(session);
       void navigate({ to: "/results/$sessionId", params: { sessionId: session.id } });
     } catch (e) {
       if ((e as Error).name === "AbortError") return;

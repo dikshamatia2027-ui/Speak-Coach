@@ -1,4 +1,5 @@
 import * as React from "react";
+import { clearSessionsRemote, useAuth } from "@/lib/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/settings")({
 
 function Settings() {
   const { profile, sessions } = useStore();
+  const { user, signOut } = useAuth();
   const [upgradeOpen, setUpgradeOpen] = React.useState(false);
 
   async function handleOpenPortal() {
@@ -180,17 +182,6 @@ function Settings() {
                     >
                       Billing Portal <ExternalLink className="size-3" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => {
-                        store.setProfile({ plan: "free" });
-                        toast.info("Switched to Free plan");
-                      }}
-                    >
-                      Downgrade
-                    </Button>
                   </div>
                 ) : (
                   <Button
@@ -208,24 +199,6 @@ function Settings() {
                   ? "Unlimited sessions, specialized executive scenarios, and acoustic analytics enabled via Dodo Payments."
                   : "3 sessions/week included. Upgrade with Dodo Payments for unlimited practice and executive scenarios."}
               </p>
-
-              {/* Optional Dodo Payment Link Configuration */}
-              <div className="mt-3 pt-3 border-t border-border/50">
-                <label className="text-sm font-semibold text-foreground block">
-                  Dodo Hosted Payment Link
-                </label>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Product payment link from Dodo Dashboard (Products → Share Link) to direct customers straight to checkout.
-                </p>
-                <div className="mt-2 flex gap-2">
-                  <Input
-                    placeholder="https://test.checkout.dodopayments.com/buy/pdt_..."
-                    value={profile.dodoPaymentLink || ""}
-                    onChange={(e) => store.setProfile({ dodoPaymentLink: e.target.value })}
-                    className="h-8 text-xs font-mono"
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -233,14 +206,18 @@ function Settings() {
         <div className="surface p-6">
           <h2 className="text-lg font-semibold">Account</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sessions are saved on this device for now. Sign-in and cloud sync can be switched on
-            later without losing this flow.
+            {user?.email ? `Signed in as ${user.email}. ` : ""}Your practice history is saved to your account and follows
+            you to any device.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => void signOut()}>
+              Sign out
+            </Button>
             <Button
               variant="outline"
               onClick={() => {
                 store.clearHistory();
+                void clearSessionsRemote();
                 toast.success("Practice history cleared");
               }}
             >
@@ -250,7 +227,8 @@ function Settings() {
               variant="ghost"
               onClick={() => {
                 store.reset();
-                toast.success("Everything reset to sample data");
+                void clearSessionsRemote();
+                toast.success("App data reset");
               }}
             >
               Reset app data

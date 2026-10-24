@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, Crown, Mic, Sparkles, Zap } from "lucide-reac
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/hooks/use-store";
-import { store } from "@/lib/speakcoach";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/checkout/success")({
   component: CheckoutSuccess,
@@ -12,11 +12,44 @@ export const Route = createFileRoute("/checkout/success")({
 
 function CheckoutSuccess() {
   const { profile } = useStore();
+  const { refreshPlan } = useAuth();
+  const isPro = profile.plan === "pro";
+  const [gaveUp, setGaveUp] = React.useState(false);
 
+  // Pro is switched on by the payment webhook on the server. Here we only wait for it to arrive.
   React.useEffect(() => {
-    // Automatically activate Pro plan on successful checkout return
-    store.setProfile({ plan: "pro" });
-  }, []);
+    let tries = 0;
+    const id = setInterval(async () => {
+      tries += 1;
+      const plan = await refreshPlan();
+      if (plan === "pro") clearInterval(id);
+      else if (tries >= 20) {
+        clearInterval(id);
+        setGaveUp(true);
+      }
+    }, 3000);
+    return () => clearInterval(id);
+  }, [refreshPlan]);
+
+  if (!isPro) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-xl py-16 text-center">
+          <h1 className="text-2xl font-extrabold tracking-tight">
+            {gaveUp ? "We're still confirming your payment" : "Confirming your payment…"}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {gaveUp
+              ? "This is taking longer than usual. If you were charged, Pro will switch on automatically within a few minutes. You can close this page."
+              : "This usually takes a few seconds. Please keep this page open."}
+          </p>
+          <Button asChild variant="outline" size="lg" className="mt-6">
+            <Link to="/dashboard">Go to Dashboard</Link>
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

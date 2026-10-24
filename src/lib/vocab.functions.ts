@@ -3,11 +3,13 @@ import { z } from "zod";
 import { wordById } from "./vocab-words";
 
 export const checkSentence = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ wordId: z.string().max(40), sentence: z.string().min(1).max(400) }).parse(d))
+  .inputValidator((d) => z.object({ wordId: z.string().max(40), sentence: z.string().min(1).max(400), token: z.string().max(4000) }).parse(d))
   .handler(async ({ data }) => {
     const { evaluateSentence, VocabAiError } = await import("./ai/vocab.server");
     const word = wordById(data.wordId);
     if (!word) return { ok: false as const, error: "Unknown word." };
+    const { userFromToken } = await import("./supabase.server");
+    if (!(await userFromToken(data.token))) return { ok: false as const, error: "Please sign in to continue." };
     const apiKey = process.env["GROQ_API_KEY"];
     if (!apiKey) return { ok: false as const, error: "AI is not configured." };
     try {

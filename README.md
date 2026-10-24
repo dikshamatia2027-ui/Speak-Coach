@@ -16,6 +16,10 @@ The Groq key stays on the server and never reaches the browser.
 
 TanStack Start (React, Vite) deployed on Vercel. Groq for speech-to-text and analysis. Dodo Payments for the Pro subscription. Microsoft Clarity for analytics.
 
+## Database
+
+Run `supabase-schema.sql` once in the Supabase SQL Editor.
+
 ## Run locally
 
 ```bash
@@ -28,6 +32,8 @@ npm run dev
 
 | Name | Used for |
 |---|---|
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Sign-in and saved history (public values) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only secret: reads the plan, counts usage, handles the payment webhook |
 | `GROQ_API_KEY` | Speech-to-text and analysis (get one at console.groq.com/keys) |
 | `DODO_PAYMENTS_API_KEY` | Creating checkout sessions and the customer portal |
 | `DODO_PAYMENTS_WEBHOOK_KEY` | Verifying payment webhooks (the webhook rejects everything without it) |
@@ -36,5 +42,5 @@ Set these in Vercel under Project Settings > Environment Variables, then redeplo
 
 ## Known limitations
 
-- Practice history and the Pro plan are stored in the browser (localStorage), not on a server. Accounts and server-side storage are the next piece of work.
-- Rate limiting on `/api/analyze` is best-effort and per server instance.
+- Profile preferences (goal, reminders) and vocabulary progress are still stored in the browser. Practice history and the plan are on the server.
+- The per-visitor hourly limit on `/api/analyze` is best-effort and per server instance. The weekly free limit is enforced per account in the database.

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getAccessToken } from "@/lib/supabase";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowRight,
@@ -329,7 +330,7 @@ function Round({ mode, onExit }: { mode: "learn" | "review"; onExit: () => void 
     setBusy(true);
     setError(null);
     try {
-      const res = await check({ data: { wordId: word.id, sentence: sentence.trim() } });
+      const res = await check({ data: { wordId: word.id, sentence: sentence.trim(), token: (await getAccessToken()) ?? "" } });
       if (!res.ok) {
         setError(res.error);
         return;

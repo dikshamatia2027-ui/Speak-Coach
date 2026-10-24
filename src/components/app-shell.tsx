@@ -1,4 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { LoginPanel } from "@/components/login-panel";
+import { useAuth } from "@/lib/auth";
 import {
   BookOpen,
   Clock,
@@ -32,6 +34,7 @@ export function Logo({ className }: { className?: string }) {
 export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { profile } = useStore();
+  const { user, loading: authLoading } = useAuth();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const isPro = profile.plan === "pro";
@@ -137,7 +140,13 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main Content Area */}
       <main className="mx-auto w-full max-w-2xl lg:max-w-4xl px-4 pt-5 pb-40 sm:px-6 sm:pb-44 flex-1">
-        {children}
+        {authLoading ? (
+          <p className="py-24 text-center text-sm text-muted-foreground">Loading…</p>
+        ) : user ? (
+          children
+        ) : (
+          <LoginPanel />
+        )}
       </main>
 
       {/* Floating White Pill Bottom Dock (Exact signature navigation from Figma) */}

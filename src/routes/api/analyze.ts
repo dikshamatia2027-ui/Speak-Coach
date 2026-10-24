@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { analyzeTranscript } from "@/lib/ai/analyze.server";
 import { GatewayError, MAX_AUDIO_BYTES, transcribeAudio } from "@/lib/ai/transcribe.server";
 import { allowRequest, clientIp } from "@/lib/rate-limit.server";
+import { FREE_WEEKLY_LIMIT } from "@/lib/speakcoach";
+import { getPlan, userFromRequest, weeklyAnalysisCount } from "@/lib/supabase.server";
 
 /**
  * POST multipart: audio (file), durationSec, prompt, goal.
@@ -17,6 +19,13 @@ export const Route = createFileRoute("/api/analyze")({
         // Best-effort cap per visitor so a loop cannot burn the AI quota (see rate-limit.server.ts).
         if (!allowRequest(`analyze:${clientIp(request)}`, 10, 60 * 60 * 1000)) {
           return json({ error: "You've reached the hourly practice limit. Please try again a bit later." }, 429);
+        }
+        const authed = await userFromRequest(request);
+        if (!authed) return json({ error: "Please sign in to practise." }, 401);
+        const { user, admin } = authed;
+        const plan = await getPlan(admin, user.id);
+        if (plan !== "pro" && (await weeklyAnalysisCount(admin, user.id)) >= FREE_WEEKLY_LIMIT) {
+          return json({ error: `You've used your ${FREE_WEEKLY_LIMIT} free sessions this week. Upgrade to Pro for unlimited practice.` }, 429);
         }
         const len = Number(request.headers.get("content-length") ?? 0);
         if (len > MAX_AUDIO_BYTES + 64 * 1024) return json({ error: "Recording is too long." }, 413);
@@ -36,6 +45,8 @@ export const Route = createFileRoute("/api/analyze")({
             return json({ error: "We couldn't make out enough speech. Try again a little closer to the mic." }, 422);
           }
           const analysis = await analyzeTranscript({ transcript, durationSec, prompt, goal, apiKey, signal: request.signal });
+          // Count only sessions that produced a report. Only the server can write this table.
+          await admin.from("analysis_log").insert({ user_id: user.id });
           return json({ transcript, analysis }, 200);
         } catch (err) {
           if (request.signal.aborted) return json({ error: "Cancelled" }, 499);

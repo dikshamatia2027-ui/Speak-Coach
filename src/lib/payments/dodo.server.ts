@@ -33,17 +33,7 @@ export function getDodoClient(): { client: DodoPayments | null; isTest: boolean;
 }
 
 export async function createDodoCheckout(input: CreateCheckoutInput): Promise<CheckoutResult> {
-  // If a direct Dodo Payment link is provided via input or env, use it immediately
-  const directLink = input.paymentLink || process.env.DODO_PAYMENTS_PAYMENT_LINK;
-  const isTest = process.env.DODO_PAYMENTS_ENVIRONMENT !== "live_mode";
-  if (directLink && directLink.trim().startsWith("http")) {
-    return {
-      ok: true,
-      checkoutUrl: directLink.trim(),
-      testMode: isTest,
-    };
-  }
-
+  const isTest = process.env["DODO_PAYMENTS_ENVIRONMENT"] !== "live_mode";
   const { client, missingConfig } = getDodoClient();
   const productId = process.env.DODO_PAYMENTS_PRODUCT_ID || "pdt_speakcoach_pro";
 
