@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { saveAccountName } from "@/lib/auth";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "@/components/app-shell";
@@ -46,6 +47,7 @@ function Onboarding() {
 
   function finish() {
     store.setProfile({ name: name.trim(), goal, level, weeklyTarget, onboarded: true });
+    void saveAccountName(name.trim());
     navigate({ to: "/dashboard" });
   }
 

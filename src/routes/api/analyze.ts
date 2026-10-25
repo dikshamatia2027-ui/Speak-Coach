@@ -44,7 +44,17 @@ export const Route = createFileRoute("/api/analyze")({
           if (transcript.split(/\s+/).filter(Boolean).length < 8) {
             return json({ error: "We couldn't make out enough speech. Try again a little closer to the mic." }, 422);
           }
-          const analysis = await analyzeTranscript({ transcript, durationSec, prompt, goal, apiKey, signal: request.signal });
+          const fullName = String(user.user_metadata?.["full_name"] ?? "").trim();
+          const speakerName = fullName.split(/\s+/)[0] ?? "";
+          const analysis = await analyzeTranscript({
+            transcript,
+            durationSec,
+            prompt,
+            goal,
+            apiKey,
+            ...(speakerName ? { speakerName } : {}),
+            signal: request.signal,
+          });
           // Count only sessions that produced a report. Only the server can write this table.
           await admin.from("analysis_log").insert({ user_id: user.id });
           return json({ transcript, analysis }, 200);

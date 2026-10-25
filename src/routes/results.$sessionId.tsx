@@ -12,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { Check, Copy, FileText } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MetricBar, ScoreRing } from "@/components/score";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,60 @@ export const Route = createFileRoute("/results/$sessionId")({
   }),
   component: Results,
 });
+
+function HighlightedTranscript({ text, words }: { text: string; words: string[] }) {
+  if (words.length === 0) return <>{text}</>;
+  const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const parts = text.split(new RegExp(`\\b(${escaped.join("|")})\\b`, "gi"));
+  return (
+    <>
+      {parts.map((part, i) =>
+        i % 2 === 1 ? (
+          <mark key={i} className="rounded bg-warning/25 px-0.5 text-foreground">
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
+  );
+}
+
+function TranscriptCard({ transcript, fillers, words, wpm }: { transcript: string; fillers: string[]; words: number; wpm: number }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(transcript);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard blocked: nothing to do
+    }
+  }
+  return (
+    <section className="surface mt-6 p-5" aria-labelledby="transcript-heading">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 id="transcript-heading" className="flex items-center gap-1.5 text-lg font-bold text-foreground">
+            <FileText className="size-4 text-primary" aria-hidden="true" /> What you said
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {words} words · {wpm} words per minute
+            {fillers.length > 0 ? " · filler words are highlighted" : ""}
+          </p>
+        </div>
+        <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 text-xs" onClick={() => void copy()}>
+          {copied ? <Check className="size-3.5" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
+          {copied ? "Copied" : "Copy"}
+        </Button>
+      </div>
+      <p className="mt-3 text-sm leading-relaxed text-foreground sm:text-base">
+        “<HighlightedTranscript text={transcript} words={fillers} />”
+      </p>
+    </section>
+  );
+}
 
 function Results() {
   const { sessionId } = Route.useParams();
@@ -125,6 +180,13 @@ function Results() {
             )}
           </div>
         </div>
+
+        <TranscriptCard
+          transcript={session.transcript}
+          fillers={session.analysis.fillerWords.map((f) => f.word)}
+          words={session.analysis.wordCount}
+          wpm={session.analysis.wordsPerMinute}
+        />
 
         {focusAreas.length > 0 && (
           <section className="mt-6" aria-labelledby="focus-areas-heading">
@@ -390,16 +452,6 @@ function Results() {
           <Button asChild variant="outline" size="sm" className="h-9 px-4 text-xs font-semibold">
             <Link to="/history">Browse All Sessions</Link>
           </Button>
-        </div>
-
-        {/* Transcript Card */}
-        <div className="surface mt-6 p-5">
-          <h2 className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-            Spoken Transcript
-          </h2>
-          <p className="mt-2 text-sm sm:text-base leading-relaxed text-foreground font-normal">
-            “{session.transcript}”
-          </p>
         </div>
       </div>
     </AppShell>

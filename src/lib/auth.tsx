@@ -21,6 +21,26 @@ export function useAuth(): AuthState {
   return ctx;
 }
 
+/** "diksha.matia2027@x.org" -> "Diksha Matia" (first two name-like parts of the email). */
+function nameFromEmail(email: string | undefined): string {
+  const local = (email ?? "").split("@")[0] ?? "";
+  return local
+    .split(/[._\-+]+/)
+    .map((t) => t.replace(/[^a-zA-Z]/g, ""))
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase())
+    .join(" ");
+}
+
+/** Save the display name on the account so it follows the person to any device. */
+export async function saveAccountName(name: string) {
+  const sb = getSupabase();
+  const clean = name.trim();
+  if (!sb || !clean) return;
+  await sb.auth.updateUser({ data: { full_name: clean } });
+}
+
 async function loadPlan(userId: string): Promise<"free" | "pro"> {
   const sb = getSupabase();
   if (!sb) return "free";
@@ -83,6 +103,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(u);
       if (u && u.id !== lastUserId) {
         lastUserId = u.id;
+        const saved = typeof u.user_metadata?.["full_name"] === "string" ? (u.user_metadata["full_name"] as string).trim() : "";
+        if (saved) {
+          store.setProfile({ name: saved });
+        } else {
+          const guess = nameFromEmail(u.email);
+          if (guess) {
+            store.setProfile({ name: guess });
+            void saveAccountName(guess);
+          }
+        }
         void loadPlan(u.id);
         void syncSessions(u.id);
       }

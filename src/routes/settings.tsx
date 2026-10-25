@@ -1,5 +1,5 @@
 import * as React from "react";
-import { clearSessionsRemote, useAuth } from "@/lib/auth";
+import { clearSessionsRemote, saveAccountName, useAuth } from "@/lib/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -72,6 +72,7 @@ function Settings() {
                 value={profile.name}
                 placeholder="e.g. Alex Chen"
                 onChange={(e) => store.setProfile({ name: e.target.value })}
+                onBlur={(e) => void saveAccountName(e.target.value)}
                 className="mt-1.5 h-10 rounded-lg px-3 text-sm"
               />
               <label className="mt-4 block text-xs font-semibold text-muted-foreground uppercase tracking-wider">Weekly Target (Sessions)</label>
