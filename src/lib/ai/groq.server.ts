@@ -11,7 +11,8 @@
 /** Base URL for the Groq API. */
 export const GROQ_API_BASE = "https://api.groq.com/openai/v1";
 
-/** Text generation models (verified on console.groq.com, Oct 2026). */
+/** Text generation models. Groq retired llama-3.1-8b-instant and llama-3.3-70b-versatile on 16 Aug 2026;
+ * these are the replacements Groq recommends (console.groq.com/docs/deprecations). */
 export const GROQ_TEXT_MODEL = "openai/gpt-oss-20b";
 export const GROQ_VERSA_MODEL = "openai/gpt-oss-120b";
 
@@ -81,8 +82,14 @@ export async function groqGenerate(
   messages: Array<{ role: string; content: string }>,
   apiKey: string,
   signal?: AbortSignal,
+  temperature = 0.4,
 ): Promise<unknown> {
   const guard = withTimeoutSignal(signal, UPSTREAM_TIMEOUT_MS);
+  // Groq's json mode rejects the request unless the lowercase word "json" appears in the messages.
+  const mentionsJson = messages.some((m) => m.content.includes("json"));
+  const finalMessages = mentionsJson
+    ? messages
+    : [...messages, { role: "system", content: "Respond with a single valid json object and nothing else." }];
   try {
     const res = await fetch(`${GROQ_API_BASE}/chat/completions`, {
       method: "POST",
@@ -92,8 +99,8 @@ export async function groqGenerate(
       },
       body: JSON.stringify({
         model,
-        messages,
-        temperature: 1,
+        messages: finalMessages,
+        temperature,
         max_tokens: 8192,
         response_format: { type: "json_object" },
       }),
@@ -147,9 +154,10 @@ export async function groqTranscribe(
     const formData = new FormData();
     formData.append("file", new Blob([audioBytes] as any), "audio.wav");
     formData.append("model", GROQ_TRANSCRIBE_MODEL);
+    // language omitted for auto-detect
+    // verbose_json returns per-segment "no speech" scores; temperature 0 reduces made-up text.
     formData.append("response_format", "verbose_json");
     formData.append("temperature", "0");
-    // language omitted for auto-detect
 
     const res = await fetch(`${GROQ_API_BASE}/audio/transcriptions`, {
       method: "POST",
