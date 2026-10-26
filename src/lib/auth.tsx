@@ -9,6 +9,7 @@ type AuthState = {
   loading: boolean;
   configured: boolean;
   signInWithEmail: (email: string) => Promise<{ error?: string }>;
+  signInWithGoogle: () => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   /** Re-read the plan from the server (used after a payment). Returns the plan. */
   refreshPlan: () => Promise<"free" | "pro">;
@@ -127,6 +128,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { error } = await sb.auth.signInWithOtp({
           email,
           options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+        });
+        return error ? { error: error.message } : {};
+      },
+      async signInWithGoogle() {
+        const sb = getSupabase();
+        if (!sb) return { error: "Sign-in is not set up yet." };
+        const { error } = await sb.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: `${window.location.origin}/dashboard` },
         });
         return error ? { error: error.message } : {};
       },

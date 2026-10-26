@@ -12,7 +12,7 @@ const BENEFITS = [
 ] as const;
 
 export function LoginPanel() {
-  const { signInWithEmail, configured } = useAuth();
+  const { signInWithEmail, signInWithGoogle, configured } = useAuth();
   const [email, setEmail] = React.useState("");
   const [sent, setSent] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -135,6 +135,13 @@ export function LoginPanel() {
               )}
               <Button type="submit" variant="hero" size="lg" className="w-full" disabled={busy || !email}>
                 {busy ? "Sending…" : "Email me a sign-in link"}
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">or continue with</p>
+              <Button variant="outline" size="lg" className="w-full" onClick={async () => {
+                const res = await signInWithGoogle();
+                if (res.error) setError(res.error);
+              }}>
+                Continue with Google
               </Button>
               <p className="text-xs text-muted-foreground">We only use your email to sign you in.</p>
             </form>
