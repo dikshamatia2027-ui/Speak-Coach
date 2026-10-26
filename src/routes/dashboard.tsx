@@ -73,6 +73,7 @@ const METRIC_LABELS: Record<MetricId, string> = {
   pronunciation: "Pronunciation",
   vocabulary: "Vocabulary",
   delivery: "Delivery & confidence",
+  relevance: "Relevance",
 };
 
 /** Deterministic, general drill advice per metric — shown alongside the user's real average score. */
@@ -83,6 +84,7 @@ const FOCUS_DRILLS: Record<MetricId, string> = {
   pronunciation: "Read one paragraph slowly, finishing every word ending — then repeat at natural pace.",
   vocabulary: "Swap one vague word (“really”, “thing”, “very”) for a precise noun or concrete verb.",
   delivery: "Land your final sentence at steady volume — hold it, don't trail off.",
+  relevance: "Start by answering the question in one sentence, then support it with one example.",
 };
 
 function Dashboard() {
@@ -123,12 +125,18 @@ function Dashboard() {
   /** Weakest metric: lowest average score across every real (AI-analysed) session. */
   const weakest = useMemo(() => {
     if (!sessions.length) return null;
-    const ids: MetricId[] = ["pace", "fillers", "clarity", "pronunciation", "vocabulary", "delivery"];
-    const averages = ids.map((id) => {
-      const scores = sessions.map((s) => s.analysis.metrics.find((m) => m.id === id)?.score ?? 0);
-      return { id, avg: Math.round(scores.reduce((a, b) => a + b, 0) / Math.max(1, scores.length)) };
-    });
-    return averages.sort((a, b) => a.avg - b.avg)[0]!;
+    const ids: MetricId[] = ["pace", "fillers", "clarity", "pronunciation", "vocabulary", "delivery", "relevance"];
+    const averages = ids
+      .map((id) => {
+        // Older sessions have no relevance score: only average the sessions that actually have the metric.
+        const scores = sessions.flatMap((s) => {
+          const m = s.analysis.metrics.find((x) => x.id === id);
+          return m ? [m.score] : [];
+        });
+        return { id, count: scores.length, avg: Math.round(scores.reduce((a, b) => a + b, 0) / Math.max(1, scores.length)) };
+      })
+      .filter((a) => a.count > 0);
+    return averages.sort((a, b) => a.avg - b.avg)[0] ?? null;
   }, [sessions]);
 
   function handleSelectGoal(goalId: GoalId) {

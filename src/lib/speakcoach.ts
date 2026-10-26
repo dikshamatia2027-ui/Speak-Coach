@@ -250,7 +250,7 @@ export function getScenario(id: string) {
 /* Analysis                                                            */
 /* ------------------------------------------------------------------ */
 
-export type MetricId = "pace" | "fillers" | "clarity" | "pronunciation" | "vocabulary" | "delivery";
+export type MetricId = "pace" | "fillers" | "clarity" | "pronunciation" | "vocabulary" | "delivery" | "relevance";
 
 export type Metric = {
   id: MetricId;
@@ -331,6 +331,12 @@ export function metricCoaching(metric: Metric, transcript: string, analysis: Ana
         why: "A complete, decisive thought gives listeners a stronger sense of your point. Confidence in your voice needs an audio listen-back to assess.",
         quote: quote(first),
         exercise: "Record this thought three times. End each pass with a full sentence and a one-beat pause; listen for a steady finish.",
+      };
+    case "relevance":
+      return {
+        why: "Listeners judge you first on whether you answered the question. A clear voice does not make up for skipping it.",
+        quote: quote(first),
+        exercise: "Say the question back in your own words, then answer it in one sentence before adding any detail. Record the answer again, opening with that one sentence.",
       };
   }
 }
@@ -784,7 +790,7 @@ export function personalBests(sessions: Session[]) {
   const best = (pick: (s: Session) => number) =>
     sessions.reduce<Session | null>((b, s) => (!b || pick(s) > pick(b) ? s : b), null);
   const overall = best((s) => s.analysis.overall);
-  const metricIds: MetricId[] = ["pace", "fillers", "clarity", "pronunciation", "vocabulary", "delivery"];
+  const metricIds: MetricId[] = ["pace", "fillers", "clarity", "pronunciation", "vocabulary", "delivery", "relevance"];
   const metrics = metricIds.map((id) => {
     const score = (s: Session) => s.analysis.metrics.find((m) => m.id === id)?.score ?? 0;
     const s = best(score);
