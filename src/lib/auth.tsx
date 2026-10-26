@@ -1,4 +1,5 @@
 import * as React from "react";
+import { nameFromEmail } from "@/lib/name";
 import type { Session as SbSession, User } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase";
 import { store, type Session } from "@/lib/speakcoach";
@@ -19,18 +20,6 @@ export function useAuth(): AuthState {
   const ctx = React.useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
-}
-
-/** "diksha.matia2027@x.org" -> "Diksha Matia" (first two name-like parts of the email). */
-function nameFromEmail(email: string | undefined): string {
-  const local = (email ?? "").split("@")[0] ?? "";
-  return local
-    .split(/[._\-+]+/)
-    .map((t) => t.replace(/[^a-zA-Z]/g, ""))
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase())
-    .join(" ");
 }
 
 /** Save the display name on the account so it follows the person to any device. */

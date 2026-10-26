@@ -21,7 +21,7 @@ type AiReport = z.infer<typeof schema>;
 const filled = (t: string) => t.trim().length > 3;
 
 /** True if the model really did the work, and did not just echo the empty answer format back. */
-function isUsable(ai: AiReport): boolean {
+export function isUsable(ai: AiReport): boolean {
   const scores = [ai.clarity.score, ai.pronunciation.score, ai.vocabulary.score, ai.delivery.score];
   if (scores.every((s) => s <= 0)) return false;
   return (
