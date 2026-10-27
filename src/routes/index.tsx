@@ -225,15 +225,24 @@ function Landing() {
         )}
       </header>
 
-      {/* ---------- Hero ---------- */}        <section className="relative overflow-hidden">
+      {/* ---------- Hero ---------- */}
+      <section className="relative overflow-hidden">
         <div className="bg-halo pointer-events-none absolute inset-x-0 -top-40 h-[540px]" />
         <div className="relative mx-auto grid max-w-5xl items-center gap-12 px-4 pt-14 pb-16 sm:px-6 sm:pt-20 lg:grid-cols-[1.02fr_1fr] lg:pt-24">
           <div className="animate-rise">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold text-muted-foreground shadow-soft">
+              <AudioLines className="size-3.5 text-primary" />
+              AI public speaking coach
+            </span>
             <h1 className="mt-5 text-4xl leading-[1.06] font-bold tracking-tight text-foreground sm:text-5xl">
-              Practice speaking out loud. Get instant, honest feedback.
+              Speak with confidence.
+              <br />
+              <span className="text-primary">Improve with every conversation.</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Answer a real scenario or a surprise topic, and see your pace, filler words, clarity and whether you actually answered the question.
+              SpeakCoach gives you a realistic scenario, listens to your spoken answer, and returns a
+              scored, specific report — fluency, pronunciation, clarity and confidence — then lets you
+              retry until it lands.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild variant="hero" size="xl" className="rounded-full">
@@ -242,47 +251,19 @@ function Landing() {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="xl" className="rounded-full">
-                <a href="#how-it-works">How it works</a>
+                <a href="#how-it-works">See How It Works</a>
               </Button>
             </div>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-              <Button asChild variant="hero" size="xl" className="rounded-full">
-                <Link to="/onboarding">
-                  Start Practicing Free <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="xl" className="rounded-full">
-                <a href="#how-it-works">How it works</a>
-              </Button>
-            </div>
-            <div className="mt-10 max-w-2xl grid-cols-1 gap-4" aria-label="How it works">
-              <div className="flex items-center gap-3 rounded bg-border/50 p-3 sm:p-4">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10 border border-primary/20">
-                  <Check className="size-4 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Pick a scenario or an impromptu topic</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">Choose from predefined scenarios or get a random free topic.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded bg-border/50 p-3 sm:p-4">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10 border border-primary/20">
-                  <Mic className="size-4 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Speak for about a minute</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">Record your spoken answer and the AI analyzes it.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded bg-border/50 p-3 sm:p-4">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10 border border-primary/20">
-                  <Sparkles className="size-4 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Get a scored report and retry</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">Review your pace, fillers, clarity and relevance score.</p>
-                </div>
-              </div>
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="size-4 text-success" /> No script needed
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="size-4 text-success" /> 5 minutes a day
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="size-4 text-success" /> Free to start
+              </span>
             </div>
           </div>
 
