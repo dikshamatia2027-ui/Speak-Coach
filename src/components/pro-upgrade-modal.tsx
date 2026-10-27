@@ -140,17 +140,22 @@ export function ProUpgradeModal({
           </div>
 
           {/* Pricing pill */}
-          <div className="rounded-2xl bg-secondary/80 p-4 flex items-center justify-between border border-border/60">
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Monthly Plan</p>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl font-extrabold tabular-nums">$12</span>
-                <span className="text-xs text-muted-foreground">/ month · cancel anytime</span>
+          <div className="rounded-2xl bg-secondary/80 p-4 border border-border/60 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Monthly Plan</p>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="text-2xl font-extrabold tabular-nums">₹299</span>
+                  <span className="text-xs text-muted-foreground">/ month · or ₹1,499 / 6 mo</span>
+                </div>
               </div>
+              <span className="rounded-full bg-primary/15 text-primary text-xs font-bold px-3 py-1">
+                Risk-free · Cancel anytime
+              </span>
             </div>
-            <span className="rounded-full bg-primary/15 text-primary text-xs font-bold px-3 py-1">
-              7-day risk-free
-            </span>
+            <p className="text-[11px] text-muted-foreground border-t border-border/50 pt-2">
+              Preparing for a single interview or GD round? Get the <strong>₹99 Big Day Pack</strong> (10 sessions) at checkout.
+            </p>
           </div>
 
           {/* Actions */}
@@ -169,7 +174,7 @@ export function ProUpgradeModal({
                   </>
                 ) : (
                   <>
-                    <Zap className="size-4 fill-primary-foreground" /> Upgrade to Pro now
+                    <Zap className="size-4 fill-primary-foreground" /> Upgrade to Pro (₹299/mo)
                   </>
                 )}
               </Button>

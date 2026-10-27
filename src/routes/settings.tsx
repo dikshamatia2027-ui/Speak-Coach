@@ -191,14 +191,14 @@ function Settings() {
                     className="h-8 text-xs font-bold"
                     onClick={() => setUpgradeOpen(true)}
                   >
-                    Go Pro ($12/mo)
+                    Go Pro (₹299/mo)
                   </Button>
                 )}
               </div>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {profile.plan === "pro"
                   ? "Unlimited sessions, specialized executive scenarios, and acoustic analytics enabled via Dodo Payments."
-                  : "3 sessions/week included. Upgrade with Dodo Payments for unlimited practice and executive scenarios."}
+                  : "3 sessions/week included. Upgrade with Dodo Payments (₹299/mo or ₹99 single pack) for unlimited practice."}
               </p>
             </div>
           </div>

@@ -23,7 +23,7 @@ const SECTIONS = [
   },
   {
     title: "Subscriptions",
-    body: "Pro subscriptions are billed monthly at $12 and can be cancelled any time. Cancellation takes effect at the end of the current billing period. Payments are handled by Dodo Payments.",
+    body: "Pro subscriptions are billed monthly at ₹299 (or ₹1,499 for 6 months) and can be cancelled any time. One-time interview packs (₹99 for 10 sessions) do not recur. Cancellation takes effect at the end of the current billing period. Payments are handled by Dodo Payments.",
   },
   {
     title: "AI feedback",

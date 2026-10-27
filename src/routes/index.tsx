@@ -508,80 +508,134 @@ function Landing() {
       <section id="pricing" className="scroll-mt-20">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <span className="text-xs font-semibold tracking-wider text-primary uppercase">Pricing</span>
-            <h2 className="mt-1.5 text-2xl font-bold tracking-tight sm:text-3xl">Simple plans, built for progress</h2>
+            <span className="text-xs font-semibold tracking-wider text-primary uppercase">Pricing for India</span>
+            <h2 className="mt-1.5 text-2xl font-bold tracking-tight sm:text-3xl">Simple plans, built for your big day</h2>
             <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-              Start free to build your baseline, or go Pro for unlimited practice and advanced speech
-              analytics.
+              Start free to build your baseline, grab a pack for placement interviews, or go Pro for unlimited drills.
             </p>
           </div>
 
-          <div className="mx-auto mt-10 grid max-w-3xl gap-6 lg:grid-cols-2">
-            <div className="surface flex flex-col p-6 sm:p-7">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold">Free</h3>
-                <span className="rounded-md bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                  Starter
-                </span>
+          <div className="mx-auto mt-10 grid max-w-5xl gap-5 lg:grid-cols-3">
+            {/* Free Tier */}
+            <div className="surface flex flex-col justify-between p-6 sm:p-7">
+              <div>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold">Free</h3>
+                  <span className="rounded-md bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    Starter
+                  </span>
+                </div>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className="font-display text-4xl font-extrabold tracking-tight">₹0</span>
+                  <span className="text-xs text-muted-foreground">/ month forever</span>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Build confidence with 3 AI-scored sessions every week.
+                </p>
+                <ul className="mt-5 space-y-2.5 border-t border-border pt-4 text-xs sm:text-sm">
+                  {[
+                    ["3 practice sessions", " per week"],
+                    ["Foundational speaking scenarios", ""],
+                    ["Instant transcription & 6-metric scorecard", ""],
+                    ["Basic pace & filler tracking", ""],
+                  ].map(([main, tail]) => (
+                    <li key={main} className="flex items-center gap-2">
+                      <Check className="size-4 shrink-0 text-success" />
+                      <span>
+                        <strong>{main}</strong>
+                        {tail}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="font-display text-4xl font-extrabold tracking-tight">$0</span>
-                <span className="text-xs text-muted-foreground">/ month forever</span>
-              </div>
-              <ul className="mt-6 space-y-3 border-t border-border pt-5 text-sm">
-                {[
-                  ["3 practice sessions", " per week"],
-                  ["Foundational speaking scenarios", ""],
-                  ["Instant transcription & 6-metric scorecard", ""],
-                  ["Basic pace & filler tracking", ""],
-                ].map(([main, tail]) => (
-                  <li key={main} className="flex items-center gap-2.5">
-                    <Check className="size-4 shrink-0 text-success" />
-                    <span>
-                      <strong>{main}</strong>
-                      {tail}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Button asChild variant="outline" size="lg" className="mt-7 w-full rounded-full">
+              <Button asChild variant="outline" size="lg" className="mt-6 w-full rounded-full">
                 <Link to="/onboarding">Get started for free</Link>
               </Button>
             </div>
 
-            <div className="surface relative flex flex-col border-2 border-primary/60 p-6 shadow-lift sm:p-7">
-              <span className="absolute -top-3 right-5 rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold tracking-wider text-primary-foreground uppercase shadow-sm">
+            {/* Event / Big Day Pack */}
+            <div className="surface relative flex flex-col justify-between border border-primary/40 p-6 sm:p-7 bg-primary/5">
+              <span className="absolute -top-3 right-5 rounded-full bg-secondary border border-border px-2.5 py-0.5 text-[11px] font-bold tracking-wider text-foreground uppercase shadow-xs">
+                One-Time Pack
+              </span>
+              <div>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold">Interview Prep</h3>
+                  <span className="rounded-md bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary">
+                    10 DRILLS
+                  </span>
+                </div>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className="font-display text-4xl font-extrabold tracking-tight text-primary">₹99</span>
+                  <span className="text-xs text-muted-foreground">/ single pack · no renewal</span>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Ideal for placement interviews, GDs, and imminent pitch rounds.
+                </p>
+                <ul className="mt-5 space-y-2.5 border-t border-border pt-4 text-xs sm:text-sm">
+                  {[
+                    ["10 high-stakes practice sessions", " to use anytime"],
+                    ["Placement, GD & case interview scenarios", ""],
+                    ["Detailed filler & pacing stability analysis", ""],
+                    ["Line-level delivery coaching & rewrites", ""],
+                  ].map(([main, tail]) => (
+                    <li key={main} className="flex items-center gap-2">
+                      <Check className="size-4 shrink-0 text-primary" />
+                      <span>
+                        <strong>{main}</strong>
+                        {tail}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Button asChild variant="outline" size="lg" className="mt-6 w-full rounded-full border-primary/40 text-primary hover:bg-primary/10">
+                <Link to="/onboarding">
+                  Get Interview Pack <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
+
+            {/* Pro Monthly */}
+            <div className="surface relative flex flex-col justify-between border-2 border-primary/70 p-6 shadow-lift sm:p-7">
+              <span className="absolute -top-3 right-5 rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-bold tracking-wider text-primary-foreground uppercase shadow-sm">
                 Recommended
               </span>
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold">SpeakCoach Pro</h3>
-                <span className="rounded-md border border-brand-yellow/30 bg-brand-yellow/10 px-2 py-0.5 text-xs font-bold text-warning">
-                  PRO
-                </span>
+              <div>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold">SpeakCoach Pro</h3>
+                  <span className="rounded-md border border-brand-yellow/30 bg-brand-yellow/10 px-2 py-0.5 text-[11px] font-bold text-warning">
+                    PRO
+                  </span>
+                </div>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className="font-display text-4xl font-extrabold tracking-tight">₹299</span>
+                  <span className="text-xs text-muted-foreground">/ month · or ₹1,499 / 6 mo</span>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Unlimited practice for ambitious students, founders, and presenters.
+                </p>
+                <ul className="mt-5 space-y-2.5 border-t border-border pt-4 text-xs sm:text-sm">
+                  {[
+                    ["Unlimited practice", " with zero weekly cap"],
+                    ["Executive & MBA scenarios", " (GDs, Boardroom, Pitches)"],
+                    ["Advanced acoustic analytics", " (variance, filler breakdown)"],
+                    ["Attempt comparisons", " & priority AI coaching"],
+                  ].map(([main, tail]) => (
+                    <li key={main} className="flex items-center gap-2">
+                      <Check className="size-4 shrink-0 font-bold text-primary" />
+                      <span>
+                        <strong>{main}</strong>
+                        {tail}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="font-display text-4xl font-extrabold tracking-tight">$12</span>
-                <span className="text-xs text-muted-foreground">/ month · cancel anytime</span>
-              </div>
-              <ul className="mt-6 space-y-3 border-t border-border pt-5 text-sm">
-                {[
-                  ["Unlimited practice", " with no weekly limit"],
-                  ["High-stakes scenarios", " (boardroom, negotiation, pitches)"],
-                  ["Advanced speech analytics", " (pacing stability, fillers, variety)"],
-                  ["Attempt comparisons", " & priority coaching"],
-                ].map(([main, tail]) => (
-                  <li key={main} className="flex items-center gap-2.5">
-                    <Check className="size-4 shrink-0 font-bold text-primary" />
-                    <span>
-                      <strong>{main}</strong>
-                      {tail}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Button asChild variant="hero" size="lg" className="mt-7 w-full rounded-full">
+              <Button asChild variant="hero" size="lg" className="mt-6 w-full rounded-full">
                 <Link to="/onboarding">
-                  Upgrade to Pro <ArrowRight className="size-4" />
+                  Go Pro (₹299/mo) <ArrowRight className="size-4" />
                 </Link>
               </Button>
             </div>
