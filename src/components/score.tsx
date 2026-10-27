@@ -74,6 +74,15 @@ export function MetricBar({
   detail?: string;
   delta?: number;
 }) {
+  const metricHints: Record<string, string> = {
+    pace: "How fast or slow you spoke.",
+    fillers: "How many filler words (um, ah, etc.) you used.",
+    clarity: "How clearly and easily your words were understood.",
+    pronunciation: "How correctly you pronounced sounds and words.",
+    vocab: "Whether you used relevant vocabulary for the topic.",
+    relevance: "Did you answer the question you were given?",
+  };
+  const hint = metricHints[label.toLowerCase()] || "";
   return (
     <div className="animate-fade">
       <div className="flex items-baseline justify-between gap-3">
@@ -102,6 +111,7 @@ export function MetricBar({
         />
       </div>
       {detail && <p className="mt-1.5 text-xs text-muted-foreground">{detail}</p>}
+      {hint && <p className="mt-1.5 text-xs text-muted-foreground/80">{hint}</p>}
     </div>
   );
 }

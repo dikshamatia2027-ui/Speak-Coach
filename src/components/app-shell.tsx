@@ -66,53 +66,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button
               onClick={() => setShowMobileMenu((prev) => !prev)}
               aria-label="Toggle navigation menu"
-              className="flex size-9 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shadow-xs sm:hidden"
+              className="flex size-9 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shadow-xs"
             >
               <Menu className="size-4.5" />
             </button>
             )}
             <Logo />
           </div>
-          {/* Desktop navigation links (visible on lg and above) */}
-          {signedIn && (
-            <nav className="hidden sm:block sm:flex-1 sm:flex items-center gap-2">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "relative flex size-10 rounded-md items-center justify-center gap-1.5 px-2 py-1.5 text-sm font-medium transition-colors",
-                    path === item.to
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
-                  )}
-                >
-                  <item.icon className="size-4" />
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </nav>
-          )}
-          {/* Mobile nav row (visible on sm only, appears below logo on mobile) */}
-          {signedIn && (
-            <div className="sm:hidden flex flex-col gap-2 w-full">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "flex flex-col items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium transition-colors",
-                    path === item.to
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
-                  )}
-                >
-                  <item.icon className="size-4" />
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-            </div>
-          )}
 
           {signedIn && (
           <div className="flex items-center gap-2.5">
@@ -184,7 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ProUpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
 
       {/* Main Content Area */}
-      <main className={cn("mx-auto w-full max-w-2xl lg:max-w-4xl px-4 pt-5 sm:px-6 flex-1", signedIn ? "pb-0 sm:pb-0" : "pb-12")}>
+      <main className={cn("mx-auto w-full max-w-2xl lg:max-w-4xl px-4 pt-5 sm:px-6 flex-1", signedIn ? "pb-40 sm:pb-44" : "pb-12")}>
         {authLoading ? (
           <p className="py-24 text-center text-sm text-muted-foreground">Loading…</p>
         ) : user ? (
@@ -194,6 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </main>
 
+      {/* Floating White Pill Bottom Dock (Exact signature navigation from Figma) */}
       {signedIn && (
       <nav aria-label="Bottom Navigation" className="fixed inset-x-0 bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-3">
         <div className="flex items-center gap-4 sm:gap-7 rounded-full bg-card/95 backdrop-blur-xl border border-border shadow-dock px-5 py-2.5 sm:px-7 sm:py-3 transition-all">

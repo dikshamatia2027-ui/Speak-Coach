@@ -454,11 +454,19 @@ function Practice() {
                     <Waveform active={isLive} analyser={analyserRef} />
                   </div>
                 ) : (
-                  <div className="relative flex size-24 items-center justify-center sm:size-28">
-                    <span className="absolute inset-0 rounded-full bg-card/60 blur-md" />
-                    <div className="relative flex size-20 items-center justify-center rounded-full bg-card shadow-lift text-primary sm:size-24">
-                      <Mic className="size-9 stroke-[2] sm:size-10" />
-                    </div>
+                  <div className="flex flex-col items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => void startCountdown()}
+                      aria-label="Start recording"
+                      className="group relative flex size-24 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40 sm:size-28"
+                    >
+                      <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/20 motion-reduce:animate-none" />
+                      <span className="relative flex size-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lift transition-transform group-hover:scale-105 group-active:scale-95 sm:size-24">
+                        <Mic className="size-9 stroke-[2] sm:size-10" />
+                      </span>
+                    </button>
+                    <p className="text-sm font-medium text-muted-foreground">Tap the microphone to start</p>
                   </div>
                 )}
 
