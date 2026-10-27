@@ -1,23 +1,22 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { saveSessionRemote } from "@/lib/auth";
 import { getAccessToken } from "@/lib/supabase";
+import { toast } from "sonner";
 import {
   ArrowLeft,
-  ChevronDown,
+  ChevronLeft,
   Crown,
   Heart,
   Lock,
   Mic,
   Pause,
   Play,
-  Repeat,
   RotateCcw,
   Shuffle,
   SkipBack,
   SkipForward,
   SlidersHorizontal,
   Square,
-  Volume2,
   Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -382,7 +381,7 @@ function Practice() {
             aria-label="Back to dashboard"
             className="flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors shadow-xs"
           >
-            <ChevronDown className="size-5" />
+            <ChevronLeft className="size-5" />
           </Link>
 
           <div className="text-center">
@@ -491,7 +490,16 @@ function Practice() {
               </div>
 
               <button
-                onClick={() => setIsBookmarked((prev) => !prev)}
+                onClick={() => {
+                  setIsBookmarked((prev) => {
+                    const next = !prev;
+                    toast(next ? "Scenario saved to favourites" : "Removed from favourites", {
+                      icon: next ? "❤️" : "🗑️",
+                      duration: 2000,
+                    });
+                    return next;
+                  });
+                }}
                 aria-label="Favorite scenario"
                 className="flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-primary transition-colors shadow-xs shrink-0 cursor-pointer"
               >
@@ -588,7 +596,7 @@ function Practice() {
                 <SkipForward className="size-5 fill-current sm:size-6" />
               </button>
 
-              {/* 5. Repeat / Reset */}
+              {/* 5. Reset */}
               <button
                 onClick={() => {
                   setElapsed(0);
@@ -596,13 +604,13 @@ function Practice() {
                   setPhase("ready");
                 }}
                 disabled={inSession}
-                title="Reset timer"
+                title="Reset to start"
                 className={cn(
                   "flex size-10 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer sm:size-11",
                   inSession && "max-sm:hidden",
                 )}
               >
-                <Repeat className="size-5" />
+                <RotateCcw className="size-5" />
               </button>
             </div>
 
