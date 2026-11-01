@@ -94,64 +94,74 @@
 }
 
 :root {
-  /* Signature Figma Palette */
-  /* Neutral tint set (kept for legacy utility classes). */
-  --mood-pink: #2563eb;
-  --mood-pink-bg: #eff6ff;
+  /* SpeakCoach redesigned palette */
+  --mood-pink: #2864B7;
+  --mood-pink-bg: #EEF4FC;
   --mood-lavender: #475569;
-  --mood-lavender-bg: #f1f5f9;
+  --mood-lavender-bg: #F3F0FC;
   --mood-tangerine: #b45309;
-  --mood-tangerine-bg: #fffbeb;
-  --mood-mint: #0f766e;
+  --mood-tangerine-bg: #FAF5EE;
+  --mood-mint: #159B68;
   --mood-mint-bg: #f0fdfa;
 
   --brand-orange: #b45309;
   --brand-yellow: #b45309;
   --radius: 0.75rem;
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #eff6ff;
-  --accent-foreground: #1e3a8a;
+  --background: #FFFFFF;
+  --foreground: #172033;
+  --card: #FFFFFF;
+  --card-foreground: #172033;
+  --popover: #FFFFFF;
+  --popover-foreground: #172033;
+  --primary: #2864B7;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F8FAFC;
+  --secondary-foreground: #172033;
+  --muted: #F8FAFC;
+  --muted-foreground: #64748B;
+  --accent: #EEF4FC;
+  --accent-foreground: #142C59;
   --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --success: #059669;
-  --success-foreground: #ffffff;
+  --destructive-foreground: #FFFFFF;
+  --success: #159B68;
+  --success-foreground: #FFFFFF;
   --warning: #b45309;
-  --warning-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #cbd5e1;
-  --ring: #2563eb;
-  --chart-1: #2563eb;
-  --chart-2: #0f766e;
-  --chart-3: #475569;
-  --chart-4: #059669;
+  --warning-foreground: #FFFFFF;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #2864B7;
+  --chart-1: #2864B7;
+  --chart-2: #159B68;
+  --chart-3: #64748B;
+  --chart-4: #142C59;
   --chart-5: #b45309;
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #2563eb;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eff6ff;
-  --sidebar-accent-foreground: #1e3a8a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #2563eb;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #172033;
+  --sidebar-primary: #2864B7;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EEF4FC;
+  --sidebar-accent-foreground: #142C59;
+  --sidebar-border: #E2E8F0;
+  --sidebar-ring: #2864B7;
 
-  --gradient-brand: linear-gradient(135deg, #2563eb, #3b82f6);
-  --gradient-soft: linear-gradient(180deg, #f8fafc, #f1f5f9);
-  --gradient-halo: linear-gradient(180deg, rgba(37, 99, 235, 0.05), transparent);
-  --shadow-soft: 0 2px 8px -2px rgba(28, 26, 36, 0.04), 0 1px 4px -1px rgba(28, 26, 36, 0.02);
-  --shadow-lift: 0 14px 34px -8px rgba(28, 26, 36, 0.08), 0 6px 16px -4px rgba(28, 26, 36, 0.04);
-  --shadow-glow: 0 14px 35px -8px rgba(37, 99, 235, 0.3);
-  --shadow-dock: 0 20px 40px -10px rgba(28, 26, 36, 0.12), 0 4px 12px -2px rgba(28, 26, 36, 0.06);
+  --gradient-brand: linear-gradient(135deg, #2864B7, #3b82f6);
+  --gradient-soft: linear-gradient(180deg, #FFFFFF, #F8FAFC);
+  --gradient-halo: linear-gradient(180deg, rgba(40, 100, 183, 0.05), transparent);
+  --shadow-soft: 0 1px 3px 0 rgba(20, 44, 89, 0.02), 0 1px 2px -1px rgba(20, 44, 89, 0.02);
+  --shadow-lift: 0 10px 30px -10px rgba(20, 44, 89, 0.08), 0 4px 12px -4px rgba(20, 44, 89, 0.04);
+  --shadow-glow: 0 14px 35px -8px rgba(40, 100, 183, 0.25);
+  --shadow-dock: 0 20px 40px -10px rgba(20, 44, 89, 0.1), 0 4px 12px -2px rgba(20, 44, 89, 0.05);
+  /* Design tokens from reference */
+  --navy-deep: #142C59;
+  --blue-primary: #2864B7;
+  --text-main: #172033;
+  --text-secondary: #64748B;
+  --border-color: #E2E8F0;
+  --bg-secondary: #F8FAFC;
+  --card-soft-blue: #EEF4FC;
+  --card-soft-lavender: #F3F0FC;
+  --card-soft-warm: #FAF5EE;
+  --success-green: #159B68;
 }
 
 .dark {

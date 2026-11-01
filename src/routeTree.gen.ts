@@ -15,6 +15,8 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as ReadingRouteImport } from './routes/reading'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VocabularyRouteImport } from './routes/vocabulary'
@@ -53,6 +55,16 @@ const PracticeRoute = PracticeRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReadingRoute = ReadingRouteImport.update({
+  id: '/reading',
+  path: '/reading',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -108,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/privacy': typeof PrivacyRoute
+  '/progress': typeof ProgressRoute
+  '/reading': typeof ReadingRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/vocabulary': typeof VocabularyRoute
@@ -125,6 +139,8 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/privacy': typeof PrivacyRoute
+  '/progress': typeof ProgressRoute
+  '/reading': typeof ReadingRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/vocabulary': typeof VocabularyRoute
@@ -143,6 +159,8 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/practice': typeof PracticeRoute
   '/privacy': typeof PrivacyRoute
+  '/progress': typeof ProgressRoute
+  '/reading': typeof ReadingRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/vocabulary': typeof VocabularyRoute
@@ -162,6 +180,8 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/privacy'
+    | '/progress'
+    | '/reading'
     | '/settings'
     | '/terms'
     | '/vocabulary'
@@ -179,6 +199,8 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/privacy'
+    | '/progress'
+    | '/reading'
     | '/settings'
     | '/terms'
     | '/vocabulary'
@@ -196,6 +218,8 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/practice'
     | '/privacy'
+    | '/progress'
+    | '/reading'
     | '/settings'
     | '/terms'
     | '/vocabulary'
@@ -214,6 +238,8 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PracticeRoute: typeof PracticeRoute
   PrivacyRoute: typeof PrivacyRoute
+  ProgressRoute: typeof ProgressRoute
+  ReadingRoute: typeof ReadingRoute
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
   VocabularyRoute: typeof VocabularyRoute
@@ -267,6 +293,20 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reading': {
+      id: '/reading'
+      path: '/reading'
+      fullPath: '/reading'
+      preLoaderRoute: typeof ReadingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -342,6 +382,8 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PracticeRoute: PracticeRoute,
   PrivacyRoute: PrivacyRoute,
+  ProgressRoute: ProgressRoute,
+  ReadingRoute: ReadingRoute,
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
   VocabularyRoute: VocabularyRoute,
