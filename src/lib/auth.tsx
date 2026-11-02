@@ -2,7 +2,9 @@ import * as React from "react";
 import { nameFromEmail } from "@/lib/name";
 import type { Session as SbSession, User } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase";
+import { isProActive } from "@/lib/plan";
 import { store, type Session } from "@/lib/speakcoach";
+import { vocabStore } from "@/lib/vocab";
 
 type AuthState = {
   user: User | null;
@@ -34,8 +36,8 @@ export async function saveAccountName(name: string) {
 async function loadPlan(userId: string): Promise<"free" | "pro"> {
   const sb = getSupabase();
   if (!sb) return "free";
-  const { data } = await sb.from("profiles").select("plan").eq("id", userId).maybeSingle();
-  const plan = data?.plan === "pro" ? "pro" : "free";
+  const { data } = await sb.from("profiles").select("plan, plan_renews_at").eq("id", userId).maybeSingle();
+  const plan = isProActive(data) ? "pro" : "free";
   store.setProfile({ plan });
   return plan;
 }
@@ -76,6 +78,19 @@ export async function clearSessionsRemote() {
   await sb.from("sessions").delete().eq("user_id", data.user.id);
 }
 
+/** Ask to be told when paid plans launch. Stored against the account, so it can be emailed later. */
+export async function joinLaunchWaitlist(): Promise<{ error?: string }> {
+  const generic = "We couldn't save that. Please try again.";
+  const sb = getSupabase();
+  if (!sb) return { error: generic };
+  const { data } = await sb.auth.getUser();
+  if (!data.user?.email) return { error: "Please sign in first." };
+  const { error } = await sb
+    .from("launch_waitlist")
+    .upsert({ user_id: data.user.id, email: data.user.email }, { onConflict: "user_id", ignoreDuplicates: true });
+  return error ? { error: generic } : {};
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -93,6 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(u);
       if (u && u.id !== lastUserId) {
         lastUserId = u.id;
+        // Must run before syncSessions: history left by another account must never reach this one.
+        store.claimForUser(u.id);
+        vocabStore.claimForUser(u.id);
         const saved = typeof u.user_metadata?.["full_name"] === "string" ? (u.user_metadata["full_name"] as string).trim() : "";
         if (saved) {
           store.setProfile({ name: saved });

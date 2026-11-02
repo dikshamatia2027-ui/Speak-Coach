@@ -38,6 +38,9 @@ export type Recorder = {
 
 const TARGET_RATE = 16000;
 
+/** 16 kHz mono 16-bit WAV is 32 KB per second, and Vercel rejects uploads over 4.5 MB. */
+export const MAX_RECORDING_SECONDS = 130;
+
 function downsample(input: Float32Array, from: number): Float32Array {
   if (from <= TARGET_RATE) return new Float32Array(input);
   const ratio = from / TARGET_RATE;

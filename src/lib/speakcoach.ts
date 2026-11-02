@@ -599,9 +599,10 @@ export type Profile = {
   strictFillers: boolean;
   plan: SubscriptionTier;
   dodoPaymentLink?: string;
+  favoriteScenarios?: string[];
 };
 
-export type StoreState = { profile: Profile; sessions: Session[] };
+export type StoreState = { profile: Profile; sessions: Session[]; ownerId?: string };
 
 const KEY = "speakcoach:v1";
 
@@ -647,6 +648,7 @@ function initial(): StoreState {
   return { profile: { ...defaultProfile }, sessions: [] };
 }
 
+const serverSnapshot = initial();
 let state: StoreState | null = null;
 const listeners = new Set<() => void>();
 
@@ -684,7 +686,7 @@ export const store = {
     return () => listeners.delete(l);
   },
   get: read,
-  getServerSnapshot: (): StoreState => initial(),
+  getServerSnapshot: (): StoreState => serverSnapshot,
   setProfile(patch: Partial<Profile>) {
     const s = read();
     write({ ...s, profile: { ...s.profile, ...patch } });
@@ -698,7 +700,25 @@ export const store = {
     write({ ...s, sessions });
   },
   reset() {
-    write(initial());
+    write({ ...initial(), ...(read().ownerId ? { ownerId: read().ownerId as string } : {}) });
+  },
+  /**
+   * Make this browser's data belong to the signed-in user. Another account's data is wiped. Sessions with no
+   * known owner are dropped too: they cannot be attributed safely, and saved history comes back from the server.
+   */
+  claimForUser(userId: string) {
+    const s = read();
+    if (s.ownerId === userId) return;
+    if (s.ownerId) write({ ...initial(), ownerId: userId });
+    else write({ ...s, sessions: [], ownerId: userId });
+  },
+  toggleFavorite(scenarioId: string): boolean {
+    const s = read();
+    const current = s.profile.favoriteScenarios ?? [];
+    const on = !current.includes(scenarioId);
+    const favoriteScenarios = on ? [...current, scenarioId] : current.filter((id) => id !== scenarioId);
+    write({ ...s, profile: { ...s.profile, favoriteScenarios } });
+    return on;
   },
   clearHistory() {
     const s = read();

@@ -1,6 +1,6 @@
 import * as React from "react";
-import { getAccessToken } from "@/lib/supabase";
-import { AlertCircle, Bell, Check, Clock, Crown, Loader2, Sparkles, X, Zap } from "lucide-react";
+import { joinLaunchWaitlist, useAuth } from "@/lib/auth";
+import { Bell, Check, Clock, Crown, Loader2, Sparkles, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,8 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useStore } from "@/hooks/use-store";
-import { FREE_WEEKLY_LIMIT, store } from "@/lib/speakcoach";
+import { FREE_WEEKLY_LIMIT } from "@/lib/speakcoach";
 
 const PRO_BENEFITS = [
   {
@@ -45,8 +44,20 @@ export function ProUpgradeModal({
   onOpenChange: (open: boolean) => void;
   triggerReason?: "quota_reached" | "scenario_locked" | "advanced_analytics" | null;
 }) {
-  const { profile } = useStore();
-  const isPro = profile.plan === "pro";
+  const { user } = useAuth();
+  const [joining, setJoining] = React.useState(false);
+
+  async function notifyMe() {
+    setJoining(true);
+    const { error } = await joinLaunchWaitlist();
+    setJoining(false);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    toast.success("You're on the list! We'll notify you the moment payments go live.", { duration: 4000 });
+    onOpenChange(false);
+  }
 
   const headline =
     triggerReason === "quota_reached"
@@ -136,12 +147,11 @@ export function ProUpgradeModal({
               variant="hero"
               size="xl"
               className="w-full flex-1 gap-2 text-base font-bold shadow-glow"
-              onClick={() => {
-                toast.success("You're on the list! We'll notify you the moment payments go live.", { duration: 4000 });
-                onOpenChange(false);
-              }}
+              disabled={joining}
+              onClick={() => void notifyMe()}
             >
-              <Bell className="size-4 fill-primary-foreground" /> Notify me when live
+              {joining ? <Loader2 className="size-4 animate-spin" /> : <Bell className="size-4 fill-primary-foreground" />}
+              Notify me when live
             </Button>
             <Button
               variant="ghost"
@@ -152,6 +162,9 @@ export function ProUpgradeModal({
               Continue for free
             </Button>
           </div>
+          {user?.email && (
+            <p className="text-center text-xs text-muted-foreground">We'll email {user.email} once when paid plans launch.</p>
+          )}
         </div>
       </DialogContent>
     </Dialog>

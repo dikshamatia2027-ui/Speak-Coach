@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, Crown, Mic, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, AudioLines, CheckCircle2, Crown, Sparkles, Zap } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/hooks/use-store";
@@ -103,7 +103,7 @@ function CheckoutSuccess() {
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
           <Button asChild variant="hero" size="lg">
             <Link to="/practice">
-              <Mic className="size-4" /> Start Practicing Now
+              <AudioLines className="size-4" /> Start Practicing Now
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg">
