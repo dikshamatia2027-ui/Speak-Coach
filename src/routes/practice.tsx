@@ -7,16 +7,20 @@ import {
   ChevronLeft,
   Crown,
   Heart,
+  Loader2,
   Lock,
   Mic,
   Pause,
   Play,
+  Plus,
   RotateCcw,
   Shuffle,
   SkipBack,
   SkipForward,
   SlidersHorizontal,
+  Sparkles,
   Square,
+  Wand2,
   Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -27,6 +31,7 @@ import {
   currentWeekSessions,
   FREE_WEEKLY_LIMIT,
   goalById,
+  saveCustomScenario,
   scenariosForGoal,
   store,
   type Analysis,
@@ -175,6 +180,44 @@ function Practice() {
   const [analysingStep, setAnalysingStep] = useState("Transcribing your answer…");
   const [showScenarioDrawer, setShowScenarioDrawer] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [customPromptInput, setCustomPromptInput] = useState("");
+  const [generatingCustom, setGeneratingCustom] = useState(false);
+
+  async function handleGenerateCustomScenario() {
+    if (!customPromptInput.trim()) {
+      toast.error("Please enter what situation you want to practice.");
+      return;
+    }
+    setGeneratingCustom(true);
+    try {
+      const token = await getAccessToken();
+      const res = await fetch("/api/generate-scenario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ prompt: customPromptInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.scenario) {
+        throw new Error(data.error || "Failed to generate scenario.");
+      }
+      saveCustomScenario(data.scenario);
+      toast.success("Custom scenario created!");
+      setShowCustomModal(false);
+      setCustomPromptInput("");
+      setShowScenarioDrawer(false);
+      setScenarioIndex(0);
+      setPhase("ready");
+      setElapsed(0);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate scenario.");
+    } finally {
+      setGeneratingCustom(false);
+    }
+  }
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef(0);
@@ -619,9 +662,19 @@ function Practice() {
               <div className="surface p-5 rounded-2xl space-y-3 animate-fade border border-border">
                 <div className="flex items-center justify-between pb-2 border-b border-border">
                   <h3 className="font-serif font-bold text-base">Select Speaking Scenario</h3>
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {goalScenarios.length} available
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="hero"
+                      className="h-7 text-xs px-2.5 rounded-lg gap-1.5 font-bold"
+                      onClick={() => setShowCustomModal(true)}
+                    >
+                      <Plus className="size-3" /> Custom
+                    </Button>
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      {goalScenarios.length} available
+                    </span>
+                  </div>
                 </div>
                 <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
                   {goalScenarios.map((sc, idx) => {
@@ -641,7 +694,14 @@ function Practice() {
                         )}
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold truncate">{sc.prompt}</p>
+                          <div className="flex items-center gap-1.5">
+                            {sc.isCustom && (
+                              <span className="rounded bg-primary/15 text-primary text-[10px] font-bold px-1.5 py-0.5">
+                                CUSTOM
+                              </span>
+                            )}
+                            <p className="text-sm font-semibold truncate">{sc.prompt}</p>
+                          </div>
                           <p className="text-xs text-muted-foreground mt-0.5">
                             {sc.seconds}s target • {goalById(sc.goal)?.label}
                           </p>
@@ -656,6 +716,63 @@ function Practice() {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+            )}
+            {/* Modal for creating custom AI scenario */}
+            {showCustomModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade">
+                <div className="surface max-w-lg w-full p-6 rounded-3xl border border-border shadow-2xl space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                      <Wand2 className="size-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-serif text-lg font-bold">Create Custom Scenario</h3>
+                      <p className="text-xs text-muted-foreground">Type any real-world situation or role-play prompt</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <textarea
+                      value={customPromptInput}
+                      onChange={(e) => setCustomPromptInput(e.target.value)}
+                      placeholder="e.g. Act as my interviewer at Goldman Sachs for an investment banking role. Ask me why I chose finance over tech."
+                      className="w-full h-28 p-3 text-sm rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                      disabled={generatingCustom}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      AI will craft a contextual prompt, ideal target timing, and score relevance tailored to your role.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={generatingCustom}
+                      onClick={() => setShowCustomModal(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="hero"
+                      size="sm"
+                      disabled={generatingCustom}
+                      onClick={handleGenerateCustomScenario}
+                      className="gap-1.5 font-bold"
+                    >
+                      {generatingCustom ? (
+                        <>
+                          <Loader2 className="size-3.5 animate-spin" /> Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="size-3.5" /> Generate Scenario
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}

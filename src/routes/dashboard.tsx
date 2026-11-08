@@ -2,18 +2,23 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BookOpen,
   Calendar,
+  CheckCircle2,
   Clock,
   Flame,
   Mic,
   Sparkles,
   Target,
+  Trophy,
   TrendingUp,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { BadgesPanel } from "@/components/badges-panel";
+import { XpBar } from "@/components/xp-bar";
 import { ScoreRing, Sparkline } from "@/components/score";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/hooks/use-store";
+import { getDailyChallenge, isChallengeCompleted } from "@/lib/gamification";
 import {
   averageScore,
   currentWeekSessions,
@@ -71,6 +76,9 @@ function Dashboard() {
 
   const displayName = profile.name?.trim() || "there";
 
+  const dailyChallenge = useMemo(() => getDailyChallenge(), []);
+  const challengeDone = useMemo(() => isChallengeCompleted(dailyChallenge, sessions), [dailyChallenge, sessions]);
+
   // Speaking skills averages
   const skillAverages = useMemo(() => {
     if (!sessions.length) {
@@ -124,6 +132,39 @@ function Dashboard() {
               <span className="font-semibold">{userStreak}</span>
               <span className="text-muted-foreground">day streak</span>
             </div>
+          </div>
+        </div>
+
+        {/* Gamification: XP & Level Bar */}
+        <XpBar sessions={sessions} />
+
+        {/* Daily Challenge Card */}
+        <div className="surface p-4 sm:p-5 rounded-2xl border border-border shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-card via-card to-primary/5">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="size-10 rounded-xl bg-warning/15 text-warning flex items-center justify-center shrink-0">
+              <Trophy className="size-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Today's Quest</span>
+                <span className="text-[11px] font-bold text-primary px-2 py-0.2 rounded-full bg-primary/10">+{dailyChallenge.xpReward} XP</span>
+              </div>
+              <h4 className="text-sm font-bold text-foreground mt-0.5">{dailyChallenge.title}</h4>
+              <p className="text-xs text-muted-foreground">{dailyChallenge.description}</p>
+            </div>
+          </div>
+          <div className="self-end sm:self-center">
+            {challengeDone ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                <CheckCircle2 className="size-4" /> Completed!
+              </span>
+            ) : (
+              <Button asChild size="sm" variant="hero" className="rounded-full h-8 text-xs font-bold">
+                <Link to="/practice">
+                  Start Drill <Mic className="size-3.5" />
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -347,6 +388,9 @@ function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Gamification: Badges Showcase */}
+        <BadgesPanel sessions={sessions} />
       </div>
     </AppShell>
   );
