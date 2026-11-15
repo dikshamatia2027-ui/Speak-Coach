@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { isAuthorizedCron } from "@/lib/cron-auth.server";
 import { adminClient } from "@/lib/supabase.server";
 
 /**
  * Twice-a-week inactivity nudge endpoint.
  * Protected by CRON_SECRET header to ensure only authorized callers (e.g. Vercel Cron) trigger it.
+ * If CRON_SECRET is not set, every request is refused. The reply carries counts only, never emails or user IDs.
  *
  * It queries users who haven't practiced in >= 3 days and dispatches email nudges with their stats.
  */
@@ -21,10 +23,7 @@ export const Route = createFileRoute("/api/cron/nudge-emails")({
 });
 
 async function handleNudge(request: Request) {
-  const cronSecret = process.env["CRON_SECRET"];
-  const authHeader = request.headers.get("authorization");
-
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!isAuthorizedCron(request.headers.get("authorization"), process.env["CRON_SECRET"])) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -39,7 +38,8 @@ async function handleNudge(request: Request) {
     // 1. Fetch users from auth
     const { data: userData, error: userError } = await admin.auth.admin.listUsers();
     if (userError) {
-      return Response.json({ error: userError.message }, { status: 500 });
+      console.error("Nudge cron could not list users:", userError.message);
+      return Response.json({ error: "Cron job failed" }, { status: 500 });
     }
 
     const users = userData?.users || [];
@@ -79,11 +79,10 @@ async function handleNudge(request: Request) {
       timestamp: new Date().toISOString(),
       evaluatedCount: users.length,
       inactiveEligibleCount: nudgedList.length,
-      nudged: nudgedList,
       message: `Identified ${nudgedList.length} inactive users. Nudge cycle completed.`,
     });
   } catch (err: any) {
     console.error("Nudge cron error:", err);
-    return Response.json({ error: err.message || "Cron job failed" }, { status: 500 });
+    return Response.json({ error: "Cron job failed" }, { status: 500 });
   }
 }
