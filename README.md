@@ -18,7 +18,7 @@ TanStack Start (React, Vite) deployed on Vercel. Groq for speech-to-text and ana
 
 ## Database
 
-Run `supabase-schema.sql` once in the Supabase SQL Editor.
+Run `supabase-schema.sql` in the Supabase SQL Editor before deploying. It is safe to re-run. It replaces every policy on its tables, and `/api/analyze` returns 503 until its functions exist.
 
 ## Run locally
 
@@ -37,10 +37,13 @@ npm run dev
 | `GROQ_API_KEY` | Speech-to-text and analysis (get one at console.groq.com/keys) |
 | `DODO_PAYMENTS_API_KEY` | Creating checkout sessions and the customer portal |
 | `DODO_PAYMENTS_WEBHOOK_KEY` | Verifying payment webhooks (the webhook rejects everything without it) |
+| `DODO_PAYMENTS_PRODUCT_ID`, `DODO_PAYMENTS_EXTRA_PRO_PRODUCT_IDS` | The subscription products that unlock Pro |
 
 Set these in Vercel under Project Settings > Environment Variables, then redeploy.
 
 ## Known limitations
 
 - Profile preferences (goal, reminders) and vocabulary progress are still stored in the browser. Practice history and the plan are on the server.
+- Recordings stop at 130 seconds to fit Vercel's 4.5 MB request limit.
+- One-time packs are not sold yet: a one-time payment grants nothing, and pack credits still need building.
 - The per-visitor hourly limit on `/api/analyze` is best-effort and per server instance. The weekly free limit is enforced per account in the database.

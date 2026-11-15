@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
+import { isProActive } from "@/lib/plan";
 
 /** Server-only client using the service-role key. Never import this from browser code. */
 export function adminClient(): SupabaseClient | null {
@@ -30,8 +31,8 @@ export async function userFromRequest(request: Request): Promise<AuthedUser | nu
 }
 
 export async function getPlan(admin: SupabaseClient, userId: string): Promise<"free" | "pro"> {
-  const { data } = await admin.from("profiles").select("plan").eq("id", userId).maybeSingle();
-  return data?.plan === "pro" ? "pro" : "free";
+  const { data } = await admin.from("profiles").select("plan, plan_renews_at").eq("id", userId).maybeSingle();
+  return isProActive(data) ? "pro" : "free";
 }
 
 /** Start of the current week (Monday 00:00), same rule the app shows in the browser. Uses IST, the main audience. */
@@ -43,12 +44,24 @@ export function weekStartMs(now = new Date()): number {
   return local.getTime() - day * 86_400_000 - IST;
 }
 
-export async function weeklyAnalysisCount(admin: SupabaseClient, userId: string): Promise<number> {
-  const since = new Date(weekStartMs()).toISOString();
-  const { count } = await admin
-    .from("analysis_log")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .gte("created_at", since);
-  return count ?? 0;
+export type Reservation = { ok: true; id: string } | { ok: false; reason: "limit" | "unavailable" };
+
+/** Atomically check the weekly limit and count one analysis, so parallel requests cannot get past it. */
+export async function reserveAnalysis(admin: SupabaseClient, userId: string, limit: number | null): Promise<Reservation> {
+  const { data, error } = await admin.rpc("reserve_analysis", {
+    p_user_id: userId,
+    p_since: new Date(weekStartMs()).toISOString(),
+    p_limit: limit,
+  });
+  if (error) {
+    console.error("[analyze] Could not reserve a session:", error.message);
+    return { ok: false, reason: "unavailable" };
+  }
+  return typeof data === "string" ? { ok: true, id: data } : { ok: false, reason: "limit" };
+}
+
+/** Give a session back when it did not produce a report. */
+export async function releaseAnalysis(admin: SupabaseClient, id: string): Promise<void> {
+  const { error } = await admin.from("analysis_log").delete().eq("id", id);
+  if (error) console.error("[analyze] Could not release a session:", error.message);
 }

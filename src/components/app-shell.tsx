@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { LoginPanel } from "@/components/login-panel";
 import { useAuth } from "@/lib/auth";
 import {
+  AudioLines,
   BarChart3,
   BookOpen,
   Crown,
@@ -33,7 +34,7 @@ export function Logo({ className }: { className?: string }) {
 
 const DESKTOP_NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard", icon: Home },
-  { to: "/practice", label: "Speak Practice", icon: Mic },
+  { to: "/practice", label: "Speak Practice", icon: AudioLines },
   { to: "/vocabulary", label: "Vocabulary", icon: Sparkles },
   { to: "/reading", label: "Reading", icon: BookOpen },
   { to: "/progress", label: "Progress", icon: BarChart3 },
@@ -43,12 +44,19 @@ const DESKTOP_NAV_ITEMS = [
 const MOBILE_BOTTOM_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: Home },
   { to: "/vocabulary", label: "Vocabulary", icon: Sparkles },
-  { to: "/practice", label: "Speak", icon: Mic, center: true },
+  { to: "/practice", label: "Speak", icon: AudioLines },
   { to: "/reading", label: "Reading", icon: BookOpen },
   { to: "/progress", label: "Progress", icon: BarChart3 },
 ] as const;
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  navigationLocked = false,
+}: {
+  children: ReactNode;
+  /** While a recording is in progress, every way out of the page is disabled. */
+  navigationLocked?: boolean;
+}) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { profile } = useStore();
   const { user, loading: authLoading } = useAuth();
@@ -71,7 +79,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       {signedIn ? (
         <div className="flex min-h-screen">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:flex lg:w-[280px] lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 border-r border-border bg-card">
+          <aside
+            inert={navigationLocked}
+            className={cn(
+              "hidden lg:flex lg:w-[280px] lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 border-r border-border bg-card",
+              navigationLocked && "opacity-50",
+            )}
+          >
             <div className="flex h-16 items-center px-6">
               <Logo />
             </div>
@@ -116,11 +130,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           </aside>
 
           {/* Main content */}
-          <div className="flex-1 lg:pl-[280px] flex flex-col">
+          <div className="min-w-0 flex-1 lg:pl-[280px] flex flex-col">
             {/* Top Header */}
             <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
               <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center gap-3 lg:hidden">
+                <div
+                  inert={navigationLocked}
+                  className={cn("flex items-center gap-3 lg:hidden", navigationLocked && "opacity-50")}
+                >
                   <Logo />
                 </div>
                 <div className="hidden lg:block">
@@ -128,7 +145,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                     Welcome back, <span className="text-foreground font-semibold">{displayName}</span>
                   </h2>
                 </div>
-                <div className="flex items-center gap-2.5">
+                <div
+                  inert={navigationLocked}
+                  className={cn("flex items-center gap-2.5", navigationLocked && "opacity-50")}
+                >
                   {isPro ? (
                     <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-warning/10 border border-warning/30 px-2.5 py-1 text-xs font-bold text-warning">
                       <Crown className="size-3 fill-warning" /> PRO
@@ -183,7 +203,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       {/* Mobile Bottom Navigation */}
-      {signedIn && (
+      {signedIn && !navigationLocked && (
         <nav
           aria-label="Bottom Navigation"
           className="lg:hidden fixed inset-x-0 bottom-0 z-50"
@@ -191,25 +211,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <div className="mx-auto max-w-md px-3 pb-3">
             <div className="relative flex items-center justify-between rounded-full bg-card/95 backdrop-blur-xl border border-border shadow-dock px-2 py-2">
-              {MOBILE_BOTTOM_NAV.map((item: any) => {
+              {MOBILE_BOTTOM_NAV.map((item) => {
                 const isActive = path === item.to || (item.to === "/progress" && path === "/history");
                 const Icon = item.icon;
-
-                if (item.center) {
-                  return (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      aria-label={item.label}
-                      className="absolute left-1/2 -translate-x-1/2 -top-6 flex items-center justify-center"
-                    >
-                      <span className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-4 ring-background transition-transform hover:scale-105 active:scale-95">
-                        <Icon className="size-6 text-white" strokeWidth={2.5} />
-                      </span>
-                      <span className="sr-only">{item.label}</span>
-                    </Link>
-                  );
-                }
 
                 return (
                   <Link
@@ -217,7 +221,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     to={item.to}
                     aria-label={item.label}
                     className={cn(
-                      "relative flex flex-1 flex-col items-center justify-center gap-1 py-1 transition-colors",
+                      "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 py-1 transition-colors",
                       isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
                     )}
                   >

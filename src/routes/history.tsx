@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Mic } from "lucide-react";
+import { ArrowRight, AudioLines } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ function History() {
         )}
       </div>
 
-      <div className="mt-4 grid gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-3">
         {list.length === 0 && (
           <div className="surface p-10 text-center">
             <p className="text-base font-semibold">Nothing here yet</p>
@@ -77,7 +77,7 @@ function History() {
             </p>
             <Button asChild variant="hero" size="sm" className="mt-5">
               <Link to="/practice">
-                <Mic className="size-4" /> Practice now
+                <AudioLines className="size-4" /> Practice now
               </Link>
             </Button>
           </div>

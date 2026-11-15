@@ -1,17 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  AudioLines,
   BookOpen,
   Calendar,
   CheckCircle2,
   Clock,
   Flame,
-  Mic,
   Sparkles,
   Target,
   Trophy,
   TrendingUp,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { AppShell } from "@/components/app-shell";
 import { BadgesPanel } from "@/components/badges-panel";
 import { XpBar } from "@/components/xp-bar";
@@ -29,6 +29,7 @@ import {
   trend,
 } from "@/lib/speakcoach";
 import { cn } from "@/lib/utils";
+import { stats as vocabStats, vocabStore } from "@/lib/vocab";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -42,6 +43,11 @@ export const Route = createFileRoute("/dashboard")({
   }),
   component: Dashboard,
 });
+
+function formatPracticeTime(totalSeconds: number) {
+  const mins = Math.round(totalSeconds / 60);
+  return mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h ${mins % 60}m`;
+}
 
 function Dashboard() {
   const { profile, sessions } = useStore();
@@ -63,55 +69,30 @@ function Dashboard() {
     .slice(-8)
     .map((s) => s.analysis.overall);
 
-  const practiceTimeMins = useMemo(() => {
-    if (!sessions.length) return 45;
-    const total = sessions.reduce((acc) => acc + 8, 0); // estimate ~8 min per session
-    return total > 120 ? 120 : total;
-  }, [sessions]);
-
-  const wordsLearned = useMemo(() => {
-    if (!sessions.length) return 128;
-    return Math.min(999, sessions.length * 12 + 80);
-  }, [sessions]);
+  const vocab = useSyncExternalStore(vocabStore.subscribe, vocabStore.get, vocabStore.getServerSnapshot);
+  const wordsLearned = vocabStats(vocab).learned;
+  const practiceSeconds = sessions.reduce((total, s) => total + s.durationSec, 0);
 
   const displayName = profile.name?.trim() || "there";
 
   const dailyChallenge = useMemo(() => getDailyChallenge(), []);
   const challengeDone = useMemo(() => isChallengeCompleted(dailyChallenge, sessions), [dailyChallenge, sessions]);
 
-  // Speaking skills averages
+  // Speaking skills averages. A skill with no scores yet shows as empty, never as a made-up number.
   const skillAverages = useMemo(() => {
-    if (!sessions.length) {
-      return [
-        { label: "Clarity", value: 78 },
-        { label: "Pace", value: 74 },
-        { label: "Pronunciation", value: 76 },
-        { label: "Vocabulary", value: 72 },
-        { label: "Delivery", value: 80 },
-      ];
-    }
-    const metrics = ["clarity", "pace", "pronunciation", "vocabulary", "delivery"] as const;
-    return metrics.map((m) => {
-      const scores = sessions
-        .flatMap((s) => s.analysis.metrics.filter((x) => x.id === m).map((x) => x.score))
-        .filter((v): v is number => typeof v === "number");
-      const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 75;
-      const labelMap: Record<string, string> = {
-        clarity: "Clarity",
-        pace: "Pace",
-        pronunciation: "Pronunciation",
-        vocabulary: "Vocabulary",
-        delivery: "Delivery",
-      };
-      return { label: labelMap[m], value: avgScore };
+    const metrics = [
+      ["clarity", "Clarity"],
+      ["pace", "Pace"],
+      ["pronunciation", "Pronunciation"],
+      ["vocabulary", "Vocabulary"],
+      ["delivery", "Delivery"],
+    ] as const;
+    return metrics.map(([id, label]) => {
+      const scores = sessions.flatMap((s) => s.analysis.metrics.filter((x) => x.id === id).map((x) => x.score));
+      const value = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+      return { label, value };
     });
   }, [sessions]);
-
-  const overallSkillScore = useMemo(() => {
-    if (avg) return avg;
-    const sum = skillAverages.reduce((a, b) => a + b.value, 0);
-    return Math.round(sum / skillAverages.length);
-  }, [avg, skillAverages]);
 
   return (
     <AppShell>
@@ -161,7 +142,7 @@ function Dashboard() {
             ) : (
               <Button asChild size="sm" variant="hero" className="rounded-full h-8 text-xs font-bold">
                 <Link to="/practice">
-                  Start Drill <Mic className="size-3.5" />
+                  Start Drill <AudioLines className="size-3.5" />
                 </Link>
               </Button>
             )}
@@ -172,7 +153,7 @@ function Dashboard() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Link
             to="/practice"
-            className="group relative overflow-hidden rounded-2xl border border-border bg-[#EEF4FC] p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            className="group relative overflow-hidden rounded-2xl border border-border bg-[#eff6ff] p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -180,7 +161,7 @@ function Dashboard() {
                 <p className="mt-1 text-sm text-muted-foreground">AI-powered speaking practice</p>
               </div>
               <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Mic className="size-5" />
+                <AudioLines className="size-5" />
               </div>
             </div>
             <div className="mt-4 text-sm font-medium text-primary group-hover:underline">Start Practice →</div>
@@ -188,7 +169,7 @@ function Dashboard() {
 
           <Link
             to="/vocabulary"
-            className="group relative overflow-hidden rounded-2xl border border-border bg-[#F3F0FC] p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            className="group relative overflow-hidden rounded-2xl border border-border bg-[#f1f5f9] p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -204,7 +185,7 @@ function Dashboard() {
 
           <Link
             to="/reading"
-            className="group relative overflow-hidden rounded-2xl border border-border bg-[#FAF5EE] p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            className="group relative overflow-hidden rounded-2xl border border-border bg-[#fffbeb] p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -242,7 +223,7 @@ function Dashboard() {
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div>
-                <p className="text-2xl font-bold text-foreground">{practiceTimeMins}m</p>
+                <p className="text-2xl font-bold text-foreground">{formatPracticeTime(practiceSeconds)}</p>
                 <p className="text-xs text-muted-foreground">Practice Time</p>
               </div>
               <div>
@@ -250,7 +231,7 @@ function Dashboard() {
                 <p className="text-xs text-muted-foreground">Sessions</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{avg || 0}</p>
+                <p className="text-2xl font-bold text-foreground">{sessions.length ? avg : "—"}</p>
                 <p className="text-xs text-muted-foreground">Avg. Score</p>
               </div>
               <div>
@@ -270,7 +251,13 @@ function Dashboard() {
                 )}
               </div>
               <div className="mt-3 h-16">
-                <Sparkline values={series.length ? series : [65, 68, 72, 70, 75, 78, 76, 80]} />
+                {series.length ? (
+                  <Sparkline values={series} />
+                ) : (
+                  <p className="flex h-full items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+                    Your trend appears after your first session
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -280,7 +267,13 @@ function Dashboard() {
             <h2 className="text-lg font-semibold text-foreground">Speaking Skills</h2>
             <div className="mt-6 flex flex-col items-center sm:flex-row sm:items-center sm:gap-6">
               <div className="flex flex-col items-center">
-                <ScoreRing score={overallSkillScore} size={110} label="Overall score" />
+                {sessions.length ? (
+                  <ScoreRing score={avg} size={110} label="Overall score" />
+                ) : (
+                  <div className="flex size-[110px] items-center justify-center rounded-full border-8 border-secondary text-3xl font-bold text-muted-foreground">
+                    —
+                  </div>
+                )}
                 <p className="mt-2 text-sm font-medium text-foreground">Overall Score</p>
               </div>
               <div className="mt-6 flex-1 w-full space-y-3 sm:mt-0">
@@ -288,12 +281,12 @@ function Dashboard() {
                   <div key={skill.label} className="space-y-1.5">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-foreground">{skill.label}</span>
-                      <span className="text-muted-foreground">{skill.value}%</span>
+                      <span className="text-muted-foreground">{skill.value === null ? "—" : `${skill.value}%`}</span>
                     </div>
                     <div className="h-2 w-full rounded-full bg-secondary">
                       <div
                         className="h-2 rounded-full bg-primary transition-all"
-                        style={{ width: `${skill.value}%` }}
+                        style={{ width: `${skill.value ?? 0}%` }}
                       />
                     </div>
                   </div>
@@ -319,7 +312,7 @@ function Dashboard() {
                   <p className="text-sm text-muted-foreground">No practice sessions yet</p>
                   <Button asChild size="sm" className="mt-3">
                     <Link to="/practice">
-                      <Mic className="size-4" /> Start your first practice
+                      <AudioLines className="size-4" /> Start your first practice
                     </Link>
                   </Button>
                 </div>
@@ -333,7 +326,7 @@ function Dashboard() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex size-9 items-center justify-center rounded-full bg-accent text-primary">
-                        <Mic className="size-4" />
+                        <AudioLines className="size-4" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-foreground line-clamp-1">{session.prompt}</p>

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useBlocker, useNavigate, Link } from "@tanstack/react-router";
 import { saveSessionRemote } from "@/lib/auth";
 import { getAccessToken } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { ProUpgradeModal } from "@/components/pro-upgrade-modal";
+import { useStore } from "@/hooks/use-store";
 import {
   currentWeekSessions,
   FREE_WEEKLY_LIMIT,
@@ -37,7 +38,7 @@ import {
   type Analysis,
   type Scenario,
 } from "@/lib/speakcoach";
-import { startRecording, type Recorder } from "@/lib/record-wav";
+import { MAX_RECORDING_SECONDS, startRecording, type Recorder } from "@/lib/record-wav";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/practice")({
@@ -154,7 +155,7 @@ function Waveform({
 }
 
 function Practice() {
-  const { profile, sessions } = store.get();
+  const { profile, sessions } = useStore();
   const isPro = profile.plan === "pro";
   const thisWeekSessions = useMemo(() => currentWeekSessions(sessions), [sessions]);
   const sessionsThisWeek = thisWeekSessions.length;
@@ -179,7 +180,6 @@ function Practice() {
   const [error, setError] = useState<string | null>(null);
   const [analysingStep, setAnalysingStep] = useState("Transcribing your answer…");
   const [showScenarioDrawer, setShowScenarioDrawer] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customPromptInput, setCustomPromptInput] = useState("");
   const [generatingCustom, setGeneratingCustom] = useState(false);
@@ -225,6 +225,21 @@ function Practice() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
+  const isBusy = phase !== "ready";
+
+  // Leaving now would throw away the recording or the analysis, so hold the user here until it ends.
+  useBlocker({
+    shouldBlockFn: ({ next }) => {
+      if (next.pathname.startsWith("/results/")) return false;
+      toast(phase === "analysing" ? "Your report is almost ready" : "Stop your recording before leaving this page", {
+        id: "navigation-locked",
+      });
+      return true;
+    },
+    disabled: !isBusy,
+    enableBeforeUnload: isBusy,
+    withResolver: false,
+  });
 
   useEffect(
     () => () => {
@@ -315,7 +330,7 @@ function Practice() {
     timerRef.current = setInterval(() => {
       elapsedRef.current += 1;
       setElapsed(elapsedRef.current);
-      if (elapsedRef.current >= Math.max((scenario?.seconds ?? 60) * 3, 180)) void finish();
+      if (elapsedRef.current >= MAX_RECORDING_SECONDS) void finish();
     }, 1000);
   }
 
@@ -375,6 +390,8 @@ function Practice() {
         error?: string;
       };
       if (!res.ok || !body.analysis || !body.transcript) {
+        // A body over the hosting limit is rejected before our code runs, so it has no JSON error.
+        if (res.status === 413) throw new Error("That recording was too long to analyse. Please keep it under two minutes.");
         throw new Error(body.error ?? "Analysis failed. Please try again.");
       }
       const prior = store.get().sessions.filter((s) => s.scenarioId === sc.id).length;
@@ -407,9 +424,14 @@ function Practice() {
   const inSession = isLive || isPaused;
   const targetSeconds = scenario?.seconds ?? 60;
   const progressPercent = Math.min(100, (elapsed / targetSeconds) * 100);
+  const secondsOverTarget = elapsed - targetSeconds;
+  const isOverTarget = secondsOverTarget > 0;
+  const secondsLeft = MAX_RECORDING_SECONDS - elapsed;
+  const favorites = profile.favoriteScenarios ?? [];
+  const isFavorite = !!scenario && favorites.includes(scenario.id);
 
   return (
-    <AppShell>
+    <AppShell navigationLocked={isBusy}>
       <ProUpgradeModal
         open={showUpgradeModal}
         onOpenChange={setShowUpgradeModal}
@@ -422,7 +444,8 @@ function Practice() {
           <Link
             to="/dashboard"
             aria-label="Back to dashboard"
-            className="flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors shadow-xs"
+            inert={isBusy}
+            className="inert:opacity-40 flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors shadow-xs"
           >
             <ChevronLeft className="size-5" />
           </Link>
@@ -437,7 +460,8 @@ function Practice() {
           <button
             onClick={() => setShowScenarioDrawer((prev) => !prev)}
             aria-label="Scenario selector drawer"
-            className="flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors shadow-xs cursor-pointer"
+            disabled={isBusy}
+            className="disabled:opacity-40 flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors shadow-xs cursor-pointer"
           >
             <SlidersHorizontal className="size-4.5" />
           </button>
@@ -496,20 +520,19 @@ function Practice() {
                     <Waveform active={isLive} analyser={analyserRef} />
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => void startCountdown()}
-                      aria-label="Start recording"
-                      className="group relative flex size-24 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40 sm:size-28"
-                    >
+                  <button
+                    type="button"
+                    onClick={() => void startCountdown()}
+                    className="group flex cursor-pointer flex-col items-center gap-3 rounded-2xl p-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
+                  >
+                    <span className="relative flex size-24 items-center justify-center rounded-full sm:size-28">
                       <span className="absolute inset-0 animate-pulse-ring rounded-full bg-primary/20 motion-reduce:animate-none" />
                       <span className="relative flex size-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lift transition-transform group-hover:scale-105 group-active:scale-95 sm:size-24">
                         <Mic className="size-9 stroke-[2] sm:size-10" />
                       </span>
-                    </button>
-                    <p className="text-sm font-medium text-muted-foreground">Tap the microphone to start</p>
-                  </div>
+                    </span>
+                    <span className="text-sm font-semibold text-foreground">Start speaking</span>
+                  </button>
                 )}
 
                 {/* Microphone/analysis error — kept inside the stage so the layout never shifts out of view */}
@@ -534,22 +557,21 @@ function Practice() {
 
               <button
                 onClick={() => {
-                  setIsBookmarked((prev) => {
-                    const next = !prev;
-                    toast(next ? "Scenario saved to favourites" : "Removed from favourites", {
-                      icon: next ? "❤️" : "🗑️",
-                      duration: 2000,
-                    });
-                    return next;
+                  if (!scenario) return;
+                  const on = store.toggleFavorite(scenario.id);
+                  toast(on ? "Scenario saved to favourites" : "Removed from favourites", {
+                    icon: on ? "❤️" : "🗑️",
+                    duration: 2000,
                   });
                 }}
-                aria-label="Favorite scenario"
+                aria-label="Favourite scenario"
+                aria-pressed={isFavorite}
                 className="flex size-10 items-center justify-center rounded-xl bg-card border border-border text-foreground/80 hover:text-primary transition-colors shadow-xs shrink-0 cursor-pointer"
               >
                 <Heart
                   className={cn(
                     "size-5 transition-colors",
-                    isBookmarked ? "fill-primary text-primary" : "text-muted-foreground",
+                    isFavorite ? "fill-primary text-primary" : "text-muted-foreground",
                   )}
                 />
               </button>
@@ -559,14 +581,26 @@ function Practice() {
             <div className="space-y-1.5">
               <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  className={cn(
+                    "h-full rounded-full transition-all duration-300",
+                    isOverTarget ? "bg-warning" : "bg-primary",
+                  )}
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
               <div className="flex items-center justify-between text-sm font-semibold text-muted-foreground tabular-nums">
                 <span>{formatTime(elapsed)}</span>
-                <span>{formatTime(targetSeconds)}</span>
+                <span className={cn(isOverTarget && "text-warning")}>
+                  {isOverTarget
+                    ? `Over target by ${formatTime(secondsOverTarget)}`
+                    : `Target ${formatTime(targetSeconds)}`}
+                </span>
               </div>
+              {inSession && secondsLeft <= 20 && (
+                <p role="status" className="text-center text-sm font-medium text-warning">
+                  Recording stops automatically in {secondsLeft}s
+                </p>
+              )}
             </div>
 
             {/* Recording & scenario control bar — compact on mobile, full on desktop */}
@@ -574,7 +608,7 @@ function Practice() {
               {/* 1. Shuffle */}
               <button
                 onClick={handleShuffleScenario}
-                disabled={inSession}
+                disabled={isBusy}
                 title="Shuffle scenario"
                 className={cn(
                   "flex size-10 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer sm:size-11",
@@ -587,7 +621,7 @@ function Practice() {
               {/* 2. Previous */}
               <button
                 onClick={handlePrevScenario}
-                disabled={inSession}
+                disabled={isBusy}
                 title="Previous scenario"
                 className={cn(
                   "flex size-10 items-center justify-center rounded-full text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer sm:size-11",
@@ -622,14 +656,14 @@ function Practice() {
                   aria-label="Start recording"
                   className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all cursor-pointer group sm:size-20 lg:size-22"
                 >
-                  <Mic className="size-7 text-primary-foreground group-hover:scale-110 transition-transform stroke-[2.2] sm:size-9" />
+                  <Play className="size-7 fill-current group-hover:scale-110 transition-transform sm:size-9" />
                 </button>
               )}
 
               {/* 4. Next */}
               <button
                 onClick={handleNextScenario}
-                disabled={inSession}
+                disabled={isBusy}
                 title="Next scenario"
                 className={cn(
                   "flex size-10 items-center justify-center rounded-full text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer sm:size-11",
@@ -646,7 +680,7 @@ function Practice() {
                   elapsedRef.current = 0;
                   setPhase("ready");
                 }}
-                disabled={inSession}
+                disabled={isBusy}
                 title="Reset to start"
                 className={cn(
                   "flex size-10 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-40 cursor-pointer sm:size-11",
@@ -658,7 +692,7 @@ function Practice() {
             </div>
 
             {/* Quick Scenario Selector Drawer */}
-            {showScenarioDrawer && (
+            {showScenarioDrawer && !isBusy && (
               <div className="surface p-5 rounded-2xl space-y-3 animate-fade border border-border">
                 <div className="flex items-center justify-between pb-2 border-b border-border">
                   <h3 className="font-serif font-bold text-base">Select Speaking Scenario</h3>
@@ -706,6 +740,9 @@ function Practice() {
                             {sc.seconds}s target • {goalById(sc.goal)?.label}
                           </p>
                         </div>
+                        {favorites.includes(sc.id) && (
+                          <Heart className="ml-auto size-3.5 shrink-0 fill-primary text-primary" aria-label="Favourite" />
+                        )}
                         {isLocked ? (
                           <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-warning">
                             <Lock className="size-3" /> PRO

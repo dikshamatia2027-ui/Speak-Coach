@@ -3,7 +3,7 @@ import { analyzeTranscript } from "@/lib/ai/analyze.server";
 import { GatewayError, MAX_AUDIO_BYTES, transcribeAudio } from "@/lib/ai/transcribe.server";
 import { allowRequest, clientIp } from "@/lib/rate-limit.server";
 import { FREE_WEEKLY_LIMIT } from "@/lib/speakcoach";
-import { getPlan, userFromRequest, weeklyAnalysisCount } from "@/lib/supabase.server";
+import { getPlan, releaseAnalysis, reserveAnalysis, userFromRequest } from "@/lib/supabase.server";
 
 /**
  * POST multipart: audio (file), durationSec, prompt, goal.
@@ -24,12 +24,11 @@ export const Route = createFileRoute("/api/analyze")({
         if (!authed) return json({ error: "Please sign in to practise." }, 401);
         const { user, admin } = authed;
         const plan = await getPlan(admin, user.id);
-        if (plan !== "pro" && (await weeklyAnalysisCount(admin, user.id)) >= FREE_WEEKLY_LIMIT) {
-          return json({ error: `You've used your ${FREE_WEEKLY_LIMIT} free sessions this week. Upgrade to Pro for unlimited practice.` }, 429);
-        }
         const len = Number(request.headers.get("content-length") ?? 0);
         if (len > MAX_AUDIO_BYTES + 64 * 1024) return json({ error: "Recording is too long." }, 413);
 
+        let reservationId: string | null = null;
+        let succeeded = false;
         try {
           const form = await request.formData();
           const audio = form.get("audio");
@@ -39,6 +38,15 @@ export const Route = createFileRoute("/api/analyze")({
           if (!(audio instanceof File) || audio.size < 2048) {
             return json({ error: "We couldn't hear anything. Please record again." }, 400);
           }
+
+          // Reserve before any AI call. Only the server can write this table.
+          const reservation = await reserveAnalysis(admin, user.id, plan === "pro" ? null : FREE_WEEKLY_LIMIT);
+          if (!reservation.ok) {
+            return reservation.reason === "limit"
+              ? json({ error: `You've used your ${FREE_WEEKLY_LIMIT} free sessions this week. Upgrade to Pro for unlimited practice.` }, 429)
+              : json({ error: "We couldn't start your analysis. Please try again in a moment." }, 503);
+          }
+          reservationId = reservation.id;
 
           const transcript = await transcribeAudio(audio, apiKey, request.signal);
           if (transcript.split(/\s+/).filter(Boolean).length < 8) {
@@ -55,8 +63,7 @@ export const Route = createFileRoute("/api/analyze")({
             ...(speakerName ? { speakerName } : {}),
             signal: request.signal,
           });
-          // Count only sessions that produced a report. Only the server can write this table.
-          await admin.from("analysis_log").insert({ user_id: user.id });
+          succeeded = true;
           return json({ transcript, analysis }, 200);
         } catch (err) {
           if (request.signal.aborted) return json({ error: "Cancelled" }, 499);
@@ -71,6 +78,9 @@ export const Route = createFileRoute("/api/analyze")({
           }
           console.error(err);
           return json({ error: "Analysis failed. Please try again." }, 500);
+        } finally {
+          // Count only sessions that produced a report.
+          if (reservationId && !succeeded) await releaseAnalysis(admin, reservationId);
         }
       },
     },

@@ -23,6 +23,7 @@ export type VocabState = {
   dailyGoal: number;
   difficulty: Tier | "auto";
   bestStreak: number;
+  ownerId?: string;
 };
 
 const KEY = "speakcoach:vocab:v1";
@@ -73,6 +74,12 @@ export const vocabStore = {
   getServerSnapshot: () => serverSnapshot,
   setSettings(patch: Partial<Pick<VocabState, "dailyGoal" | "difficulty">>) {
     write({ ...read(), ...patch });
+  },
+  /** Progress lives only in this browser, so ownerless data is adopted but another account's is wiped. */
+  claimForUser(userId: string) {
+    const s = read();
+    if (s.ownerId === userId) return;
+    write(s.ownerId ? { ...initial(), ownerId: userId } : { ...s, ownerId: userId });
   },
   /** Record a sentence attempt; returns points earned. */
   record(wordId: string, score: number, isReview: boolean) {

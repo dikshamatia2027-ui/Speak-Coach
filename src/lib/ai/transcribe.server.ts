@@ -1,9 +1,9 @@
 import { GatewayError, GROQ_TRANSCRIBE_MODEL, groqTranscribe } from "./groq.server";
 
-/** Upload guard. Recordings are capped at 180s (≈6 MB WAV @ 16 kHz mono), and
- * inline base64 stays comfortably under Groq's request-size limits.
+/** Upload guard. Vercel rejects request bodies over 4.5 MB before this code runs, so the recorder
+ * stops at MAX_RECORDING_SECONDS (≈4.2 MB WAV @ 16 kHz mono) to stay under this.
  */
-export const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
+export const MAX_AUDIO_BYTES = 4_400_000;
 
 /** Speech-to-text step: audio file in, verbatim transcript out.
  * 
