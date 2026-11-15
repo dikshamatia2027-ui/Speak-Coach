@@ -58,6 +58,7 @@ export type Scenario = {
   seconds: number;
   tier?: ScenarioTier;
   badge?: string;
+  isCustom?: boolean;
   /** Used when live transcription is unavailable. TODO(api): remove with real STT. */
   sampleTranscript: string;
 };
@@ -239,11 +240,40 @@ export const SCENARIOS: Scenario[] = [
 ];
 
 export function scenariosForGoal(goal: GoalId) {
-  return SCENARIOS.filter((s) => s.goal === goal);
+  const custom = getCustomScenarios().filter((s) => s.goal === goal);
+  return [...custom, ...SCENARIOS.filter((s) => s.goal === goal)];
 }
 
 export function getScenario(id: string) {
+  if (id.startsWith("custom-")) {
+    return getCustomScenarios().find((s) => s.id === id) || SCENARIOS.find((s) => s.id === id);
+  }
   return SCENARIOS.find((s) => s.id === id);
+}
+
+const CUSTOM_SCENARIOS_KEY = "speakcoach:custom_scenarios";
+
+export function getCustomScenarios(): Scenario[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(CUSTOM_SCENARIOS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomScenario(scenario: Scenario): void {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getCustomScenarios().filter((s) => s.id !== scenario.id);
+    const updated = [scenario, ...existing];
+    window.localStorage.setItem(CUSTOM_SCENARIOS_KEY, JSON.stringify(updated));
+    // Trigger store listeners so components re-render with new scenario
+    listeners.forEach((l) => l());
+  } catch (e) {
+    console.error("Could not save custom scenario", e);
+  }
 }
 
 /* ------------------------------------------------------------------ */
