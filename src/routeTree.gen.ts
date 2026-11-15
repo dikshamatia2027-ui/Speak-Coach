@@ -23,8 +23,10 @@ import { Route as VocabularyRouteImport } from './routes/vocabulary'
 import { Route as ApiAnalyzeRouteImport } from './routes/api/analyze'
 import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
 import { Route as ApiCustomerPortalRouteImport } from './routes/api/customer-portal'
+import { Route as ApiGenerateScenarioRouteImport } from './routes/api/generate-scenario'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as ResultsSessionIdRouteImport } from './routes/results.$sessionId'
+import { Route as ApiCronNudgeEmailsRouteImport } from './routes/api/cron/nudge-emails'
 import { Route as ApiWebhooksDodoRouteImport } from './routes/api/webhooks/dodo'
 
 const IndexRoute = IndexRouteImport.update({
@@ -97,6 +99,11 @@ const ApiCustomerPortalRoute = ApiCustomerPortalRouteImport.update({
   path: '/api/customer-portal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateScenarioRoute = ApiGenerateScenarioRouteImport.update({
+  id: '/api/generate-scenario',
+  path: '/api/generate-scenario',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
   id: '/checkout/success',
   path: '/checkout/success',
@@ -105,6 +112,11 @@ const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
 const ResultsSessionIdRoute = ResultsSessionIdRouteImport.update({
   id: '/results/$sessionId',
   path: '/results/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronNudgeEmailsRoute = ApiCronNudgeEmailsRouteImport.update({
+  id: '/api/cron/nudge-emails',
+  path: '/api/cron/nudge-emails',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiWebhooksDodoRoute = ApiWebhooksDodoRouteImport.update({
@@ -128,8 +140,10 @@ export interface FileRoutesByFullPath {
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/customer-portal': typeof ApiCustomerPortalRoute
+  '/api/generate-scenario': typeof ApiGenerateScenarioRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
+  '/api/cron/nudge-emails': typeof ApiCronNudgeEmailsRoute
   '/api/webhooks/dodo': typeof ApiWebhooksDodoRoute
 }
 export interface FileRoutesByTo {
@@ -147,8 +161,10 @@ export interface FileRoutesByTo {
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/customer-portal': typeof ApiCustomerPortalRoute
+  '/api/generate-scenario': typeof ApiGenerateScenarioRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
+  '/api/cron/nudge-emails': typeof ApiCronNudgeEmailsRoute
   '/api/webhooks/dodo': typeof ApiWebhooksDodoRoute
 }
 export interface FileRoutesById {
@@ -167,8 +183,10 @@ export interface FileRoutesById {
   '/api/analyze': typeof ApiAnalyzeRoute
   '/api/checkout': typeof ApiCheckoutRoute
   '/api/customer-portal': typeof ApiCustomerPortalRoute
+  '/api/generate-scenario': typeof ApiGenerateScenarioRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/results/$sessionId': typeof ResultsSessionIdRoute
+  '/api/cron/nudge-emails': typeof ApiCronNudgeEmailsRoute
   '/api/webhooks/dodo': typeof ApiWebhooksDodoRoute
 }
 export interface FileRouteTypes {
@@ -188,8 +206,10 @@ export interface FileRouteTypes {
     | '/api/analyze'
     | '/api/checkout'
     | '/api/customer-portal'
+    | '/api/generate-scenario'
     | '/checkout/success'
     | '/results/$sessionId'
+    | '/api/cron/nudge-emails'
     | '/api/webhooks/dodo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -207,8 +227,10 @@ export interface FileRouteTypes {
     | '/api/analyze'
     | '/api/checkout'
     | '/api/customer-portal'
+    | '/api/generate-scenario'
     | '/checkout/success'
     | '/results/$sessionId'
+    | '/api/cron/nudge-emails'
     | '/api/webhooks/dodo'
   id:
     | '__root__'
@@ -226,8 +248,10 @@ export interface FileRouteTypes {
     | '/api/analyze'
     | '/api/checkout'
     | '/api/customer-portal'
+    | '/api/generate-scenario'
     | '/checkout/success'
     | '/results/$sessionId'
+    | '/api/cron/nudge-emails'
     | '/api/webhooks/dodo'
   fileRoutesById: FileRoutesById
 }
@@ -246,8 +270,10 @@ export interface RootRouteChildren {
   ApiAnalyzeRoute: typeof ApiAnalyzeRoute
   ApiCheckoutRoute: typeof ApiCheckoutRoute
   ApiCustomerPortalRoute: typeof ApiCustomerPortalRoute
+  ApiGenerateScenarioRoute: typeof ApiGenerateScenarioRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ResultsSessionIdRoute: typeof ResultsSessionIdRoute
+  ApiCronNudgeEmailsRoute: typeof ApiCronNudgeEmailsRoute
   ApiWebhooksDodoRoute: typeof ApiWebhooksDodoRoute
 }
 
@@ -351,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCustomerPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-scenario': {
+      id: '/api/generate-scenario'
+      path: '/api/generate-scenario'
+      fullPath: '/api/generate-scenario'
+      preLoaderRoute: typeof ApiGenerateScenarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/success': {
       id: '/checkout/success'
       path: '/checkout/success'
@@ -363,6 +396,13 @@ declare module '@tanstack/react-router' {
       path: '/results/$sessionId'
       fullPath: '/results/$sessionId'
       preLoaderRoute: typeof ResultsSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/nudge-emails': {
+      id: '/api/cron/nudge-emails'
+      path: '/api/cron/nudge-emails'
+      fullPath: '/api/cron/nudge-emails'
+      preLoaderRoute: typeof ApiCronNudgeEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/webhooks/dodo': {
@@ -390,8 +430,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAnalyzeRoute: ApiAnalyzeRoute,
   ApiCheckoutRoute: ApiCheckoutRoute,
   ApiCustomerPortalRoute: ApiCustomerPortalRoute,
+  ApiGenerateScenarioRoute: ApiGenerateScenarioRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   ResultsSessionIdRoute: ResultsSessionIdRoute,
+  ApiCronNudgeEmailsRoute: ApiCronNudgeEmailsRoute,
   ApiWebhooksDodoRoute: ApiWebhooksDodoRoute,
 }
 export const routeTree = rootRouteImport

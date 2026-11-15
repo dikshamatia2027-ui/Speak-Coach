@@ -185,16 +185,20 @@ function Settings() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5 rounded-full border border-warning/40 bg-brand-yellow/5 px-3 py-1 text-xs font-bold text-warning">
-                    <span className="size-1.5 rounded-full bg-warning animate-pulse" />
-                    Coming soon
-                  </div>
+                  <Button
+                    variant="hero"
+                    size="sm"
+                    className="h-8 text-xs font-bold"
+                    onClick={() => setUpgradeOpen(true)}
+                  >
+                    Go Pro (₹299/mo)
+                  </Button>
                 )}
               </div>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {profile.plan === "pro"
                   ? "Unlimited sessions, specialized executive scenarios, and acoustic analytics enabled via Dodo Payments."
-                  : "3 sessions/week included. Pro (₹299/mo) and Interview Pack (₹99) are launching soon — start free in the meantime."}
+                  : "3 sessions/week included. Upgrade with Dodo Payments (₹299/mo) for unlimited practice and executive scenarios."}
               </p>
             </div>
           </div>
