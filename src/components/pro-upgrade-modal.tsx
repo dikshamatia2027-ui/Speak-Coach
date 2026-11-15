@@ -1,6 +1,6 @@
 import * as React from "react";
-import { joinLaunchWaitlist, useAuth } from "@/lib/auth";
-import { Bell, Check, Clock, Crown, Loader2, Sparkles, Zap } from "lucide-react";
+import { getAccessToken } from "@/lib/supabase";
+import { AlertCircle, Check, Crown, Loader2, Sparkles, X, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FREE_WEEKLY_LIMIT } from "@/lib/speakcoach";
+import { useStore } from "@/hooks/use-store";
+import { FREE_WEEKLY_LIMIT, store } from "@/lib/speakcoach";
 
 const PRO_BENEFITS = [
   {
@@ -44,19 +45,54 @@ export function ProUpgradeModal({
   onOpenChange: (open: boolean) => void;
   triggerReason?: "quota_reached" | "scenario_locked" | "advanced_analytics" | null;
 }) {
-  const { user } = useAuth();
-  const [joining, setJoining] = React.useState(false);
+  const { profile } = useStore();
+  const isPro = profile.plan === "pro";
+  const [loading, setLoading] = React.useState(false);
 
-  async function notifyMe() {
-    setJoining(true);
-    const { error } = await joinLaunchWaitlist();
-    setJoining(false);
-    if (error) {
-      toast.error(error);
-      return;
+  async function handleUpgrade() {
+    setLoading(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        toast.error("Please sign in first to upgrade.");
+        return;
+      }
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: profile.name || undefined,
+          returnUrl: `${window.location.origin}/checkout/success`,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.ok && data.checkoutUrl) {
+        toast.info("Redirecting to Dodo Payments checkout...");
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+      if (data.missingConfig) {
+        toast.error("Dodo Payments is not configured yet. Please check back soon.");
+        return;
+      }
+      toast.error(data.error || "Failed to start checkout. Please try again.");
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      toast.error("Could not reach the payment page. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    toast.success("You're on the list! We'll notify you the moment payments go live.", { duration: 4000 });
-    onOpenChange(false);
+  }
+
+  async function handleManagePlan() {
+    try {
+      const res = await fetch("/api/customer-portal");
+      const data = await res.json();
+      window.open(data.portalUrl || "https://customer.dodopayments.com", "_blank", "noopener,noreferrer");
+    } catch {
+      window.open("https://customer.dodopayments.com", "_blank", "noopener,noreferrer");
+    }
   }
 
   const headline =
@@ -103,68 +139,64 @@ export function ProUpgradeModal({
             ))}
           </div>
 
-          {/* Coming Soon banner */}
-          <div className="rounded-2xl border border-warning/30 bg-brand-yellow/5 p-4 flex items-start gap-3">
-            <div className="size-8 rounded-lg bg-brand-yellow/15 text-warning flex items-center justify-center shrink-0 mt-0.5">
-              <Clock className="size-4" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-foreground">Paid plans launching soon 🚀</p>
-              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                We're putting the final touches on payments. Lock in your spot — pricing stays the same once we go live.
-              </p>
-            </div>
-          </div>
-
           {/* Pricing pill */}
           <div className="rounded-2xl bg-secondary/80 p-4 border border-border/60 space-y-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Upcoming pricing</p>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 rounded-xl bg-background border border-border/60 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Pro Monthly</p>
-                  <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-xl font-extrabold tabular-nums">₹299</span>
-                    <span className="text-[11px] text-muted-foreground">/ month</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">or ₹1,499 for 6 months</p>
-                </div>
-                <div className="flex-1 rounded-xl bg-background border border-border/60 p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Big Day Pack</p>
-                  <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-xl font-extrabold tabular-nums">₹99</span>
-                    <span className="text-[11px] text-muted-foreground">one-time</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">10 sessions · no renewal</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Monthly Plan</p>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="text-2xl font-extrabold tabular-nums">₹299</span>
+                  <span className="text-xs text-muted-foreground">/ month · or ₹1,499 / 6 mo</span>
                 </div>
               </div>
+              <span className="rounded-full bg-primary/15 text-primary text-xs font-bold px-3 py-1">
+                Risk-free · Cancel anytime
+              </span>
             </div>
+            <p className="text-[11px] text-muted-foreground border-t border-border/50 pt-2">
+              Instant activation via <strong>Dodo Payments</strong>. Unlock unlimited practice sessions and specialized scenarios.
+            </p>
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
-            <Button
-              variant="hero"
-              size="xl"
-              className="w-full flex-1 gap-2 text-base font-bold shadow-glow"
-              disabled={joining}
-              onClick={() => void notifyMe()}
-            >
-              {joining ? <Loader2 className="size-4 animate-spin" /> : <Bell className="size-4 fill-primary-foreground" />}
-              Notify me when live
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            {!isPro ? (
+              <Button
+                variant="hero"
+                size="xl"
+                disabled={loading}
+                className="w-full flex-1 gap-2 text-base font-bold shadow-glow"
+                onClick={() => void handleUpgrade()}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" /> Opening checkout...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="size-4 fill-primary-foreground" /> Upgrade to Pro (₹299/mo)
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full flex-1"
+                onClick={() => void handleManagePlan()}
+              >
+                Manage subscription
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="lg"
               className="text-muted-foreground hover:text-foreground"
               onClick={() => onOpenChange(false)}
             >
-              Continue for free
+              Maybe later
             </Button>
           </div>
-          {user?.email && (
-            <p className="text-center text-xs text-muted-foreground">We'll email {user.email} once when paid plans launch.</p>
-          )}
         </div>
       </DialogContent>
     </Dialog>

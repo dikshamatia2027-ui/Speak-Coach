@@ -513,10 +513,6 @@ function Landing() {
             <p className="mt-2 text-sm text-muted-foreground sm:text-base">
               Start free to build your baseline, grab a pack for placement interviews, or go Pro for unlimited drills.
             </p>
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-warning/40 bg-brand-yellow/5 px-3 py-1 text-xs font-semibold text-warning">
-              <span className="size-1.5 rounded-full bg-warning animate-pulse" />
-              Paid plans launching soon — pricing locked in at these rates
-            </div>
           </div>
 
           <div className="mx-auto mt-10 grid max-w-5xl gap-5 lg:grid-cols-3">
@@ -594,14 +590,10 @@ function Landing() {
                   ))}
                 </ul>
               </div>
-              <div className="mt-6 space-y-2">
-                <div className="flex items-center justify-center gap-2 rounded-full border border-warning/40 bg-brand-yellow/5 py-2 text-xs font-bold text-warning">
-                  <span className="size-1.5 rounded-full bg-warning animate-pulse" />
-                  Coming Soon — ₹99 at launch
-                </div>
+              <div className="mt-6">
                 <Button asChild variant="outline" size="lg" className="w-full rounded-full border-primary/40 text-primary hover:bg-primary/10">
                   <Link to="/onboarding">
-                    Start free now <ArrowRight className="size-4" />
+                    Get Started <ArrowRight className="size-4" />
                   </Link>
                 </Button>
               </div>
@@ -643,14 +635,10 @@ function Landing() {
                   ))}
                 </ul>
               </div>
-              <div className="mt-6 space-y-2">
-                <div className="flex items-center justify-center gap-2 rounded-full border border-warning/40 bg-brand-yellow/5 py-2 text-xs font-bold text-warning">
-                  <span className="size-1.5 rounded-full bg-warning animate-pulse" />
-                  Coming Soon — ₹299/mo at launch
-                </div>
+              <div className="mt-6">
                 <Button asChild variant="hero" size="lg" className="w-full rounded-full">
                   <Link to="/onboarding">
-                    Start free · Get early access <ArrowRight className="size-4" />
+                    Go Pro (₹299/mo) <ArrowRight className="size-4" />
                   </Link>
                 </Button>
               </div>
