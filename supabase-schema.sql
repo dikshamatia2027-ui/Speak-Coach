@@ -138,3 +138,43 @@ revoke all on function public.reserve_analysis(uuid, timestamptz, integer) from 
 revoke all on function public.apply_plan_event(uuid, text, timestamptz, text, timestamptz) from public, anon, authenticated;
 grant execute on function public.reserve_analysis(uuid, timestamptz, integer) to service_role;
 grant execute on function public.apply_plan_event(uuid, text, timestamptz, text, timestamptz) to service_role;
+
+-- Per-user caps on AI calls (practice analysis, custom scenarios, vocabulary checks).
+-- Counted in the database so every server instance shares the same count. No client access.
+create table if not exists public.ai_usage (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  kind text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists ai_usage_user_kind_created_idx on public.ai_usage (user_id, kind, created_at);
+alter table public.ai_usage enable row level security;
+revoke all on public.ai_usage from public, anon, authenticated;
+grant all on public.ai_usage to service_role;
+
+-- Count one AI call unless the user already made p_limit of this kind in the last p_window_seconds.
+-- Returns true if allowed. The per-user lock makes parallel requests wait their turn.
+create or replace function public.take_ai_quota(p_user_id uuid, p_kind text, p_limit integer, p_window_seconds integer)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform pg_advisory_xact_lock(hashtextextended('ai:' || p_user_id::text || ':' || p_kind, 0));
+  -- Old rows are not needed for any window, so keep the table small.
+  delete from public.ai_usage where user_id = p_user_id and created_at < now() - interval '1 day';
+  if (
+    select count(*) from public.ai_usage
+    where user_id = p_user_id and kind = p_kind
+      and created_at >= now() - make_interval(secs => p_window_seconds)
+  ) >= p_limit then
+    return false;
+  end if;
+  insert into public.ai_usage (user_id, kind) values (p_user_id, p_kind);
+  return true;
+end;
+$$;
+
+revoke all on function public.take_ai_quota(uuid, text, integer, integer) from public, anon, authenticated;
+grant execute on function public.take_ai_quota(uuid, text, integer, integer) to service_role;

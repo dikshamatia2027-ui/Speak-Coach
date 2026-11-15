@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { GatewayError, GROQ_TEXT_MODEL, groqGenerate, groqJson } from "@/lib/ai/groq.server";
+import { takeAiQuota } from "@/lib/ai-quota.server";
 import { allowRequest, clientIp } from "@/lib/rate-limit.server";
 import { userFromRequest } from "@/lib/supabase.server";
 
@@ -29,12 +30,16 @@ export const Route = createFileRoute("/api/generate-scenario")({
         const apiKey = process.env["GROQ_API_KEY"];
         if (!apiKey) return json({ error: "AI is not configured." }, 500);
 
-        if (!allowRequest(`scenario:${clientIp(request)}`, 5, 60 * 60 * 1000)) {
-          return json({ error: "Too many scenario requests. Please try again later." }, 429);
+        // Loose flood guard per network; the real cap is per account below.
+        if (!allowRequest(`scenario:${clientIp(request)}`, 40, 60 * 60 * 1000)) {
+          return json({ error: "Too many requests from this network. Please try again later." }, 429);
         }
 
         const authed = await userFromRequest(request);
         if (!authed) return json({ error: "Please sign in first." }, 401);
+        if (!(await takeAiQuota(authed.admin, authed.user.id, "scenario"))) {
+          return json({ error: "You've made a lot of scenarios this hour. Please try again later." }, 429);
+        }
 
         try {
           const body = await request.json();
