@@ -20,19 +20,19 @@ const PRO_BENEFITS = [
     icon: Zap,
   },
   {
-    title: "Specialized high-stakes scenarios",
-    desc: "Executive defense, salary negotiation, crisis town halls & procurement pitch scenarios.",
-    icon: Crown,
-  },
-  {
-    title: "Advanced Deep-Dive Analytics",
-    desc: "Filler word distribution radar, pacing cadence graphs, sentiment & vocabulary diversity metrics.",
+    title: "Scientific Speech Diagnostics",
+    desc: "Acoustic pause-to-speech ratio (0.5s–1.5s), Halliday lexical density index, and cadence variance graphs.",
     icon: Sparkles,
   },
   {
-    title: "Granular speech breakdown",
-    desc: "Word-by-word pause detection and tailored syllable clarity feedback.",
+    title: "Assertiveness & Hedging Inspector",
+    desc: "Line-level psycholinguistic tracking of weak qualifiers ('kind of', 'maybe') to boost authority.",
     icon: Check,
+  },
+  {
+    title: "Specialized high-stakes scenarios",
+    desc: "Executive defense, salary negotiation, crisis town halls & procurement pitch scenarios.",
+    icon: Crown,
   },
 ];
 

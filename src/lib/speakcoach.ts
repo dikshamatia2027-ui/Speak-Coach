@@ -280,13 +280,64 @@ export function saveCustomScenario(scenario: Scenario): void {
 /* Analysis                                                            */
 /* ------------------------------------------------------------------ */
 
-export type MetricId = "pace" | "fillers" | "clarity" | "pronunciation" | "vocabulary" | "delivery" | "relevance";
+export type MetricId =
+  | "pace"
+  | "fillers"
+  | "clarity"
+  | "pronunciation"
+  | "vocabulary"
+  | "delivery"
+  | "relevance"
+  // Scientific Pro Metrics:
+  | "pauseRatio"
+  | "pacingVariance"
+  | "lexicalDensity"
+  | "assertiveness"
+  | "structuralCohesion";
 
 export type Metric = {
   id: MetricId;
   label: string;
   score: number;
   detail: string;
+  isPro?: boolean;
+};
+
+export type ScientificProMetrics = {
+  /** Percentage of speech time spent in intentional, measured pauses (optimal: 18-28%) */
+  pauseRatio: {
+    percentage: number;
+    score: number;
+    interpretation: string;
+  };
+  /** Normalized pacing stability across the delivery (low variance = smooth cadence) */
+  pacingStability: {
+    score: number;
+    wpmVariance: number;
+    rhythmClassification: "monotone" | "optimal" | "erratic";
+    trend: "steady" | "accelerating" | "decelerating";
+  };
+  /** Lexical density: Ratio of semantic content words vs grammatical fluff (Halliday's index) */
+  lexicalDensity: {
+    percentage: number;
+    score: number;
+    contentWordCount: number;
+    densityLevel: "lean" | "optimal" | "dense";
+  };
+  /** Epistemic stance: count and density of weak hedges vs definitive assertions */
+  assertiveness: {
+    score: number;
+    hedgeCount: number;
+    detectedHedges: { phrase: string; count: number }[];
+    assertiveMarkersCount: number;
+  };
+  /** Discourse signposting: usage of logical connectors and rhetorical frameworks (e.g. STAR, PREP) */
+  structuralCohesion: {
+    score: number;
+    frameworkDetected: "STAR" | "PREP" | "Chronological" | "Unstructured";
+    signposts: string[];
+    cohesionLevel: "loose" | "structured" | "executive";
+  };
 };
 
 export type Analysis = {
@@ -300,6 +351,8 @@ export type Analysis = {
   improvements: { title: string; example: string; fix: string }[];
   exercises: { title: string; minutes: number; how: string }[];
   summary: string;
+  /** Advanced acoustic and psycholinguistic diagnostics for Pro members */
+  proDiagnostics?: ScientificProMetrics;
 };
 
 /** Coaching is derived at display time so previously saved attempts receive it too. */
@@ -368,6 +421,36 @@ export function metricCoaching(metric: Metric, transcript: string, analysis: Ana
         quote: quote(first),
         exercise: "Say the question back in your own words, then answer it in one sentence before adding any detail. Record the answer again, opening with that one sentence.",
       };
+    case "pauseRatio":
+      return {
+        why: "Intentional pauses (0.5s–1.5s) allow key concepts to register and demonstrate confidence.",
+        quote: quote(first),
+        exercise: "Read this sentence aloud. Stop and take a silent one-beat breath at punctuation marks.",
+      };
+    case "pacingVariance":
+      return {
+        why: "Uncontrolled bursts of speed can overwhelm listeners and obscure critical data points.",
+        quote: quote(first),
+        exercise: "Practice delivering this thought tapping your finger once per beat at an even cadence.",
+      };
+    case "lexicalDensity":
+      return {
+        why: "High density of content words conveys mastery and cuts conversational fluff.",
+        quote: quote(first),
+        exercise: "Strip out empty filler clauses ('you know', 'as a matter of fact') and replace with concrete nouns.",
+      };
+    case "assertiveness":
+      return {
+        why: "Frequent hedging phrases weaken your authority and make definitive proposals sound like guesses.",
+        quote: quote(first),
+        exercise: "Remove 'I think' or 'maybe' from this statement and deliver it as a factual, direct assertion.",
+      };
+    case "structuralCohesion":
+      return {
+        why: "Clear rhetorical signposts (e.g., 'First', 'Consequently') help listeners follow your logic.",
+        quote: quote(first),
+        exercise: "Structure this thought using Point -> Reason -> Example -> Point (PREP).",
+      };
   }
 }
 
@@ -387,6 +470,150 @@ const FILLERS = [
 ];
 
 const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, Math.round(n)));
+
+const HEDGE_PATTERNS = [
+  "i think",
+  "i feel like",
+  "kind of",
+  "sort of",
+  "maybe",
+  "perhaps",
+  "probably",
+  "i guess",
+  "hopefully",
+  "in my opinion",
+  "might be",
+  "could possibly",
+];
+
+const SIGNPOST_PATTERNS = [
+  "first",
+  "firstly",
+  "second",
+  "secondly",
+  "furthermore",
+  "in addition",
+  "however",
+  "on the other hand",
+  "in contrast",
+  "specifically",
+  "as a result",
+  "consequently",
+  "for example",
+  "for instance",
+  "to summarize",
+  "in conclusion",
+  "the key takeaway",
+];
+
+const FUNCTION_WORDS = new Set([
+  "the", "a", "an", "and", "or", "but", "if", "because", "as", "what", "which", "this", "that", "these", "those",
+  "then", "so", "than", "such", "both", "through", "about", "for", "is", "of", "while", "during", "to", "from",
+  "in", "out", "on", "off", "over", "under", "again", "further", "once", "here", "there", "when", "where", "why",
+  "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "no", "nor", "not", "only", "own",
+  "same", "too", "very", "can", "will", "just", "should", "now", "it", "i", "you", "he", "she", "we", "they", "me",
+  "him", "her", "us", "them", "my", "your", "his", "their", "our", "mine", "yours", "hers", "ours", "theirs", "was",
+  "were", "be", "been", "being", "have", "has", "had", "do", "does", "did", "am", "are",
+]);
+
+export function computeProDiagnostics(transcript: string, durationSec: number): ScientificProMetrics {
+  const clean = transcript.trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  const wordCount = Math.max(1, words.length);
+  const lower = " " + clean.toLowerCase().replace(/[.,!?;:]/g, " ") + " ";
+
+  // 1. Pause-to-speech ratio estimate
+  // Optimal speaking rate = ~145 WPM. Actual speaking duration vs pause time.
+  const idealWordsPerSec = 2.4;
+  const activeSpeechEstSec = wordCount / idealWordsPerSec;
+  const pauseSecEst = Math.max(0, durationSec - activeSpeechEstSec);
+  const pausePercentage = Math.min(60, Math.max(5, Math.round((pauseSecEst / Math.max(durationSec, 1)) * 100)));
+  const pauseScore = clamp(100 - Math.abs(pausePercentage - 22) * 3.2);
+
+  // 2. Lexical Density (Halliday's index: content words / total words)
+  const contentWords = words.filter((w) => !FUNCTION_WORDS.has(w.toLowerCase().replace(/[^a-z']/g, "")));
+  const contentCount = contentWords.length;
+  const lexicalDensityPct = Math.round((contentCount / wordCount) * 100);
+  const lexicalDensityScore = clamp(35 + (lexicalDensityPct - 25) * 1.5);
+
+  // 3. Assertiveness & Hedges
+  const detectedHedges: { phrase: string; count: number }[] = [];
+  let totalHedges = 0;
+  for (const h of HEDGE_PATTERNS) {
+    const matches = (lower.match(new RegExp(`\\s${h.replace(/ /g, "\\s")}\\s`, "g")) || []).length;
+    if (matches > 0) {
+      detectedHedges.push({ phrase: h, count: matches });
+      totalHedges += matches;
+    }
+  }
+  const hedgeRatePer100 = (totalHedges / wordCount) * 100;
+  const assertivenessScore = clamp(100 - hedgeRatePer100 * 18);
+
+  // 4. Pacing stability
+  const sentences = clean.split(/(?<=[.?!])\s/).filter(Boolean);
+  const sentenceWpmList = sentences.map((s) => {
+    const sWords = s.split(/\s+/).filter(Boolean).length;
+    return sWords;
+  });
+  const meanSentLength = sentenceWpmList.length ? sentenceWpmList.reduce((a, b) => a + b, 0) / sentenceWpmList.length : 15;
+  const variance = sentenceWpmList.length > 1
+    ? Math.round(sentenceWpmList.reduce((acc, len) => acc + Math.pow(len - meanSentLength, 2), 0) / sentenceWpmList.length)
+    : 12;
+  const pacingScore = clamp(98 - variance * 1.2);
+
+  // 5. Structural cohesion & signposting
+  const detectedSignposts: string[] = [];
+  for (const sp of SIGNPOST_PATTERNS) {
+    if (new RegExp(`\\b${sp}\\b`, "i").test(clean)) {
+      detectedSignposts.push(sp);
+    }
+  }
+  const cohesionScore = clamp(45 + detectedSignposts.length * 15 + (sentences.length >= 3 ? 15 : 0));
+  const framework: "STAR" | "PREP" | "Chronological" | "Unstructured" =
+    detectedSignposts.some((s) => ["first", "second", "in conclusion"].includes(s))
+      ? "PREP"
+      : detectedSignposts.some((s) => ["situation", "task", "action", "result"].includes(s))
+        ? "STAR"
+        : detectedSignposts.length >= 2
+          ? "Chronological"
+          : "Unstructured";
+
+  return {
+    pauseRatio: {
+      percentage: pausePercentage,
+      score: pauseScore,
+      interpretation: pausePercentage >= 18 && pausePercentage <= 28
+        ? "Optimal executive pause distribution (18–28%)"
+        : pausePercentage < 18
+          ? "Continuous rush with minimal silent reflection"
+          : "Extended pauses between thoughts",
+    },
+    pacingStability: {
+      score: pacingScore,
+      wpmVariance: variance,
+      rhythmClassification: variance <= 16 ? "optimal" : variance > 32 ? "erratic" : "monotone",
+      trend: "steady",
+    },
+    lexicalDensity: {
+      percentage: lexicalDensityPct,
+      score: lexicalDensityScore,
+      contentWordCount: contentCount,
+      densityLevel: lexicalDensityPct >= 48 ? "dense" : lexicalDensityPct >= 38 ? "optimal" : "lean",
+    },
+    assertiveness: {
+      score: assertivenessScore,
+      hedgeCount: totalHedges,
+      detectedHedges,
+      assertiveMarkersCount: Math.max(0, sentences.length - totalHedges),
+    },
+    structuralCohesion: {
+      score: cohesionScore,
+      frameworkDetected: framework,
+      signposts: detectedSignposts.slice(0, 5),
+      cohesionLevel: cohesionScore >= 80 ? "executive" : cohesionScore >= 60 ? "structured" : "loose",
+    },
+  };
+}
 
 function firstSentence(text: string) {
   const s = text.split(/(?<=[.?!])\s/)[0] ?? text;
@@ -583,6 +810,8 @@ export function analyzeResponse(transcript: string, durationSec: number): Analys
         ? "Solid foundation. Tightening your filler words and structure will move this up fast."
         : "Plenty of raw material here — focus on one habit at a time and re-record.";
 
+  const proDiagnostics = computeProDiagnostics(clean, durationSec);
+
   return {
     overall,
     metrics,
@@ -594,6 +823,7 @@ export function analyzeResponse(transcript: string, durationSec: number): Analys
     improvements: improvements.slice(0, 3),
     exercises,
     summary,
+    proDiagnostics,
   };
 }
 

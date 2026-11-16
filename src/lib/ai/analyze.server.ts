@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { analyzeResponse, type Analysis, type MetricId } from "@/lib/speakcoach";
+import { analyzeResponse, computeProDiagnostics, type Analysis, type MetricId } from "@/lib/speakcoach";
 import { GatewayError, GROQ_VERSA_MODEL, groqGenerate, groqJson } from "./groq.server";
 
 const metric = z.object({ score: z.coerce.number(), detail: z.string() });
@@ -138,6 +138,8 @@ export async function analyzeTranscript(input: {
   const relevance = clamp(ai.relevance.score);
   const allMetrics = [...metrics, { id: "relevance" as MetricId, label: "Relevance", score: relevance, detail: ai.relevance.detail }];
   const average = allMetrics.reduce((a, m) => a + m.score, 0) / allMetrics.length;
+  const proDiagnostics = computeProDiagnostics(input.transcript, input.durationSec);
+
   return {
     ...base,
     metrics: allMetrics,
@@ -146,5 +148,6 @@ export async function analyzeTranscript(input: {
     improvements: ai.improvements.filter((x) => filled(x.title)).slice(0, 3),
     exercises: ai.exercises.filter((x) => filled(x.title)).slice(0, 3).map((e) => ({ ...e, minutes: Math.max(1, Math.round(e.minutes)) })),
     summary: ai.summary,
+    proDiagnostics,
   };
 }

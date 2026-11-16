@@ -4,21 +4,26 @@ import {
   ArrowLeft,
   CheckCircle2,
   Crown,
+  FileText,
+  Gauge,
   Lightbulb,
   Lock,
+  Network,
   PieChart,
   RefreshCw,
+  ShieldAlert,
   Sparkles,
+  Timer,
   Zap,
 } from "lucide-react";
 import { useState } from "react";
-import { Check, Copy, FileText } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MetricBar, ScoreRing } from "@/components/score";
 import { Button } from "@/components/ui/button";
 import { ProUpgradeModal } from "@/components/pro-upgrade-modal";
 import { useStore } from "@/hooks/use-store";
-import { goalById, metricCoaching, scoreTone, timeAgo } from "@/lib/speakcoach";
+import { goalById, metricCoaching, scoreTone, timeAgo, computeProDiagnostics } from "@/lib/speakcoach";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/results/$sessionId")({
@@ -128,6 +133,7 @@ function Results() {
     const coaching = metricCoaching(metric, session.transcript, session.analysis);
     return coaching ? [{ metric, coaching }] : [];
   });
+  const proMetrics = session.analysis.proDiagnostics ?? computeProDiagnostics(session.transcript, session.durationSec);
 
   return (
     <AppShell>
@@ -316,86 +322,133 @@ function Results() {
           </div>
 
           {isPro ? (
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {/* Filler words list */}
-              <div className="rounded-lg bg-secondary/50 p-4 border border-border/50">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Filler Frequency
-                  </p>                  <PieChart className="size-3.5 text-primary" />
-                </div>
-                {session.analysis.fillerWords.length > 0 ? (
-                  <div className="mt-3 space-y-2">
-                    {session.analysis.fillerWords.map((fw) => (
-                      <div key={fw.word} className="flex items-center justify-between text-xs">
-                        <span className="font-mono text-xs font-semibold bg-background px-1.5 py-0.5 rounded border border-border">
-                          “{fw.word}”
-                        </span>
-                        <span className="font-semibold tabular-nums text-muted-foreground">
-                          {fw.count}×
-                        </span>
-                      </div>
-                    ))}
+            <div className="mt-5 space-y-4">
+              {/* Scientific Pro Grid - 4 Diagnostic Cards */}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {/* 1. Assertiveness & Hedges */}
+                <div className="rounded-xl bg-secondary/50 p-4 border border-border/50 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Assertiveness
+                      </p>
+                      <ShieldAlert className={cn(
+                        "size-4",
+                        proMetrics.assertiveness.score >= 80 ? "text-emerald-500" : "text-amber-500"
+                      )} />
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-1.5">
+                      <span className="text-2xl font-extrabold tabular-nums">{proMetrics.assertiveness.score}</span>
+                      <span className="text-xs text-muted-foreground">/ 100</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {proMetrics.assertiveness.hedgeCount === 0
+                        ? "Zero weakening qualifiers found."
+                        : `${proMetrics.assertiveness.hedgeCount} hedge${proMetrics.assertiveness.hedgeCount > 1 ? "s" : ""} detected.`}
+                    </p>
                   </div>
-                ) : (
-                  <p className="mt-3 text-xs text-success font-medium">Zero filler words detected! Outstanding control.</p>
-                )}
+                  {proMetrics.assertiveness.detectedHedges.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {proMetrics.assertiveness.detectedHedges.slice(0, 3).map((h) => (
+                        <span key={h.phrase} className="text-[10px] bg-background border border-border px-1.5 py-0.5 rounded text-amber-600 font-medium">
+                          “{h.phrase}” {h.count > 1 ? `(${h.count}×)` : ""}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Pause Ratio */}
+                <div className="rounded-xl bg-secondary/50 p-4 border border-border/50 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Pause Ratio
+                      </p>
+                      <Timer className="size-4 text-primary" />
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-1.5">
+                      <span className="text-2xl font-extrabold tabular-nums">{proMetrics.pauseRatio.percentage}%</span>
+                      <span className="text-xs text-muted-foreground">of delivery</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground leading-snug">
+                      {proMetrics.pauseRatio.interpretation}
+                    </p>
+                  </div>
+                  <div className="mt-3 text-[11px] font-semibold text-primary">
+                    Ideal benchmark: 18% – 28%
+                  </div>
+                </div>
+
+                {/* 3. Lexical Density */}
+                <div className="rounded-xl bg-secondary/50 p-4 border border-border/50 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Lexical Density
+                      </p>
+                      <Gauge className="size-4 text-primary" />
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-1.5">
+                      <span className="text-2xl font-extrabold tabular-nums">{proMetrics.lexicalDensity.percentage}%</span>
+                      <span className="text-xs text-muted-foreground">content words</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {proMetrics.lexicalDensity.contentWordCount} information-bearing words. Level: <span className="font-semibold capitalize text-foreground">{proMetrics.lexicalDensity.densityLevel}</span>.
+                    </p>
+                  </div>
+                  <div className="mt-3 text-[11px] font-semibold text-primary">
+                    Halliday Index: {proMetrics.lexicalDensity.score}/100
+                  </div>
+                </div>
+
+                {/* 4. Discourse Cohesion */}
+                <div className="rounded-xl bg-secondary/50 p-4 border border-border/50 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        Cohesion & Signposts
+                      </p>
+                      <Network className="size-4 text-primary" />
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-1.5">
+                      <span className="text-2xl font-extrabold tabular-nums">{proMetrics.structuralCohesion.score}</span>
+                      <span className="text-xs text-muted-foreground">/ 100</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Framework: <span className="font-semibold text-foreground">{proMetrics.structuralCohesion.frameworkDetected}</span>
+                    </p>
+                  </div>
+                  {proMetrics.structuralCohesion.signposts.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {proMetrics.structuralCohesion.signposts.map((sp) => (
+                        <span key={sp} className="text-[10px] bg-background border border-border px-1.5 py-0.5 rounded text-primary font-medium">
+                          {sp}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-[11px] text-muted-foreground italic">Add connectors like 'first', 'consequently'</p>
+                  )}
+                </div>
               </div>
 
-              {/* Pacing cadence */}
-              <div className="rounded-lg bg-secondary/50 p-4 border border-border/50">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Pacing Stability
+              {/* Acoustic Rhythm and Pacing Stability Deep Dive */}
+              <div className="rounded-xl bg-secondary/30 p-4 border border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Activity className="size-4 text-primary" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Acoustic Cadence & Micro-Pacing Variance</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Normalized syllable variance index: <strong className="text-foreground">{proMetrics.pacingStability.wpmVariance}</strong>.
+                    Pacing rhythm is rated as <strong className="text-foreground capitalize">{proMetrics.pacingStability.rhythmClassification}</strong>.
                   </p>
-                  <Activity className="size-3.5 text-primary" />
                 </div>
-                <div className="mt-3 space-y-2 text-xs">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-muted-foreground">Target rate</span>
-                    <span className="font-semibold">130 – 160 wpm</span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-muted-foreground">Recorded rate</span>
-                    <span className={cn(
-                      "font-bold tabular-nums",
-                      session.analysis.wordsPerMinute >= 130 && session.analysis.wordsPerMinute <= 160
-                        ? "text-success"
-                        : "text-warning"
-                    )}>
-                      {session.analysis.wordsPerMinute} wpm
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="bg-brand h-full rounded-full"
-                      style={{
-                        width: `${Math.min(100, (session.analysis.wordsPerMinute / 180) * 100)}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Vocabulary density */}
-              <div className="rounded-lg bg-secondary/50 p-4 border border-border/50">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Vocabulary Range
-                  </p>
-                  <Sparkles className="size-3.5 text-warning" />
-                </div>
-                <div className="mt-3 space-y-2 text-xs">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-muted-foreground">Lexical variety</span>
-                    <span className="font-bold tabular-nums text-foreground">
-                      {Math.round((new Set(session.transcript.toLowerCase().split(/\s+/)).size / Math.max(1, session.analysis.wordCount)) * 100)}%
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-muted-foreground">Word count</span>
-                    <span className="font-bold tabular-nums text-foreground">{session.analysis.wordCount} words</span>
-                  </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    Cadence Score: {proMetrics.pacingStability.score}/100
+                  </span>
                 </div>
               </div>
             </div>
@@ -405,18 +458,18 @@ function Results() {
                 <Lock className="size-4" />
               </div>
               <h3 className="text-xs sm:text-sm font-bold text-foreground">
-                Advanced Speech Metrics Locked
+                Scientific Speech Diagnostics Locked
               </h3>
-              <p className="mt-0.5 text-sm text-muted-foreground max-w-sm">
-                Pro members receive in-depth syllable-level pacing stability, filler frequency charts, and vocabulary richness diagnostics.
+              <p className="mt-0.5 text-sm text-muted-foreground max-w-md">
+                Pro members receive articulatory pause-to-speech ratio, epistemic assertiveness & hedging detection, Halliday lexical density, and acoustic pacing variance.
               </p>
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-3 h-7 text-xs border-brand-yellow/30 text-warning  hover:bg-brand-yellow/10 font-bold gap-1"
+                className="mt-3 h-7 text-xs border-brand-yellow/30 text-warning hover:bg-brand-yellow/10 font-bold gap-1"
                 onClick={() => setShowUpgradeModal(true)}
               >
-                <Crown className="size-3 fill-brand-yellow" /> Upgrade to Pro to view
+                <Crown className="size-3 fill-brand-yellow" /> Unlock Scientific Pro Diagnostics
               </Button>
             </div>
           )}
