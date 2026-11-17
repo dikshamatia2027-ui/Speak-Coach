@@ -31,7 +31,7 @@ Branch/PR: ... | Status: merged / open / pushed to main
 ## Log
 
 ### 2026-11-17 — Shared change log (Saprabh, Claude Code)
-Branch/PR: `docs/shared-changelog` | Status: open
+PR #4 (`docs/shared-changelog`) | Status: merged (`3a2b955`)
 - Added this file, plus `CLAUDE.md` and a section in `AGENTS.md` so both AI tools read it and keep it updated.
 - Action needed: none.
 
@@ -54,14 +54,14 @@ Commit `6b4efd3` | Status: pushed to `main`
 - Note from Saprabh's review: the diagnostics are sent to free users too and only hidden in the page, so a free user could read them from the network response.
 
 ### 2026-11-15 — Per-user AI limits (Saprabh, Claude Code)
-Branch/PR: `fix/per-user-ai-limits` (PR #3) | Status: open, SQL already run on production Supabase
+PR #3 (`fix/per-user-ai-limits`) | Status: merged (`bf0963e`), SQL already run on production Supabase
 - Vocabulary sentence check had no limit: now 40 per hour per account.
 - Custom scenarios and practice analysis were limited per network in server memory (blocked shared Wi-Fi, reset on restart): now 10 and 15 per hour per account, counted in Supabase.
 - Per-network limits kept only as a loose flood guard (40 and 60 per hour).
 - Falls back to an in-memory per-account count if the database function is missing.
 - Files: `src/lib/ai-quota.server.ts` (+ test), `src/lib/vocab.functions.ts`, `src/routes/api/analyze.ts`, `src/routes/api/generate-scenario.ts`, `supabase-schema.sql`
 - Database: new table `ai_usage` and function `take_ai_quota` (already created on production).
-- Action needed: test on the Vercel preview, then merge.
+- Action needed: none.
 
 ### 2026-11-15 — Dodo API key fixed (Saprabh, dashboards only — no code)
 - `DODO_PAYMENTS_API_KEY` in Vercel was a masked copy (contained `•`), which broke checkout. Replaced with a full live key.
