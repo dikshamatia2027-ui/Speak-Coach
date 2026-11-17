@@ -112,8 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         store.claimForUser(u.id);
         vocabStore.claimForUser(u.id);
         const saved = typeof u.user_metadata?.["full_name"] === "string" ? (u.user_metadata["full_name"] as string).trim() : "";
-        if (saved) {
-          store.setProfile({ name: saved });
+        const validSaved = saved.length > 1 ? saved : ""; // ignore single-char artifacts like "h"
+        if (validSaved) {
+          store.setProfile({ name: validSaved });
         } else {
           const guess = nameFromEmail(u.email);
           if (guess) {

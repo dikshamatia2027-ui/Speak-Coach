@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { saveAccountName } from "@/lib/auth";
+import { saveAccountName, useAuth } from "@/lib/auth";
+import { nameFromEmail } from "@/lib/name";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Logo } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GOALS, store, type GoalId, type Profile } from "@/lib/speakcoach";
+import { useStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding")({
@@ -37,11 +39,29 @@ const LEVELS: { id: Profile["level"]; label: string; body: string }[] = [
 
 function Onboarding() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
-  const [name, setName] = useState("");
+  const { user, loading } = useAuth();
+  const { profile, sessions } = useStore();
+
+  // Derive a sensible display name: prefer full_name from account metadata,
+  // then a valid (>1 char) stored profile name, then derive from email.
+  const derivedName =
+    (user?.user_metadata?.["full_name"] as string | undefined)?.trim() ||
+    (profile.name && profile.name.trim().length > 1 ? profile.name.trim() : "") ||
+    nameFromEmail(user?.email);
+
+  const [step, setStep] = useState(() => (derivedName ? 1 : 0));
+  const [name, setName] = useState(derivedName);
   const [goal, setGoal] = useState<GoalId | null>(null);
   const [level, setLevel] = useState<Profile["level"]>("some");
   const [weeklyTarget, setWeeklyTarget] = useState(3);
+
+  // If the user is already fully onboarded (has sessions or the flag), send them to dashboard.
+  useEffect(() => {
+    if (loading) return;
+    if (user && (profile.onboarded || sessions.length > 0)) {
+      void navigate({ to: "/dashboard", replace: true });
+    }
+  }, [user, loading, profile.onboarded, sessions.length]);
 
   const canNext = step === 0 ? name.trim().length > 0 : step === 1 ? goal !== null : true;
 

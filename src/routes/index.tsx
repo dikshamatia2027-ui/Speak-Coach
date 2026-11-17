@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useAuth } from "@/lib/auth";
 import {
   ArrowRight,
   AudioLines,
@@ -168,6 +169,10 @@ const TREND_SERIES = [58, 62, 61, 70, 68, 76, 84];
 
 function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user } = useAuth();
+  // When signed in, all CTAs go to /dashboard instead of onboarding.
+  const ctaTo = user ? "/dashboard" : "/onboarding";
+  const ctaLabel = user ? "Go to Dashboard" : "Start Practicing";
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/15">
@@ -190,7 +195,7 @@ function Landing() {
 
           <div className="flex items-center gap-2">
             <Button asChild variant="hero" size="sm" className="hidden sm:inline-flex rounded-full px-4">
-              <Link to="/onboarding">Start Practicing</Link>
+              <Link to={ctaTo}>{ctaLabel}</Link>
             </Button>
             <button
               type="button"
@@ -218,7 +223,7 @@ function Landing() {
                 </a>
               ))}
               <Button asChild variant="hero" size="sm" className="mt-2 rounded-full sm:hidden">
-                <Link to="/onboarding">Start Practicing</Link>
+                <Link to={ctaTo}>{ctaLabel}</Link>
               </Button>
             </div>
           </nav>
@@ -246,8 +251,8 @@ function Landing() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild variant="hero" size="xl" className="rounded-full">
-                <Link to="/onboarding">
-                  Start Practicing Free <ArrowRight className="size-4" />
+                <Link to={ctaTo}>
+                  {user ? "Go to Dashboard" : "Start Practicing Free"} <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="xl" className="rounded-full">
@@ -495,8 +500,8 @@ function Landing() {
               </div>
 
               <Button asChild variant="hero" size="lg" className="mt-7 w-full rounded-full sm:w-auto">
-                <Link to="/onboarding">
-                  Get your first report <ArrowRight className="size-4" />
+                <Link to={ctaTo}>
+                  {user ? "Go to Dashboard" : "Get your first report"} <ArrowRight className="size-4" />
                 </Link>
               </Button>
             </div>
@@ -550,7 +555,7 @@ function Landing() {
                 </ul>
               </div>
               <Button asChild variant="outline" size="lg" className="mt-6 w-full rounded-full">
-                <Link to="/onboarding">Get started for free</Link>
+                <Link to={ctaTo}>{user ? "Go to Dashboard" : "Get started for free"}</Link>
               </Button>
             </div>
 
@@ -592,8 +597,8 @@ function Landing() {
               </div>
               <div className="mt-6">
                 <Button asChild variant="outline" size="lg" className="w-full rounded-full border-primary/40 text-primary hover:bg-primary/10">
-                  <Link to="/onboarding">
-                    Get Started <ArrowRight className="size-4" />
+                  <Link to={ctaTo}>
+                    {user ? "Go to Dashboard" : "Get Started"} <ArrowRight className="size-4" />
                   </Link>
                 </Button>
               </div>
@@ -637,8 +642,8 @@ function Landing() {
               </div>
               <div className="mt-6">
                 <Button asChild variant="hero" size="lg" className="w-full rounded-full">
-                  <Link to="/onboarding">
-                    Go Pro (₹299/mo) <ArrowRight className="size-4" />
+                  <Link to={ctaTo}>
+                    {user ? "Go to Dashboard" : "Go Pro (₹299/mo)"} <ArrowRight className="size-4" />
                   </Link>
                 </Button>
               </div>
@@ -658,8 +663,8 @@ function Landing() {
           </p>
           <div className="mt-7 flex justify-center">
             <Button asChild size="xl" variant="hero" className="rounded-full">
-              <Link to="/onboarding">
-                Start your first session <ArrowRight className="size-4" />
+              <Link to={ctaTo}>
+                {user ? "Go to Dashboard" : "Start your first session"} <ArrowRight className="size-4" />
               </Link>
             </Button>
           </div>
