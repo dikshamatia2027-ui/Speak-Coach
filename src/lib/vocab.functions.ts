@@ -9,9 +9,14 @@ export const checkSentence = createServerFn({ method: "POST" })
     const word = wordById(data.wordId);
     if (!word) return { ok: false as const, error: "Unknown word." };
     const { userFromToken } = await import("./supabase.server");
-    if (!(await userFromToken(data.token))) return { ok: false as const, error: "Please sign in to continue." };
+    const authed = await userFromToken(data.token);
+    if (!authed) return { ok: false as const, error: "Please sign in to continue." };
     const apiKey = process.env["GROQ_API_KEY"];
     if (!apiKey) return { ok: false as const, error: "AI is not configured." };
+    const { takeAiQuota } = await import("./ai-quota.server");
+    if (!(await takeAiQuota(authed.admin, authed.user.id, "vocab"))) {
+      return { ok: false as const, error: "You've checked a lot of sentences this hour. Please take a short break and try again." };
+    }
     try {
       const feedback = await evaluateSentence({ word: word.word, pos: word.pos, definition: word.definition, sentence: data.sentence, apiKey });
       return { ok: true as const, feedback };
