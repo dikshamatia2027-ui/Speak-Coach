@@ -30,6 +30,15 @@ Branch/PR: ... | Status: merged / open / pushed to main
 
 ## Log
 
+### 2026-11-17 — Server checks what is being analysed (Saprabh, Claude Code)
+Branch/PR: `fix/analyze-input-checks` | Status: open
+- S9: built-in scenarios now use the server's own question and goal, and Pro-only scenarios return 403 on the free plan (also when a Pro question is sent under a made-up id). Custom scenarios keep their text; unknown goals become "confidence".
+- S9: the recording length now comes from the WAV audio itself, not from the browser. The server returns `durationSec` and the practice page saves that.
+- S10: the upload is counted byte by byte and stopped past ~4.4 MB, even if `Content-Length` is missing or wrong. Only 16-bit PCM WAV (what our recorder makes) is accepted, and recordings over 135 seconds are refused.
+- Rejected uploads never reach the AI and never use a weekly session.
+- Files: `src/lib/ai/analyze-input.server.ts` (+ test), `src/routes/api/analyze.ts`, `src/routes/practice.tsx`
+- Action needed: test a practice recording on the Vercel preview, then merge. If anyone adds a non-WAV recorder later, `parseWav` must be updated.
+
 ### 2026-11-17 — Shared change log (Saprabh, Claude Code)
 PR #4 (`docs/shared-changelog`) | Status: merged (`3a2b955`)
 - Added this file, plus `CLAUDE.md` and a section in `AGENTS.md` so both AI tools read it and keep it updated.
@@ -96,8 +105,6 @@ Commit `46230e8` | Status: pushed to `main`
 ---
 
 ## Still open (from Saprabh's security audit)
-- S9: the browser sends duration, prompt and goal for analysis, and Pro-only scenarios are not enforced on the server.
-- S10: upload size is checked with the `content-length` header only; audio type is not checked.
 - S8: the payment webhook falls back to matching users by email.
 - S11: raw error messages from Dodo and the AI reach users.
 - S13: no security headers (CSP, X-Frame-Options and so on).

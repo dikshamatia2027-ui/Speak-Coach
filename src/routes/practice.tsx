@@ -374,6 +374,7 @@ function Practice() {
       const form = new FormData();
       form.append("audio", audio);
       form.append("durationSec", String(duration));
+      form.append("scenarioId", sc.id);
       form.append("prompt", sc.prompt);
       form.append("goal", sc.goal);
       abortRef.current = new AbortController();
@@ -387,6 +388,7 @@ function Practice() {
       const body = (await res.json().catch(() => ({}))) as {
         transcript?: string;
         analysis?: Analysis;
+        durationSec?: number;
         error?: string;
       };
       if (!res.ok || !body.analysis || !body.transcript) {
@@ -401,7 +403,8 @@ function Practice() {
         goal: sc.goal,
         prompt: sc.prompt,
         transcript: body.transcript,
-        durationSec: duration,
+        // The server measures the length from the audio itself.
+        durationSec: body.durationSec ?? duration,
         createdAt: Date.now(),
         analysis: body.analysis,
         attempt: prior + 1,

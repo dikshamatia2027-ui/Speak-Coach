@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { analyzeTranscript } from "@/lib/ai/analyze.server";
 import { GatewayError, MAX_AUDIO_BYTES, transcribeAudio } from "@/lib/ai/transcribe.server";
 import { takeAiQuota } from "@/lib/ai-quota.server";
+import { parseWav, readBodyCapped, resolveScenario } from "@/lib/ai/analyze-input.server";
+import { MAX_RECORDING_SECONDS } from "@/lib/record-wav";
 import { allowRequest, clientIp } from "@/lib/rate-limit.server";
 import { FREE_WEEKLY_LIMIT } from "@/lib/speakcoach";
 import { getPlan, releaseAnalysis, reserveAnalysis, userFromRequest } from "@/lib/supabase.server";
@@ -35,14 +37,31 @@ export const Route = createFileRoute("/api/analyze")({
         let reservationId: string | null = null;
         let succeeded = false;
         try {
-          const form = await request.formData();
+          // Count the bytes actually received; Content-Length can be missing or wrong.
+          const body = await readBodyCapped(request, MAX_AUDIO_BYTES + 64 * 1024);
+          if (!body) return json({ error: "Recording is too long." }, 413);
+          const form = await new Response(body, {
+            headers: { "content-type": request.headers.get("content-type") ?? "" },
+          }).formData();
           const audio = form.get("audio");
-          const durationSec = Math.min(Math.max(Number(form.get("durationSec")) || 0, 1), 900);
-          const prompt = String(form.get("prompt") ?? "").slice(0, 500);
-          const goal = String(form.get("goal") ?? "confidence").slice(0, 40);
           if (!(audio instanceof File) || audio.size < 2048) {
             return json({ error: "We couldn't hear anything. Please record again." }, 400);
           }
+          // Only the WAV files our recorder makes are accepted, and the length comes from the audio itself.
+          const wav = parseWav(new Uint8Array(await audio.arrayBuffer()));
+          if (!wav) return json({ error: "We couldn't read that recording. Please record again." }, 415);
+          if (wav.durationSec > MAX_RECORDING_SECONDS + 5) return json({ error: "Recording is too long." }, 413);
+          const durationSec = Math.max(1, Math.round(wav.durationSec));
+
+          // Built-in scenarios use the server's own question and goal; Pro-only ones need Pro.
+          const scenario = resolveScenario({
+            scenarioId: String(form.get("scenarioId") ?? ""),
+            prompt: String(form.get("prompt") ?? ""),
+            goal: String(form.get("goal") ?? ""),
+            plan,
+          });
+          if (!scenario.ok) return json({ error: scenario.error }, scenario.status);
+          const { prompt, goal } = scenario;
 
           // Reserve before any AI call. Only the server can write this table.
           const reservation = await reserveAnalysis(admin, user.id, plan === "pro" ? null : FREE_WEEKLY_LIMIT);
@@ -69,7 +88,7 @@ export const Route = createFileRoute("/api/analyze")({
             signal: request.signal,
           });
           succeeded = true;
-          return json({ transcript, analysis }, 200);
+          return json({ transcript, analysis, durationSec }, 200);
         } catch (err) {
           if (request.signal.aborted) return json({ error: "Cancelled" }, 499);
           if (err instanceof GatewayError) {
